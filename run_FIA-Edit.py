@@ -12,7 +12,7 @@ from diffusers import StableDiffusion3Pipeline
 if __name__ == "__main__":
     
     src_prompt = "a cat sitting on a wooden chair"
-    tar_prompt = "a dog sitting on a wooden chair"
+    tar_prompt = "a horse sitting on a wooden chair"
     negative_prompt =  "" # optionally add support for negative prompts (SD3)
     image_src_path = "example/cat.jpg"
 
@@ -26,6 +26,9 @@ if __name__ == "__main__":
     tar_guidance_scale = 13.5
     n_min = 0
     n_max = 33
+    # tar_guidance_scale = 17.5
+    # n_min = 10
+    # n_max = 15
     seed = 42
 
 
@@ -33,7 +36,7 @@ if __name__ == "__main__":
         pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3-medium-diffusers", torch_dtype=torch.float16)
         # pipe.enable_xformers_memory_efficient_attention()
     elif model_type == 'SD35': # diffusers == 0.33.1
-        pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", torch_dtype=torch.float16).to("cuda")
+        pipe = StableDiffusion3Pipeline.from_pretrained("stabilityai/stable-diffusion-3.5-medium", torch_dtype=torch.float16)
         # pipe.enable_xformers_memory_efficient_attention()
     else:
         raise NotImplementedError(f"Model type {model_type} not implemented")
@@ -55,7 +58,7 @@ if __name__ == "__main__":
     image_src = pipe.image_processor.preprocess(image)
     # cast image to half precision
     image_src = image_src.to(device).half()
-    with torch.autocast("cuda"), torch.inference_mode():
+    with torch.autocast(device.type), torch.inference_mode():
         x0_src_denorm = pipe.vae.encode(image_src).latent_dist.mode()
     x0_src = (x0_src_denorm - pipe.vae.config.shift_factor) * pipe.vae.config.scaling_factor
     x0_src = x0_src.to(device)
@@ -75,7 +78,7 @@ if __name__ == "__main__":
         
 
     x0_tar_denorm = (x0_tar / pipe.vae.config.scaling_factor) + pipe.vae.config.shift_factor
-    with torch.autocast("cuda"), torch.inference_mode():
+    with torch.autocast(device.type), torch.inference_mode():
         image_tar = pipe.vae.decode(x0_tar_denorm, return_dict=False)[0]
     image_tar = pipe.image_processor.postprocess(image_tar)
 

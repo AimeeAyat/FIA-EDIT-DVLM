@@ -1,0 +1,4 @@
+Source prompt: a cat sitting on a wooden chair
+Target prompt: a horse sitting on a wooden chair
+Seed: 42
+Sampler type: SD35
