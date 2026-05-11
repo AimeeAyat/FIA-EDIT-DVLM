@@ -27,10 +27,8 @@ class SamplingOptions:
     seed: int = 42
     re_init: bool = False
     attn_mask: bool = False
-    attn_scale: float = 1.0
 
 def resize_image(image_array, max_width=1360, max_height=768):
-    # 将numpy数组转换为PIL图像
     if image_array.shape[-1] == 4:
         mode = 'RGBA'
     else:
@@ -38,28 +36,21 @@ def resize_image(image_array, max_width=1360, max_height=768):
     
     pil_image = Image.fromarray(image_array, mode=mode)
     
-    # 获取原始图像的宽度和高度
     original_width, original_height = pil_image.size
     
-    # 计算缩放比例
     width_ratio = max_width / original_width
     height_ratio = max_height / original_height
     
-    # 选择较小的缩放比例以确保图像不超过最大宽度和高度
     scale_ratio = min(width_ratio, height_ratio)
     
-    # 如果图像已经小于或等于最大分辨率，则不进行缩放
     if scale_ratio >= 1:
         return image_array
     
-    # 计算新的宽度和高度
     new_width = int(original_width * scale_ratio)
     new_height = int(original_height * scale_ratio)
     
-    # 缩放图像
     resized_image = pil_image.resize((new_width, new_height))
     
-    # 将PIL图像转换回numpy数组
     resized_array = np.array(resized_image)
     
     return resized_array
@@ -99,8 +90,6 @@ class FluxEditor_kv_demo:
         if hasattr(self, 'z0'):
             del self.z0
             del self.zt
-        # self.info = {}
-        # gc.collect()
         
         if 'feature' in self.info:
             key_list = list(self.info['feature'].keys())
@@ -110,7 +99,6 @@ class FluxEditor_kv_demo:
         
         rgba_init_image = brush_canvas["background"]
         init_image = rgba_init_image[:,:,:3]
-        # init_image = resize_image(init_image)
         shape = init_image.shape        
         height = shape[0] if shape[0] % 16 == 0 else shape[0] - shape[0] % 16
         width = shape[1] if shape[1] % 16 == 0 else shape[1] - shape[1] % 16
@@ -124,7 +112,7 @@ class FluxEditor_kv_demo:
             height=height,
             inversion_num_steps=inversion_num_steps,
             denoise_num_steps=denoise_num_steps,
-            skip_step=0, # no skip step in inverse leads chance to adjest skip_step in edit
+            skip_step=0,
             inversion_guidance=inversion_guidance,
             denoise_guidance=denoise_guidance,
             seed=seed,
@@ -137,7 +125,6 @@ class FluxEditor_kv_demo:
         torch.cuda.empty_cache()
         
         if opts.attn_mask:
-            # rgba_mask = resize_image(brush_canvas["layers"][0])[:height, :width, :]
             rgba_mask = brush_canvas["layers"][0][:height, :width, :]
             mask = rgba_mask[:,:,3]/255
             mask = mask.astype(int)
@@ -165,7 +152,7 @@ class FluxEditor_kv_demo:
              inversion_num_steps, denoise_num_steps, 
              skip_step, 
              inversion_guidance, denoise_guidance,seed,
-             re_init, attn_mask,attn_scale
+             re_init, attn_mask
              ):
         
         torch.cuda.empty_cache()
@@ -177,9 +164,7 @@ class FluxEditor_kv_demo:
         width = shape[1] if shape[1] % 16 == 0 else shape[1] - shape[1] % 16
         init_image = init_image[:height, :width, :]
         rgba_init_image = rgba_init_image[:height, :width, :]
-        # brush_canvas = brush_canvas["composite"][:,:,:3][:height, :width, :]
     
-        # if np.all(brush_canvas[:,:,0] == brush_canvas[:,:,1]) and np.all(brush_canvas[:,:,1] == brush_canvas[:,:,2]):
         rgba_mask = brush_canvas["layers"][0][:height, :width, :]
         mask = rgba_mask[:,:,3]/255
         mask = mask.astype(int)
@@ -204,8 +189,7 @@ class FluxEditor_kv_demo:
             denoise_guidance=denoise_guidance,
             seed=seed,
             re_init=re_init,
-            attn_mask=attn_mask,
-            attn_scale=attn_scale
+            attn_mask=attn_mask
         )
         torch.manual_seed(opts.seed)
         if torch.cuda.is_available():
@@ -280,7 +264,7 @@ def create_demo(model_name: str):
     """
         
     description = r"""
-        <b>Official 🤗 Gradio demo</b> for <a href='https://github.com/Xilluill/KV-Edit' target='_blank'><b>KV-Edit: Training-Free Image Editing for Precise Background Preservation</b></a>.<br>
+        <b>Official 🤗 Gradio demo</b> for <b>KV-Edit: Training-Free Image Editing for Precise Background Preservation</b></a>.<br>
     
         💫💫 <b>Here is editing steps:</b> <br>
         1️⃣ Upload your image that needs to be edited. <br>
@@ -289,12 +273,8 @@ def create_demo(model_name: str):
         4️⃣ Fill in your target prompt, then adjust the hyperparameters. <br>
         5️⃣ Click the "Edit" button to generate your edited image! <br>
         
-        🔔🔔 [<b>Important</b>] Less skip steps, "re_init" and "attn_mask"  will enhance the editing performance, making the results more aligned with your text but may lead to discontinuous images.  <br>
-        If you fail because of these three, we recommend trying to increase "attn_scale" to increase attention between mask and background.<br>
+        🔔🔔 [<b>Important</b>] We suggest trying "re_init" and "attn_mask" only when the result is too similar to the original content (e.g. removing objects).<br>
         """
-    article = r"""
-    If our work is helpful, please help to ⭐ the <a href='https://github.com/Xilluill/KV-Edit' target='_blank'>Github Repo</a>. Thanks! 
-    """
     
     with gr.Blocks() as demo:
         gr.HTML(title)
@@ -306,7 +286,6 @@ def create_demo(model_name: str):
                 inversion_num_steps = gr.Slider(1, 50, 28, step=1, label="Number of inversion steps")
                 target_prompt = gr.Textbox(label="Target Prompt", value='' )
                 denoise_num_steps = gr.Slider(1, 50, 28, step=1, label="Number of denoise steps")
-                # init_image = gr.Image(label="Input Image", visible=True,scale=1)
                 brush_canvas = gr.ImageEditor(label="Brush Canvas",
                                                 sources=('upload'), 
                                                 brush=gr.Brush(colors=["#ff0000"],color_mode='fixed'),
@@ -324,14 +303,12 @@ def create_demo(model_name: str):
                     skip_step = gr.Slider(0, 30, 4, step=1, label="Number of skip steps")
                     inversion_guidance = gr.Slider(1.0, 10.0, 1.5, step=0.1, label="inversion Guidance", interactive=not is_schnell)
                     denoise_guidance = gr.Slider(1.0, 10.0, 5.5, step=0.1, label="denoise Guidance", interactive=not is_schnell)
-                    attn_scale = gr.Slider(0.0, 5.0, 1, step=0.1, label="attn_scale")
                     seed = gr.Textbox('0', label="Seed (-1 for random)", visible=True)
                     with gr.Row():
                         re_init = gr.Checkbox(label="re_init", value=False)
                         attn_mask = gr.Checkbox(label="attn_mask", value=False)
                 
                 output_image = gr.Image(label="Generated Image")
-                gr.Markdown(article)
         inv_btn.click(
             fn=editor.inverse,
             inputs=[brush_canvas,
@@ -352,7 +329,7 @@ def create_demo(model_name: str):
                     skip_step, 
                     inversion_guidance,
                     denoise_guidance,seed,
-                    re_init, attn_mask,attn_scale
+                    re_init, attn_mask
                     ],
             outputs=[output_image]
         )

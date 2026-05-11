@@ -4,8 +4,8 @@ import torch
 from torch import Tensor, nn
 
 from flux.modules.layers import (DoubleStreamBlock, EmbedND, LastLayer,
-                                 MLPEmbedder, SingleStreamBlock,
-                                SingleStreamBlock_kv,DoubleStreamBlock_kv,
+                                 MLPEmbedder, SingleStreamBlock,DoubleStreamBlock_rf,SingleStreamBlock_rf,
+                                    SingleStreamBlock_kv,DoubleStreamBlock_kv,
                                  timestep_embedding)
 
 
@@ -88,7 +88,6 @@ class Flux(nn.Module):
         if img.ndim != 3 or txt.ndim != 3:
             raise ValueError("Input img and txt tensors must have 3 dimensions.")
 
-        # running on sequences img
         img = self.img_in(img)
         vec = self.time_in(timestep_embedding(timesteps, 256))
         if self.params.guidance_embed:
@@ -109,12 +108,64 @@ class Flux(nn.Module):
             img = block(img, vec=vec, pe=pe)
         img = img[:, txt.shape[1] :, ...]
 
-        img = self.final_layer(img, vec)  # (N, T, patch_size ** 2 * out_channels)
+        img = self.final_layer(img, vec)
         return img
 
-class Flux_kv(Flux):
+    
+class Flux_rf(Flux):
     """
-    继承Flux类，重写forward方法
+    rf solver 的实现
+    """
+
+    def __init__(self, params: FluxParams):
+        super().__init__(params,DoubleStreamBlock_rf,SingleStreamBlock_rf)
+
+    def forward(
+        self,
+        img: Tensor,
+        img_ids: Tensor,
+        txt: Tensor,
+        txt_ids: Tensor,
+        timesteps: Tensor,
+        y: Tensor,
+        guidance: Tensor | None = None,
+        info = None,
+    ) -> tuple:
+        if img.ndim != 3 or txt.ndim != 3:
+            raise ValueError("Input img and txt tensors must have 3 dimensions.")
+
+        img = self.img_in(img)
+        vec = self.time_in(timestep_embedding(timesteps, 256))
+        if self.params.guidance_embed:
+            if guidance is None:
+                raise ValueError("Didn't get guidance strength for guidance distilled model.")
+            vec = vec + self.guidance_in(timestep_embedding(guidance, 256))
+        vec = vec + self.vector_in(y)
+        txt = self.txt_in(txt)
+
+        ids = torch.cat((txt_ids, img_ids), dim=1)
+        pe = self.pe_embedder(ids)
+
+        for block in self.double_blocks:
+            img, txt = block(img=img, txt=txt, vec=vec, pe=pe, info=info)
+
+        cnt = 0
+        img = torch.cat((txt, img), 1) 
+        info['type'] = 'single'
+        for block in self.single_blocks:
+            info['id'] = cnt
+            img, info = block(img, vec=vec, pe=pe, info=info)
+            cnt += 1
+
+        img = img[:, txt.shape[1] :, ...]
+
+        img = self.final_layer(img, vec)
+        return img, info
+
+    
+class Flux_fe(Flux):
+    """
+
     """
 
     def __init__(self, params: FluxParams,double_block_cls=DoubleStreamBlock_kv,single_block_cls=SingleStreamBlock_kv):
@@ -124,28 +175,76 @@ class Flux_kv(Flux):
         self,
         img: Tensor,
         img_ids: Tensor,
-        txt: Tensor, 
+        txt: Tensor,
         txt_ids: Tensor,
         timesteps: Tensor,
-        y: Tensor, 
-        guidance: Tensor | None = None, 
+        y: Tensor,
+        guidance: Tensor | None = None,
         info: dict = {},
     ) -> Tensor:
         if img.ndim != 3 or txt.ndim != 3:
             raise ValueError("Input img and txt tensors must have 3 dimensions.")
 
-        # running on sequences img
         img = self.img_in(img)
-        vec = self.time_in(timestep_embedding(timesteps, 256)) 
+        vec = self.time_in(timestep_embedding(timesteps, 256))
         if self.params.guidance_embed:
             if guidance is None:
                 raise ValueError("Didn't get guidance strength for guidance distilled model.")
-            vec = vec + self.guidance_in(timestep_embedding(guidance, 256)) 
+            vec = vec + self.guidance_in(timestep_embedding(guidance, 256))
         vec = vec + self.vector_in(y)
         txt = self.txt_in(txt)
 
-        ids = torch.cat((txt_ids, img_ids), dim=1) 
-        pe = self.pe_embedder(ids) 
+        ids = torch.cat((txt_ids, img_ids), dim=1)
+        pe = self.pe_embedder(ids)
+        for block in self.double_blocks:
+            
+            img, txt = block(img=img, txt=txt, vec=vec, pe=pe)
+
+        cnt = 0
+        img = torch.cat((txt, img), 1) 
+        for block in self.single_blocks:
+            info['id'] = cnt
+            img = block(img, vec=vec, pe=pe)
+            cnt += 1
+
+        img = img[:, txt.shape[1] :, ...]
+
+        img = self.final_layer(img, vec)
+        return img
+    
+class Flux_kv(Flux):
+    """
+    
+    """
+
+    def __init__(self, params: FluxParams,double_block_cls=DoubleStreamBlock_kv,single_block_cls=SingleStreamBlock_kv):
+        super().__init__(params,double_block_cls,single_block_cls)
+
+    def forward(
+        self,
+        img: Tensor,
+        img_ids: Tensor,
+        txt: Tensor,
+        txt_ids: Tensor,
+        timesteps: Tensor,
+        y: Tensor,
+        guidance: Tensor | None = None,
+        info: dict = {},
+    ) -> Tensor:
+        if img.ndim != 3 or txt.ndim != 3:
+            raise ValueError("Input img and txt tensors must have 3 dimensions.")
+
+        img = self.img_in(img)
+        vec = self.time_in(timestep_embedding(timesteps, 256))
+        if self.params.guidance_embed:
+            if guidance is None:
+                raise ValueError("Didn't get guidance strength for guidance distilled model.")
+            vec = vec + self.guidance_in(timestep_embedding(guidance, 256))
+        vec = vec + self.vector_in(y)
+        txt = self.txt_in(txt)
+
+        ids = torch.cat((txt_ids, img_ids), dim=1)
+        pe = self.pe_embedder(ids)
         if not info['inverse']:
             mask_indices = info['mask_indices'] 
             info['pe_mask'] = torch.cat((pe[:, :, :512, ...],pe[:, :, mask_indices+512, ...]),dim=2)
@@ -157,14 +256,17 @@ class Flux_kv(Flux):
             cnt += 1
 
         cnt = 0
+        img_len = img.shape[2]
+        txt_len = txt.shape[2]
         x = torch.cat((txt, img), 1) 
         for block in self.single_blocks:
             info['id'] = cnt
             x = block(x, vec=vec, pe=pe, info=info)
+
             cnt += 1
 
         img = x[:, txt.shape[1] :, ...]
 
-        img = self.final_layer(img, vec)  # (N, T, patch_size ** 2 * out_channels)
+        img = self.final_layer(img, vec)
 
         return img

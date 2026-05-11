@@ -9,6 +9,21 @@ from flux.sampling import get_schedule, unpack,denoise_kv,denoise_kv_inf
 from flux.util import load_flow_model
 from flux.model import Flux_kv
 
+@dataclass
+class SamplingOptions:
+    source_prompt: str = ''
+    target_prompt: str = ''
+    width: int = 1366
+    height: int = 768
+    inversion_num_steps: int = 0
+    denoise_num_steps: int = 0
+    skip_step: int = 0
+    inversion_guidance: float = 1.0
+    denoise_guidance: float = 1.0
+    seed: int = 42
+    re_init: bool = False
+    attn_mask: bool = False
+
 class only_Flux(torch.nn.Module): 
     def __init__(self, device,name='flux-dev'):
         self.device = device
@@ -17,7 +32,6 @@ class only_Flux(torch.nn.Module):
         self.model = load_flow_model(self.name, device=self.device,flux_cls=Flux_kv)
         
     def create_attention_mask(self,seq_len, mask_indices, text_len=512, device='cuda'):
-        
         attention_mask = torch.zeros(seq_len, seq_len, dtype=torch.bool, device=device)
 
         text_indices = torch.arange(0, text_len, device=device)
@@ -27,39 +41,20 @@ class only_Flux(torch.nn.Module):
         all_indices = torch.arange(text_len, seq_len, device=device)
         background_token_indices = torch.tensor([idx for idx in all_indices if idx not in mask_token_indices])
 
-        # text setting
         attention_mask[text_indices.unsqueeze(1).expand(-1, seq_len)] = True
         attention_mask[text_indices.unsqueeze(1), text_indices] = True
-        attention_mask[text_indices.unsqueeze(1), background_token_indices] = True 
+        attention_mask[text_indices.unsqueeze(1), background_token_indices] = True
 
         
-        # mask setting
-        # attention_mask[mask_token_indices.unsqueeze(1), background_token_indices] = True 
-        attention_mask[mask_token_indices.unsqueeze(1), text_indices] = True  
-        attention_mask[mask_token_indices.unsqueeze(1), mask_token_indices] = True 
+        attention_mask[mask_token_indices.unsqueeze(1), text_indices] = True
+        attention_mask[mask_token_indices.unsqueeze(1), mask_token_indices] = True
 
-        # background setting
-        # attention_mask[background_token_indices.unsqueeze(1), mask_token_indices] = True  
-        attention_mask[background_token_indices.unsqueeze(1), text_indices] = True 
-        attention_mask[background_token_indices.unsqueeze(1), background_token_indices] = True  
+        
+        attention_mask[background_token_indices.unsqueeze(1), mask_token_indices] = True
+        attention_mask[background_token_indices.unsqueeze(1), text_indices] = True
+        attention_mask[background_token_indices.unsqueeze(1), background_token_indices] = True
 
         return attention_mask.unsqueeze(0)
-
-    def create_attention_scale(self,seq_len, mask_indices, text_len=512, device='cuda',scale = 0):
-
-        attention_scale = torch.zeros(1, seq_len, dtype=torch.bfloat16, device=device) # 相加时广播
-
-
-        text_indices = torch.arange(0, text_len, device=device)
-        
-        mask_token_indices = torch.tensor([idx + text_len for idx in mask_indices], device=device)
-
-        all_indices = torch.arange(text_len, seq_len, device=device)
-        background_token_indices = torch.tensor([idx for idx in all_indices if idx not in mask_token_indices])
-        
-        attention_scale[0, background_token_indices] = scale #
-        
-        return attention_scale.unsqueeze(0)
      
 class Flux_kv_edit_inf(only_Flux):
     def __init__(self, device,name):
@@ -81,18 +76,11 @@ class Flux_kv_edit_inf(only_Flux):
         info['mask'] = mask
         bool_mask = (mask.sum(dim=2) > 0.5)
         info['mask_indices'] = torch.nonzero(bool_mask)[:,1] 
-        #单独分离inversion
         if opts.attn_mask and (~bool_mask).any():
             attention_mask = self.create_attention_mask(L+512, info['mask_indices'], device=self.device)
         else:
             attention_mask = None   
         info['attention_mask'] = attention_mask
-        
-        if opts.attn_scale != 0 and (~bool_mask).any():
-            attention_scale = self.create_attention_scale(L+512, info['mask_indices'], device=mask.device,scale = opts.attn_scale)
-        else:
-            attention_scale = None
-        info['attention_scale'] = attention_scale
         
         denoise_timesteps = get_schedule(opts.denoise_num_steps, inp["img"].shape[1], shift=(self.name != "flux-schnell"))
         denoise_timesteps = denoise_timesteps[opts.skip_step:]
@@ -140,7 +128,6 @@ class Flux_kv_edit(only_Flux):
             bool_mask = (mask.sum(dim=2) > 0.5)
             mask_indices = torch.nonzero(bool_mask)[:,1] 
             
-            #单独分离inversion
             assert not (~bool_mask).all(), "mask is all false"
             assert not (bool_mask).all(), "mask is all true"
             attention_mask = self.create_attention_mask(L+512, mask_indices, device=mask.device)
@@ -150,7 +137,6 @@ class Flux_kv_edit(only_Flux):
         denoise_timesteps = get_schedule(opts.denoise_num_steps, inp["img"].shape[1], shift=(self.name != "flux-schnell"))
         denoise_timesteps = denoise_timesteps[opts.skip_step:]
         
-        # 加噪过程
         z0 = inp["img"].clone()        
         info['inverse'] = True
         zt, info = denoise_kv(self.model, **inp, timesteps=denoise_timesteps, guidance=opts.inversion_guidance, inverse=True, info=info)
@@ -161,7 +147,7 @@ class Flux_kv_edit(only_Flux):
         
         h = opts.height // 8
         w = opts.width // 8
-        L = h * w // 4 
+        
         mask = F.interpolate(mask, size=(h,w), mode='bilinear', align_corners=False)
         mask[mask > 0] = 1
         
@@ -182,15 +168,7 @@ class Flux_kv_edit(only_Flux):
             zt_noise = z0 *(1 - t) + noise * t
             inp_target["img"] = zt_noise[:, mask_indices,...]
         else:
-            img_name = str(info['t']) + '_' + 'img'
-            zt = info['feature'][img_name].to(zt.device)
             inp_target["img"] = zt[:, mask_indices,...]
-            
-        if opts.attn_scale != 0 and (~bool_mask).any():
-            attention_scale = self.create_attention_scale(L+512, mask_indices, device=mask.device,scale = opts.attn_scale)
-        else:
-            attention_scale = None
-        info['attention_scale'] = attention_scale
 
         info['inverse'] = False
         x, _ = denoise_kv(self.model, **inp_target, timesteps=denoise_timesteps, guidance=opts.denoise_guidance, inverse=False, info=info)
