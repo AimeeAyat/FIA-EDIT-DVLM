@@ -73,6 +73,8 @@ def run_inference(args):
             output_path = os.path.join(output_dir, output_path)
             if os.path.exists(output_path):
                 continue
+            gc.collect()
+            torch.cuda.empty_cache()
             x = model(inp, inp_target, mask, opts)
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
             torch.save(x, output_path)

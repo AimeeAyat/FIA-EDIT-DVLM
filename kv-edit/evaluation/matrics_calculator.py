@@ -305,11 +305,10 @@ class MetricsCalculator:
         
         self.clip_model, _, self.clip_preprocess = open_clip.create_model_and_transforms('ViT-L-14', pretrained='openai')
         # image reward model
-        if RM is not None:
-            self.imagereward_model = RM.load("ImageReward-v1.0")
-        else:
+        try:
+            self.imagereward_model = RM.load("ImageReward-v1.0") if RM is not None else None
+        except Exception:
             self.imagereward_model = None
-            print("Warning: ImageReward not available")
     
     def calculate_clip_similarity(self, img, txt, mask=None):
         from PIL import Image as PILImage
