@@ -49,7 +49,7 @@ def main():
 
     extractor = pie_features_extractor(device=args.device)
 
-    print(f"Extracting features -> {args.features_name}  (empty_source={args.empty_source})")
+    print(f"Extracting features → {args.features_name}  (empty_source={args.empty_source})")
 
     for batch in tqdm(dataloader):
         images, masks, source_prompt, target_prompt, output_path = batch
