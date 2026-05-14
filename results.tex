@@ -1,0 +1,214 @@
+\section{Results}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{output/step_28_skip_4_1.5_5.5/plots/1_overall_bar.png}
+    \caption{Single aggregate score for each of the 10 metrics across all 700 PIE-Bench
+    images for KV-Edit (ours). Blue bars indicate higher-is-better metrics (PSNR, SSIM,
+    CLIP scores, HPS, Aesthetic Score); red bars indicate lower-is-better metrics
+    (Structure Distance, LPIPS, MSE).}
+    \label{fig:overall_bar}
+\end{figure}
+
+Figure~\ref{fig:overall_bar} reports the aggregate performance of KV-Edit~\cite{zhu2025kvedit}
+across all 700 images of PIE-Bench~\cite{piebench2024}.
+Background preservation is strong across the board: a PSNR of 37.63\,dB, SSIM of 0.965,
+LPIPS of $7.98\times10^{-3}$, and MSE of $3.88\times10^{-4}$ confirm that pixels outside
+the edit mask are reconstructed with high fidelity, while a Structure Distance of
+$3.80\times10^{-4}$ indicates that global structural coherence is well maintained.
+Prompt alignment is competitive at a CLIP Target score of 23.17, though the within-mask
+CLIP Target (edit) score of 19.98 is notably lower, reflecting the added difficulty of
+aligning a localised region to a text description.
+Per-class breakdowns are given in Tables~\ref{tab:bg} and~\ref{tab:clip}.
+
+% ── Comparison with published baselines ──────────────────────────────────────
+\subsection{Comparison with Baselines}
+
+Table~\ref{tab:comparison} compares our KV-Edit run against the published baselines
+reported in the original paper~\cite{zhu2025kvedit}, using the same metric scaling
+(HPS$\times10^2$, LPIPS$\times10^3$, MSE$\times10^4$).
+Our implementation achieves \textbf{superior background preservation} relative to the
+paper's reported ``Ours'' row: PSNR improves by $+1.76$\,dB (37.63 vs.\ 35.87),
+LPIPS improves by $1.94\times10^{-3}$ (7.98 vs.\ 9.92), and MSE improves by
+$0.81\times10^{-4}$ (3.88 vs.\ 4.69).
+CLIP Target similarity also improves slightly (23.17 vs.\ 22.39).
+The HPS\,v2.1 score (24.92) and Aesthetic Score (6.35) are lower than the paper's values
+(27.21 and 6.49 respectively), consistent with our observation that the method operates
+close to the VAE$^*$ reconstruction regime, faithfully preserving background at the
+expense of generating high-perceptual-quality edits within the mask.
+Relative to all non-training baselines, KV-Edit achieves the best background preservation
+by a substantial margin.
+
+\begin{table}[t]
+\centering
+\caption{Comparison with published methods on PIE-Bench~\cite{piebench2024}.
+VAE$^*$ denotes the inherent reconstruction error through direct VAE reconstruction.
+NS indicates no skip step during inversion; RI indicates the reinitialization strategy.
+\textbf{Bold} and \underline{underline} denote the best and second-best results.}
+\label{tab:comparison}
+\setlength{\tabcolsep}{5pt}
+\small
+\begin{tabular}{lcccccc}
+\toprule
+\multirow{2}{*}{Method}
+  & \multicolumn{2}{c}{Image Quality}
+  & \multicolumn{3}{c}{Background Preservation}
+  & \multicolumn{1}{c}{Text Align} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-6}\cmidrule(lr){7-7}
+  & HPS$_{{\times}10^2}$$\uparrow$
+  & AS$\uparrow$
+  & PSNR$\uparrow$
+  & LPIPS$_{{\times}10^3}$$\downarrow$
+  & MSE$_{{\times}10^4}$$\downarrow$
+  & CLIP Sim$\uparrow$ \\
+\midrule
+VAE$^*$     & 24.93 & 6.37 & 37.65 &  7.93 &  3.86 & 19.69 \\
+\midrule
+P2P~\cite{hertz2022p2p}
+            & 25.40 & 6.27 & 17.86 & 208.43 & 219.22 & 22.24 \\
+MasaCtrl~\cite{cao2023masactrl}
+            & 23.46 & 5.91 & 22.20 & 105.74 &  86.15 & 20.83 \\
+RF Inv.~\cite{rfedi2024}
+            & \underline{27.99} & \textbf{6.74} & 20.20 & 179.73 & 139.85 & 21.71 \\
+RF Edit~\cite{rfedi2024}
+            & 27.60 & \underline{6.56} & 24.44 & 113.20 &  56.26 & 22.08 \\
+BrushEdit~\cite{brushedit2024}
+            & 25.81 & 6.17 & 32.16 &  17.22 &   8.46 & \underline{22.44} \\
+FLUX Fill~\cite{bfl2024}
+            & 25.76 & 6.31 & 32.53 &  25.59 &   8.55 & 22.40 \\
+\midrule
+KV-Edit (paper)~\cite{zhu2025kvedit}
+            & 27.21 & 6.49 & 35.87 &   9.92 &   4.69 & 22.39 \\
+KV-Edit+NS+RI~\cite{zhu2025kvedit}
+            & \textbf{28.05} & 6.40 & 33.30 &  14.80 &   7.45 & \textbf{23.62} \\
+\midrule
+\textbf{KV-Edit (ours)}
+            & 24.92 & 6.35 & \textbf{37.63} & \textbf{7.98} & \textbf{3.88} & 23.17 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ── Per-class background preservation ────────────────────────────────────────
+\subsection{Per-Class Analysis}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{output/step_28_skip_4_1.5_5.5/plots/2_class_heatmap.png}
+    \caption{Per-class performance heatmap for KV-Edit (ours) across all edit categories
+    and metrics. Green indicates better performance (normalised per metric column);
+    red indicates worse performance. Each cell shows the raw metric value.}
+    \label{fig:heatmap}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Per-class background preservation metrics for KV-Edit (ours).
+Best value in each column in bold.}
+\label{tab:bg}
+\setlength{\tabcolsep}{6pt}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Edit Class
+  & Struct.\ Dist.$\downarrow$
+  & PSNR$\uparrow$
+  & LPIPS$\downarrow$
+  & SSIM$\uparrow$ \\
+\midrule
+Random              & 0.000414 & 38.387 & 0.00793 & 0.963 \\
+Change Object       & 0.000225 & 37.280 & 0.00851 & 0.962 \\
+Add Object          & 0.000350 & 38.407 & 0.00701 & 0.972 \\
+Delete Object       & \textbf{0.000201} & 35.617 & 0.00989 & 0.956 \\
+Change Attr.\ (Content) & 0.000704 & \textbf{38.507} & 0.00766 & \textbf{0.973} \\
+Change Attr.\ (Pose)    & 0.000498 & 36.511 & 0.00921 & 0.957 \\
+Change Attr.\ (Color)   & 0.000636 & 36.916 & 0.00937 & 0.959 \\
+Change Attr.\ (Material)& 0.000234 & 40.818 & \textbf{0.00667} & \textbf{0.973} \\
+Change Background   & 0.000409 & 37.080 & 0.00554 & 0.972 \\
+\midrule
+\textbf{Overall}    & 0.000380 & 37.625 & 0.00798 & 0.965 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Per-class CLIP alignment metrics for KV-Edit (ours).
+Best value in each column in bold.}
+\label{tab:clip}
+\setlength{\tabcolsep}{5pt}
+\small
+\begin{tabular}{lccc}
+\toprule
+Edit Class
+  & CLIP Source$\uparrow$
+  & CLIP Target$\uparrow$
+  & CLIP Target (edit)$\uparrow$ \\
+\midrule
+Random              & 25.315 & 22.068 & 20.208 \\
+Change Object       & 26.219 & 21.719 & 17.421 \\
+Add Object          & 25.239 & 23.941 & 22.263 \\
+Delete Object       & 27.110 & 23.194 & 17.039 \\
+Change Attr.\ (Content) & 25.241 & 23.911 & 21.369 \\
+Change Attr.\ (Pose)    & \textbf{26.710} & \textbf{26.129} & 21.857 \\
+Change Attr.\ (Color)   & 26.354 & 23.946 & 19.564 \\
+Change Attr.\ (Material)& 25.489 & 23.840 & 22.221 \\
+Change Background   & 25.497 & 23.148 & 20.280 \\
+\midrule
+\textbf{Overall}    & 25.840 & 23.166 & 19.983 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}[b]{0.49\linewidth}
+        \includegraphics[width=\linewidth]{output/step_28_skip_4_1.5_5.5/plots/3_distributions.png}
+        \caption{Per-image score distributions.}
+        \label{fig:boxplot}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.49\linewidth}
+        \includegraphics[width=\linewidth]{output/step_28_skip_4_1.5_5.5/plots/4_radar.png}
+        \caption{Normalised radar chart by edit class.}
+        \label{fig:radar}
+    \end{subfigure}
+    \caption{Distribution and per-class radar analysis for KV-Edit (ours).
+    \textbf{Left:} box plots showing the spread of per-image scores across all metrics;
+    wider boxes indicate higher variance across samples.
+    \textbf{Right:} radar chart with per-axis scores normalised to $[0,1]$
+    (1 = best across classes); the dashed black line shows the overall mean.}
+    \label{fig:dist_radar}
+\end{figure}
+
+% ── Discussion ───────────────────────────────────────────────────────────────
+\subsection{Discussion}
+
+The KV-Edit baseline establishes a strong floor for background preservation, with the
+per-class breakdown revealing several key patterns.
+On background preservation (Table~\ref{tab:bg}), Change Attribute (Material) achieves
+the highest PSNR (40.82\,dB), indicating that material-level edits—which localise to
+surface appearance rather than geometry—minimally disturb surrounding structure.
+Delete Object yields the lowest PSNR (35.62\,dB), consistent with the expectation
+that object removal requires the model to hallucinate plausible background content,
+introducing structural deviation.
+Change Attribute (Content) and Material exhibit the highest SSIM ($0.973$), confirming
+that attribute edits are the least structurally disruptive edit type.
+
+On text alignment (Table~\ref{tab:clip}), the consistent gap between global CLIP Target
+(23.17) and within-mask CLIP Target (edit) (19.98) echoes the pattern observed for
+FIA-Edit in the baseline analysis: text-only conditioning provides category-level
+guidance but fails to enforce instance-level fidelity within the edited region.
+This gap is most pronounced for Delete Object (17.04) and Change Object (17.42),
+the two categories that require wholesale replacement of an object with a semantically
+different one.
+Change Attribute (Pose) achieves the highest CLIP Target score (26.13), indicating that
+pose edits are most effectively guided by text descriptions, likely because pose is
+a more directly text-encodable attribute than object identity.
+
+Taken together, these results confirm the observation from the baseline FIA-Edit
+analysis: background preservation metrics can flatter an editing method's apparent
+performance while concealing weak alignment within the edit region.
+The within-mask CLIP Target (edit) score of 19.98—three points below the global CLIP
+Target—precisely quantifies this limitation and motivates the reference-guided
+extension described in Section~3, where visual conditioning replaces text-only
+foreground guidance to close this fidelity gap.

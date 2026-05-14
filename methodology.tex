@@ -1,270 +1,316 @@
 \section{Methodology}
 
-We present \textbf{Flux \& Key}, a training-free, reference-guided image editing pipeline for
-multi-modal diffusion transformers. Given a source image
-$\mathbf{I}_A \in \mathbb{R}^{H \times W \times 3}$, a reference image
-$\mathbf{I}_B \in \mathbb{R}^{H' \times W' \times 3}$ containing the object of interest, a
-binary spatial mask $\mathbf{M}_A \in \{0,1\}^{H \times W}$ delineating the edit region in
-$\mathbf{I}_A$, and a text description $\mathcal{T}$, the goal is to produce an edited image
-$\hat{\mathbf{I}}$ such that:
-(i)~the visual identity of the specific object in $\mathbf{I}_B$ is faithfully transferred into
-the masked region;
+We present \textbf{Flux \& Key}, a training-free, reference-guided image editing pipeline
+for multi-modal diffusion transformers.
+Given a source image $\mathbf{I}_A \in \mathbb{R}^{H \times W \times 3}$, a reference image
+$\mathbf{I}_B \in \mathbb{R}^{H' \times W' \times 3}$ containing the specific object to be
+transferred, a binary spatial mask $\mathbf{M}_A \in \{0,1\}^{H \times W}$ delineating the
+edit region, and a text prompt $\mathcal{T}$, our goal is to produce an edited image
+$\hat{\mathbf{I}}$ satisfying three constraints simultaneously:
+(i)~the visual identity of the specific object in $\mathbf{I}_B$ is faithfully transferred
+into the masked region;
 (ii)~all pixels outside $\mathbf{M}_A$ are reconstructed with high fidelity; and
 (iii)~no model fine-tuning or iterative ODE inversion is required.
-The pipeline consists of five stages detailed below.
+The pipeline is summarised in Figure~\ref{fig:pipeline} and detailed below.
 
-% -----------------------------------------------------------------------
+% ---------------------------------------------------------------------------
 \subsection{Reference Object Extraction}
-% -----------------------------------------------------------------------
+% ---------------------------------------------------------------------------
 
-We first isolate the target object in $\mathbf{I}_B$ using a grounded segmentation module.
-Grounding DINO~\cite{liu2023grounding} localises the object region via text-conditioned
-bounding-box prediction; SAM~2~\cite{ravi2024sam2} then produces a precise binary object
-mask $\mathbf{M}_B$.
-The reference crop is obtained as
+We first isolate the target object in $\mathbf{I}_B$ using Grounding
+DINO~\cite{liu2023grounding}, which localises the object via text-conditioned
+bounding-box detection.
+The detected bounding box defines the crop region:
 \begin{equation}
-    \mathbf{I}_B^{\text{crop}} = \mathbf{I}_B \odot \mathbf{M}_B,
+    \mathbf{I}_B^{\text{crop}} = \operatorname{Crop}\!\left(\mathbf{I}_B,\;
+        \operatorname{bbox}_{\text{DINO}}(\mathbf{I}_B, \mathcal{T})\right).
     \label{eq:crop}
 \end{equation}
-where $\odot$ denotes element-wise multiplication.
-To address the scale mismatch between the reference object and the target region we resize
+To address the scale mismatch between the reference object and the target region, we resize
 $\mathbf{I}_B^{\text{crop}}$ to match the bounding-box extent of $\mathbf{M}_A$:
 \begin{equation}
     \mathbf{I}_B^{\text{aligned}} =
-        \operatorname{Resize}\!\left(\mathbf{I}_B^{\text{crop}},\;
-                                      \operatorname{bbox}(\mathbf{M}_A)\right).
+        \operatorname{Resize}\!\left(
+            \mathbf{I}_B^{\text{crop}},\;
+            \operatorname{bbox}(\mathbf{M}_A)
+        \right).
     \label{eq:resize}
 \end{equation}
-Critically, rather than encoding $\mathbf{I}_B^{\text{aligned}}$ through a CLIP
-encoder---which is optimised for semantic similarity and discards high-frequency instance
-detail~\cite{radford2021clip}---we pass it directly through FLUX's VAE encoder $\mathcal{E}$,
-preserving the full spatial and spectral structure of the reference:
+We then encode $\mathbf{I}_B^{\text{aligned}}$ through the VAE encoder $\mathcal{E}$,
+preserving spatial and spectral structure:
 \begin{equation}
-    \mathbf{z}_B = \mathcal{E}\!\left(\mathbf{I}_B^{\text{aligned}}\right)
-        \in \mathbb{R}^{h_A \times w_A \times C},
-    \label{eq:ref_encode}
+    \mathbf{z}_B = \mathcal{E}\!\left(\mathbf{I}_B^{\text{aligned}}\right),
+    \label{eq:ref_vae}
 \end{equation}
-where $h_A, w_A$ are the spatial dimensions of the edit-region latent.
+and similarly encode the source:
+\begin{equation}
+    \mathbf{z}_A = \mathcal{E}(\mathbf{I}_A).
+    \label{eq:src_vae}
+\end{equation}
+Note that we deliberately avoid encoding $\mathbf{I}_B$ through CLIP, which is optimised
+for semantic similarity and discards the high-frequency instance detail — exact texture,
+surface finish, edge geometry — that distinguishes a specific object from a generic
+category~\cite{radford2021clip}.
 
-% -----------------------------------------------------------------------
+% ---------------------------------------------------------------------------
+\subsection{Dual-Stream Feature Extraction (Two Clean Forward Passes)}
+% ---------------------------------------------------------------------------
+
+In order to obtain transformer-level attention features from both $\mathbf{I}_A$ and
+$\mathbf{I}_B^{\text{aligned}}$, we perform two \emph{clean} (noise-free) forward passes
+through the frozen FLUX transformer $f_\theta$ at $t = 0$.
+No inversion is performed; these are standard feed-forward evaluations on clean latents.
+
+\paragraph{Source stream.}
+A forward pass on $\mathbf{z}_A$ yields background key-value features for all $L$ blocks:
+\begin{equation}
+    \left\{
+        \mathbf{K}_{\mathrm{src}}^{(\ell)},\;
+        \mathbf{V}_{\mathrm{src}}^{(\ell)}
+    \right\}_{\ell=1}^{L}
+    = f_\theta(\mathbf{z}_A)\big|_{t=0}.
+    \label{eq:src_feat}
+\end{equation}
+
+\paragraph{Reference stream.}
+A forward pass on $\mathbf{z}_B$ yields reference key-value features:
+\begin{equation}
+    \left\{
+        \mathbf{K}_{\mathrm{ref}}^{(\ell)},\;
+        \mathbf{V}_{\mathrm{ref}}^{(\ell)}
+    \right\}_{\ell=1}^{L}
+    = f_\theta(\mathbf{z}_B)\big|_{t=0}.
+    \label{eq:ref_feat}
+\end{equation}
+In principle, the 2D rotary position embeddings (RoPE) of the reference tokens could be
+re-indexed to the spatial coordinates of the foreground region
+$\mathcal{F} = \{i : \mathbf{M}_A^{(i)} = 1\}$ within Image~A's latent grid, so that
+reference features carry position context aligned to the insertion site.
+In our current implementation we use standard RoPE coordinates; RoPE re-indexing is left
+as a planned improvement (see Ablation Plan, Section~\ref{sec:ablation}).
+The total cost of Stages~1--2 is two forward passes (equivalent to two inversion steps),
+after which no further passes on either source or reference are needed.
+
+% ---------------------------------------------------------------------------
+\subsection{Selective Stochastic Inversion (SSI)}
+% ---------------------------------------------------------------------------
+
+We need to initialise the denoising trajectory differently for foreground and background
+tokens.
+Background tokens should start from their clean latent values so that the frequency lock
+(Section~\ref{sec:bg_lock}) can exactly reproduce the source.
+Foreground tokens need sufficient freedom to regenerate a structurally different object.
+
+\textbf{FLUX uses rectified flow}, not the DDPM noise schedule.
+The forward noising process is:
+\begin{equation}
+    \mathbf{z}_t = (1 - t)\,\mathbf{z}_0 + t\,\boldsymbol{\varepsilon},
+    \quad \boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}),
+    \quad t \in [0,1].
+    \label{eq:flow_noise}
+\end{equation}
+We apply SSI exclusively to the foreground token subset
+$\mathbf{z}_A^{\mathcal{F}}$ at a chosen stochasticity level $\tau$:
+\begin{align}
+    \tilde{\mathbf{z}}_\tau^{\mathcal{F}}
+        &= (1-\tau)\,\mathbf{z}_A^{\mathcal{F}} + \tau\,\boldsymbol{\varepsilon},
+    \label{eq:ssi} \\
+    \tilde{\mathbf{z}}_0^{\mathcal{B}}
+        &= \mathbf{z}_A^{\mathcal{B}},
+    \label{eq:bg_clean}
+\end{align}
+where $\tau \in [0,1]$ controls edit aggressiveness.
+Background tokens are kept clean ($\tau=0$) and are never perturbed.
+Unlike FSI-Edit~\cite{yang2026fsi}, which injects noise globally, SSI is spatially confined
+to $\mathcal{F}$, eliminating mask-leakage artefacts by construction.
+Denoising then begins from timestep $\tau$ for the foreground and from $t=0$
+for the background (which the frequency lock will handle).
+
+The stochasticity level $\tau$ is calibrated per edit category:
+\begin{itemize}[nosep]
+    \item Wholesale replacement (change object, add object): $\tau \in [0.7, 0.9]$
+    \item Attribute modification (colour, texture, pose): $\tau \in [0.3, 0.5]$
+\end{itemize}
+
+% ---------------------------------------------------------------------------
 \subsection{Inversion-Free Background Preservation via Frequency Locking}
-% -----------------------------------------------------------------------
+\label{sec:bg_lock}
+% ---------------------------------------------------------------------------
 
-Rather than caching background key-value pairs from a costly DDIM inversion
-pass~\cite{zhu2025kvedit}, we preserve the background through a single clean forward pass,
-maintaining the pipeline's inversion-free character throughout.
+For background tokens $\mathcal{B} = \{i : \mathbf{M}_A^{(i)} = 0\}$, we apply
+FIA-Edit-style frequency fusion~\cite{yang2026fia} \emph{masked to $\mathcal{B}$},
+replacing KV-Edit's hard inversion-based cache with a soft frequency lock.
 
-\paragraph{Source feature extraction.}
-We compute the clean latent $\mathbf{z}_A = \mathcal{E}(\mathbf{I}_A)$ and perform one forward
-pass through the frozen FLUX transformer $f_\theta$ at $t=0$ to extract source attention
-features at each block $\ell$:
+We define complementary high- and low-pass spectral filters.
+For a $512\times512$ image, the FLUX VAE produces $64\times64$ latents (8$\times$
+downsampling); $2\times2$ patch packing reduces this to a $32\times32 = 1024$-token sequence.
+We apply the frequency lock along this token dimension.
+Let $\mathcal{F}_{1D}$ denote the 1-D DFT along the token sequence axis and $\gamma$ the
+fraction of low-frequency bins assigned to the target:
 \begin{equation}
-    \left\{\mathbf{K}_{\text{src}}^{(\ell)},\;
-           \mathbf{V}_{\text{src}}^{(\ell)}\right\}_{\ell=1}^{L}
-    = f_\theta(\mathbf{z}_A).
-    \label{eq:src_features}
-\end{equation}
-
-\paragraph{Frequency-locked background attention.}
-During denoising, at each timestep and block $\ell$, let
-$\mathbf{K}_{\text{tgt}}^{(\ell)}, \mathbf{V}_{\text{tgt}}^{(\ell)}$
-be the keys and values produced from the current noisy latent.
-We define complementary high- and low-pass frequency filters
-\begin{equation}
-    \mathcal{H}(\hat{\mathbf{X}})_{u,v} =
-        \hat{\mathbf{X}}_{u,v}\cdot\mathbf{1}\!\left[\|(u,v)\| > \gamma\right],
-    \qquad
-    \mathcal{L}(\hat{\mathbf{X}})_{u,v} =
-        \hat{\mathbf{X}}_{u,v}\cdot\mathbf{1}\!\left[\|(u,v)\| \leq \gamma\right],
+    \mathcal{H}(\hat{\mathbf{X}})_{k}
+        = \hat{\mathbf{X}}_{k} \cdot \mathbf{1}[k > \lfloor\gamma K\rfloor],
+    \quad
+    \mathcal{L}(\hat{\mathbf{X}})_{k}
+        = \hat{\mathbf{X}}_{k} \cdot \mathbf{1}[k \leq \lfloor\gamma K\rfloor],
     \label{eq:filters}
 \end{equation}
-where $\mathcal{F}$ denotes the 2-D Discrete Fourier Transform and $\gamma$ is the
-frequency-split threshold.
-For background tokens $\mathcal{B} = \{i : \mathbf{M}_A^{(i)} = 0\}$ we construct
+where $K$ is the total number of frequency bins.
+At transformer block $\ell$, during denoising at timestep $t$, background keys and values
+are constructed as:
 \begin{align}
     \mathbf{K}_{\mathcal{B}}^{(\ell)}
-        &= \mathcal{F}^{-1}\!\left(
-              \mathcal{H}\!\left(\mathcal{F}\!\left(\mathbf{K}_{\text{src}}^{(\ell)}\right)\right)
-            + \mathcal{L}\!\left(\mathcal{F}\!\left(\mathbf{K}_{\text{tgt}}^{(\ell)}\right)\right)
-           \right)\!\bigg|_{\mathcal{B}},
+        &= \mathcal{F}_{1D}^{-1}\!\!\left(
+              \mathcal{H}\!\left(\mathcal{F}_{1D}(\mathbf{K}_{\mathrm{src}}^{(\ell)})\right)
+            + \mathcal{L}\!\left(\mathcal{F}_{1D}(\mathbf{K}_{\mathrm{tgt}}^{(\ell)})\right)
+           \right)\bigg|_{\mathcal{B}},
     \label{eq:bg_K} \\
     \mathbf{V}_{\mathcal{B}}^{(\ell)}
-        &= \mathcal{F}^{-1}\!\left(
-              \mathcal{H}\!\left(\mathcal{F}\!\left(\mathbf{V}_{\text{src}}^{(\ell)}\right)\right)
-            + \mathcal{L}\!\left(\mathcal{F}\!\left(\mathbf{V}_{\text{tgt}}^{(\ell)}\right)\right)
-           \right)\!\bigg|_{\mathcal{B}}.
+        &= \mathcal{F}_{1D}^{-1}\!\!\left(
+              \mathcal{H}\!\left(\mathcal{F}_{1D}(\mathbf{V}_{\mathrm{src}}^{(\ell)})\right)
+            + \mathcal{L}\!\left(\mathcal{F}_{1D}(\mathbf{V}_{\mathrm{tgt}}^{(\ell)})\right)
+           \right)\bigg|_{\mathcal{B}},
     \label{eq:bg_V}
 \end{align}
+where $\mathbf{K}_{\mathrm{tgt}}^{(\ell)}, \mathbf{V}_{\mathrm{tgt}}^{(\ell)}$ are computed
+from the current noisy latent $\mathbf{z}_t$ at each denoising step.
+Before mixing, we normalise $\mathbf{K}_{\mathrm{src}}$ to match the per-token
+$\ell_2$ norm of $\mathbf{K}_{\mathrm{tgt}}$, preventing phase-amplitude interference
+caused by the different noise levels of the two signals.
 
-High-frequency components of the \emph{source} keys and values encode the structural layout,
-edge geometry, and fine texture of the background, locking these signals in place without any
-inversion.
-Low-frequency components from the \emph{target} branch carry global illumination and semantic
-context, allowing the background to subtly adapt its lighting when a visually different object
-is inserted---a property that hard KV-freezing~\cite{zhu2025kvedit} suppresses but that
-photorealistic compositing requires.
-Unlike FIA-Edit~\cite{yang2026fia}, which applies the same frequency fusion over the entire
-image without a mask, our formulation confines the lock exclusively to $\mathcal{B}$ tokens,
-eliminating edit-content bleed into the background by construction.
-
-% -----------------------------------------------------------------------
-\subsection{Selective Stochastic Inversion}
-% -----------------------------------------------------------------------
-
-Full DDIM inversion applies the reverse ODE trajectory to the entire image, accumulating
-numerical error that corrupts even unedited regions~\cite{wallace2023edict}.
-Inversion-free methods avoid this cost but give the model insufficient freedom to regenerate
-a structurally different object in the foreground.
-We resolve this tension with \textbf{Selective Stochastic Inversion (SSI)}, which applies
-controlled forward-direction noise exclusively to masked tokens.
-
-Let $\mathbf{z}_A^{\mathcal{F}}$ denote the foreground token subset of $\mathbf{z}_A$,
-where $\mathcal{F} = \{i : \mathbf{M}_A^{(i)} = 1\}$.
-SSI initialises the denoising trajectory for the edit region as
+We also apply a time-aware schedule to $\gamma$: at high noise levels the source and target
+features are at very different scales, so we let $\gamma$ approach $1$ (target-only) and
+tighten the lock gradually as denoising progresses:
 \begin{equation}
-    \tilde{\mathbf{z}}_0^{\mathcal{F}}
-        = \sqrt{1-\tau^2}\;\mathbf{z}_A^{\mathcal{F}} + \tau\,\boldsymbol{\varepsilon},
-    \qquad \boldsymbol{\varepsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}),
-    \label{eq:ssi}
+    \gamma_t = \gamma + (1 - \gamma)\,t,
+    \label{eq:gamma_schedule}
 \end{equation}
-where $\tau \in [0, 1]$ is the \emph{stochasticity coefficient} governing edit aggressiveness.
-Background tokens are initialised from the clean source latent,
-$\tilde{\mathbf{z}}_0^{\mathcal{B}} = \mathbf{z}_A^{\mathcal{B}}$, and are never perturbed.
-Unlike FSI-Edit~\cite{yang2026fsi}, which injects noise globally and risks content bleeding
-beyond the edit boundary, SSI is spatially confined to $\mathcal{F}$, eliminating
-mask-leakage artefacts by construction.
+where $t \in [0, 1]$ is the current denoising timestep.
+At $t \approx 1$, $\gamma_t \approx 1$ (no source injection); at $t = 0$, $\gamma_t = \gamma$
+(full frequency lock).
 
-The stochasticity coefficient $\tau$ is calibrated per edit category: for tasks requiring
-wholesale object replacement (e.g., change object, add object),
-$\tau \in [0.7, 0.9]$ affords sufficient regeneration freedom; for attribute-level
-modifications (e.g., change colour, change texture),
-$\tau \in [0.3, 0.5]$ preserves more source structure.
+\textit{Rationale.}
+High-frequency source components encode edge geometry, texture, and fine spatial structure
+of the background — the signals that define its visual identity.
+Low-frequency target components carry global illumination and semantic context, permitting
+subtle lighting adaptation consistent with the inserted object.
+Confining the fusion to $\mathcal{B}$ (rather than the full image as in FIA-Edit) prevents
+reference-object features from contaminating background tokens.
 
-% -----------------------------------------------------------------------
-\subsection{Spectral-Aware Dual-Source KV Injection}
-% -----------------------------------------------------------------------
+% ---------------------------------------------------------------------------
+\subsection{Reference-Conditioned Foreground Injection}
+% ---------------------------------------------------------------------------
 
-The central architectural contribution is a mechanism for injecting reference appearance into
-the foreground attention stream while preserving the spatial layout prescribed by the text
-prompt.
-At transformer block $\ell$, let
-$\mathbf{K}_{\text{text}}^{(\ell)}, \mathbf{V}_{\text{text}}^{(\ell)}$ denote the keys and
-values produced from the text branch, and
-$\mathbf{K}_{\text{ref}}^{(\ell)}, \mathbf{V}_{\text{ref}}^{(\ell)}$ those obtained by
-projecting the reference latent $\mathbf{z}_B$ through the same QKV weight matrices.
-We fuse the two sources in the frequency domain:
+For foreground tokens $\mathcal{F}$, we replace the text-only KV stream of KV-Edit
+with a soft interpolation between the text branch and the reference branch:
 \begin{align}
-    \tilde{\mathbf{K}}^{(\ell)}
-        &= \mathcal{F}^{-1}\!\left(
-              \alpha^{(\ell)}\,
-              \mathcal{F}\!\left(\mathbf{K}_{\text{text}}^{(\ell)}\right)
-            + \left(1 - \alpha^{(\ell)}\right)
-              \mathcal{F}\!\left(\mathbf{K}_{\text{ref}}^{(\ell)}\right)
-           \right),
+    \tilde{\mathbf{K}}_{\mathcal{F}}^{(\ell)}
+        &= \alpha^{(\ell)}\,\mathbf{K}_{\mathrm{text}}^{(\ell)}
+         + \left(1 - \alpha^{(\ell)}\right)\mathbf{K}_{\mathrm{ref}}^{(\ell)},
     \label{eq:fg_K} \\
-    \tilde{\mathbf{V}}^{(\ell)}
-        &= \mathcal{F}^{-1}\!\left(
-              \beta^{(\ell)}\,
-              \mathcal{F}\!\left(\mathbf{V}_{\text{text}}^{(\ell)}\right)
-            + \left(1 - \beta^{(\ell)}\right)
-              \mathcal{F}\!\left(\mathbf{V}_{\text{ref}}^{(\ell)}\right)
-           \right),
+    \tilde{\mathbf{V}}_{\mathcal{F}}^{(\ell)}
+        &= \beta^{(\ell)}\,\mathbf{V}_{\mathrm{text}}^{(\ell)}
+         + \left(1 - \beta^{(\ell)}\right)\mathbf{V}_{\mathrm{ref}}^{(\ell)},
     \label{eq:fg_V}
 \end{align}
-where $\alpha^{(\ell)}, \beta^{(\ell)} \in [0,1]$ are layer-wise mixing coefficients.
+where $\mathbf{K}_{\mathrm{text}}^{(\ell)}, \mathbf{V}_{\mathrm{text}}^{(\ell)}$ are
+produced from the text embedding $\mathcal{T}$, and
+$\alpha^{(\ell)}, \beta^{(\ell)} \in [0,1]$ are layer-wise mixing coefficients.
 
-\paragraph{Frequency decomposition rationale.}
-The low-frequency spectrum of $\mathbf{K}_{\text{text}}$ encodes coarse spatial layout and
-semantic structure---information that governs scale, pose, and placement of the inserted
-object.
-The high-frequency spectrum of $\mathbf{K}_{\text{ref}}$ encodes edge sharpness, surface
-texture, and fine geometric detail that distinguish one physical instance from another.
-Naive convex combination in feature space conflates these orthogonal signals; FFT mixing
-decouples them, allowing the text branch to guide layout while the reference branch
-contributes appearance fidelity.
-
-\paragraph{Layer-wise scheduling.}
-We adopt a linearly decaying schedule for $\alpha^{(\ell)}$:
+\paragraph{Layer-wise schedule.}
+Early transformer blocks govern global layout and pose; late blocks refine surface
+appearance and fine detail~\cite{yang2026fia}.
+We adopt a linearly decaying schedule that makes early blocks text-dominant
+(preserving spatial structure from $\mathcal{T}$) and late blocks reference-dominant
+(sharpening instance-specific detail from $\mathbf{I}_B$):
 \begin{equation}
     \alpha^{(\ell)}
-        = \alpha_{\max} - \frac{\ell}{L}
-          \left(\alpha_{\max} - \alpha_{\min}\right),
+        = \alpha_{\max} - \frac{\ell}{L}\left(\alpha_{\max} - \alpha_{\min}\right),
     \label{eq:schedule}
 \end{equation}
-with $\alpha_{\max} = 0.8$ and $\alpha_{\min} = 0.2$.
-Early blocks (small $\ell$) are text-dominant, preserving global structural layout; late
-blocks (large $\ell$) are reference-dominant, sharpening instance-specific appearance.
-The schedule for $\beta^{(\ell)}$ mirrors Eq.~\eqref{eq:schedule}.
+with $\alpha_{\max} = 0.8$, $\alpha_{\min} = 0.2$; $\beta^{(\ell)}$ follows the same
+schedule.
+These values are initial estimates subject to ablation (Section~\ref{sec:ablation}).
 
-The full per-block attention for foreground tokens is then
+The per-block attention for foreground tokens is:
 \begin{equation}
     \mathbf{A}_{\mathcal{F}}^{(\ell)}
         = \operatorname{Softmax}\!\!\left(
               \frac{\mathbf{Q}_{\mathcal{F}}^{(\ell)}\,
-                    \tilde{\mathbf{K}}^{(\ell)\top}}{\sqrt{d}}
-          \right)\tilde{\mathbf{V}}^{(\ell)}.
+                    \tilde{\mathbf{K}}_{\mathcal{F}}^{(\ell)\top}}{\sqrt{d}}
+          \right)\tilde{\mathbf{V}}_{\mathcal{F}}^{(\ell)}.
     \label{eq:fg_attn}
 \end{equation}
-Background tokens attend exclusively to
-$\{\mathbf{K}_{\mathcal{B}}^{(\ell)}, \mathbf{V}_{\mathcal{B}}^{(\ell)}\}$
-from Eqs.~\eqref{eq:bg_K}--\eqref{eq:bg_V}, and the two streams are never mixed.
+Background and foreground attention streams are disjoint: background tokens never attend
+to foreground or reference features, and vice versa.
 
-% -----------------------------------------------------------------------
-\subsection{Position Embedding Re-indexing}
-% -----------------------------------------------------------------------
-
-The reference crop $\mathbf{I}_B^{\text{aligned}}$ is encoded at an arbitrary absolute
-position in its own coordinate frame.
-To ensure spatial coherence with the target region we re-index its 2-D rotary position
-embeddings (RoPE) to match the token-grid coordinates of $\mathcal{F}$ within Image~A:
+\paragraph{Remark on clean vs.\ noisy reference features.}
+Both $\mathbf{K}_{\mathrm{src}}^{(\ell)}$ and $\mathbf{K}_{\mathrm{ref}}^{(\ell)}$ are
+computed from clean latents ($t=0$), while the query and target features during denoising
+are computed from noisy latents at timestep $t$.
+This domain mismatch is shared with FIA-Edit, which argues that high-frequency structural
+signals are largely invariant to the noise level.
+For the foreground interpolation we mitigate this by conditioning the mixing weight
+$\alpha^{(\ell)}$ on $t$: at early timesteps (large $t$) the reference weight is
+attenuated to avoid imposing clean-domain structure prematurely, with full reference
+injection at $t \approx 0$:
 \begin{equation}
-    \mathbf{pe}_{\text{ref}}^{(i)}
-        = \operatorname{RoPE}\!\left(
-              \operatorname{row}\!\left(\mathcal{F}^{(i)}\right),\;
-              \operatorname{col}\!\left(\mathcal{F}^{(i)}\right)
-          \right),
-    \label{eq:rope}
+    \alpha^{(\ell)}_t = \alpha^{(\ell)} + (1 - \alpha^{(\ell)})\,t.
+    \label{eq:time_schedule}
 \end{equation}
-where $\bigl(\operatorname{row}(\mathcal{F}^{(i)}), \operatorname{col}(\mathcal{F}^{(i)})\bigr)$
-are the 2-D grid indices of the $i$-th foreground token in Image~A's full latent.
-This resolves spatial inconsistencies arising from scale mismatch without any explicit affine
-transformation.
 
-% -----------------------------------------------------------------------
-\subsection{Inference and Post-Processing}
-% -----------------------------------------------------------------------
+% ---------------------------------------------------------------------------
+\subsection{Inference Algorithm}
+% ---------------------------------------------------------------------------
 
-The complete denoising loop proceeds as follows.
-At each timestep~$t$ and transformer block~$\ell$:
-\begin{enumerate}
-    \item Background tokens attend to frequency-locked
-          $\{\mathbf{K}_{\mathcal{B}}^{(\ell)}, \mathbf{V}_{\mathcal{B}}^{(\ell)}\}$
-          (Eqs.~\eqref{eq:bg_K}--\eqref{eq:bg_V}).
-    \item Foreground tokens attend to spectral-mixed
-          $\{\tilde{\mathbf{K}}^{(\ell)}, \tilde{\mathbf{V}}^{(\ell)}\}$
-          (Eqs.~\eqref{eq:fg_K}--\eqref{eq:fg_V}).
-    \item The denoised latent is decoded by the VAE decoder $\mathcal{D}$ at the final step.
+The complete pipeline requires no ODE inversion and proceeds as follows:
+
+\begin{enumerate}[leftmargin=*, nosep]
+    \item \textbf{Extract reference:} Grounded-DINO + SAM~2 $\to$
+          $\mathbf{I}_B^{\text{aligned}}$.
+    \item \textbf{Encode:} $\mathbf{z}_A = \mathcal{E}(\mathbf{I}_A)$;\quad
+          $\mathbf{z}_B = \mathcal{E}(\mathbf{I}_B^{\text{aligned}})$.
+    \item \textbf{Source forward pass} (clean, $t=0$):
+          extract $\{\mathbf{K}_{\mathrm{src}}^{(\ell)}, \mathbf{V}_{\mathrm{src}}^{(\ell)}\}$.
+    \item \textbf{Reference forward pass} (clean, $t=0$):
+          extract $\{\mathbf{K}_{\mathrm{ref}}^{(\ell)}, \mathbf{V}_{\mathrm{ref}}^{(\ell)}\}$.
+    \item \textbf{SSI:}
+          $\tilde{\mathbf{z}}_\tau^{\mathcal{F}} = (1-\tau)\mathbf{z}_A^{\mathcal{F}}
+          + \tau\boldsymbol{\varepsilon}$;\quad
+          $\tilde{\mathbf{z}}_0^{\mathcal{B}} = \mathbf{z}_A^{\mathcal{B}}$.
+    \item \textbf{Denoising} from $t=\tau \to 0$: at each step and block $\ell$,
+          background tokens use frequency-locked KVs
+          (Eqs.~\ref{eq:bg_K}--\ref{eq:bg_V});
+          foreground tokens use reference-interpolated KVs
+          (Eqs.~\ref{eq:fg_K}--\ref{eq:fg_attn}).
+    \item \textbf{Decode:} $\hat{\mathbf{I}} = \mathcal{D}(\mathbf{z}_{\text{final}})$.
 \end{enumerate}
 
-\paragraph{Lightweight harmonisation.}
-A final post-processing step aligns the colour statistics of the decoded edit region with the
-local neighbourhood of $\mathbf{M}_A$ in $\mathbf{I}_A$ via histogram matching, correcting
-residual lighting inconsistencies introduced by the domain gap between
-$\mathbf{I}_A$ and $\mathbf{I}_B$:
-\begin{equation}
-    \hat{\mathbf{I}}^{\mathcal{F}}
-        = \operatorname{HistMatch}\!\left(
-              \mathcal{D}(\mathbf{z}_{\text{final}})^{\mathcal{F}},\;
-              \mathbf{I}_A^{\mathcal{N}(\mathbf{M}_A)}
-          \right),
-    \label{eq:histmatch}
-\end{equation}
-where $\mathbf{I}_A^{\mathcal{N}(\mathbf{M}_A)}$ denotes the pixels in $\mathbf{I}_A$
-within a neighbourhood of the mask boundary.
-
 \paragraph{Computational complexity.}
-The method requires two forward passes (one on $\mathbf{I}_A$, one on
-$\mathbf{I}_B^{\text{aligned}}$) plus $T$ denoising steps each with two FFT operations per
-block, each of complexity $\mathcal{O}(N \log N)$ where $N = |\mathcal{F}|$.
+The method adds two clean forward passes (Steps~3--4) relative to standard text-guided
+inference, plus $\mathcal{O}(N \log N)$ FFT operations per block per denoising step
+(where $N = 32 \times 32 = 1024$ tokens after $2\times2$ patch packing).
 No ODE inversion is performed at any stage.
-The overall pipeline is summarised in Figure~\ref{fig:pipeline}.
+
+% ---------------------------------------------------------------------------
+\subsection{Ablation Plan}
+\label{sec:ablation}
+% ---------------------------------------------------------------------------
+
+To isolate the contribution of each component we plan the following ablations:
+
+\begin{enumerate}[nosep]
+    \item \textbf{Background lock:} hard KV-cache (KV-Edit) vs.\ frequency lock (ours).
+    \item \textbf{Foreground conditioning:} text-only vs.\ reference-only
+          ($\alpha=0$) vs.\ interpolation (ours, $\alpha=0.5$) vs.\ full schedule.
+    \item \textbf{SSI level:} $\tau \in \{0.3, 0.5, 0.7, 0.9\}$.
+    \item \textbf{Mixing schedule:} constant $\alpha$ vs.\ layer-wise
+          (Eq.~\ref{eq:schedule}) vs.\ layer+time-aware
+          (Eq.~\ref{eq:time_schedule}).
+    \item \textbf{Reference encoding:} CLIP~\cite{radford2021clip}
+          vs.\ DINOv2~\cite{oquab2023dinov2} vs.\ FLUX-VAE + transformer (ours).
+    \item \textbf{RoPE re-indexing:} standard coordinates vs.\ re-indexed to
+          foreground mask positions.
+    \item \textbf{Frequency filter dimensionality:} 1-D token-sequence DFT (current)
+          vs.\ 2-D spatial DFT on the $32\times32$ latent grid.
+\end{enumerate}
