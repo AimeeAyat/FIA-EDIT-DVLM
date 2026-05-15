@@ -121,6 +121,7 @@ def run_edit_v3a(source_path, ref_aligned_path, json_path, key,
                  guidance: float     = 3.5,
                  use_rembg: bool     = True,
                  offload: bool       = False,
+                 low_vram: bool      = False,
                  device: str         = "cuda",
                  out_dir: str        = "test_output/flux_key_v3a/",
                  ae=None, model=None, t5=None, clip_enc=None):
@@ -135,10 +136,11 @@ def run_edit_v3a(source_path, ref_aligned_path, json_path, key,
     torch.backends.cuda.enable_math_sdp(True)
 
     def _on(m):
-        if offload: m.to(device)
+        if (offload or low_vram) and m is not None: m.to(device)
 
     def _off(m):
-        if offload: m.cpu(); torch.cuda.empty_cache()
+        if (offload or low_vram) and m is not None:
+            m.cpu(); torch.cuda.empty_cache()
 
     # ── mask (needed before compositing) ──────────────────────────────────────
     mask_np = load_mask_from_json(json_path, key)
@@ -205,9 +207,12 @@ def run_edit_v3a(source_path, ref_aligned_path, json_path, key,
         return {k: v.to(device) if isinstance(v, torch.Tensor) else v
                 for k, v in d.items()}
 
-    _on(t5); _on(clip_enc)
-    inp_edit = _to_dev(prepare(t5, clip_enc, z_src, prompt=prompt_edit))
-    _off(t5); _off(clip_enc)
+    if low_vram:
+        inp_edit = _to_dev(prepare(t5, clip_enc, z_src.cpu(), prompt=prompt_edit))
+    else:
+        _on(t5); _on(clip_enc)
+        inp_edit = _to_dev(prepare(t5, clip_enc, z_src, prompt=prompt_edit))
+        _off(t5); _off(clip_enc)
 
     g_edit = torch.full((B,), guidance, device=device, dtype=z_src_tok.dtype)
     g_1    = torch.ones (B,            device=device, dtype=z_src_tok.dtype)

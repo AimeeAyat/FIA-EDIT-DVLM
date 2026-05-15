@@ -264,7 +264,8 @@ def run_edit_v2(source_path, ref_aligned_path, json_path, key,
                 num_steps=28, guidance=3.5,
                 alpha_max=0.3, alpha_min=0.05,
                 device="cuda", out_dir="test_output/flux_key_v2/",
-                ae=None, model=None, t5=None, clip_enc=None):
+                ae=None, model=None, t5=None, clip_enc=None,
+                low_vram: bool = False):
     """
     FlowEdit + noise-consistent reference injection.
 
@@ -297,6 +298,15 @@ def run_edit_v2(source_path, ref_aligned_path, json_path, key,
     torch.backends.cuda.enable_mem_efficient_sdp(False)
     torch.backends.cuda.enable_math_sdp(True)
 
+    def _on(m):
+        if low_vram and m is not None:
+            m.to(device)
+
+    def _off(m):
+        if low_vram and m is not None:
+            m.cpu()
+            torch.cuda.empty_cache()
+
     # ── encode images ─────────────────────────────────────────────────────────
     def _load(path):
         img = Image.open(path).convert("RGB").resize((512, 512))
@@ -306,8 +316,10 @@ def run_edit_v2(source_path, ref_aligned_path, json_path, key,
     src_pil, src_t = _load(source_path)
     _,        ref_t = _load(ref_aligned_path)
 
+    _on(ae)
     z_src = ae.encode(src_t.to(device)).to(torch.bfloat16)
     z_ref = ae.encode(ref_t.to(device)).to(torch.bfloat16)
+    _off(ae)
 
     B, C, H_l, W_l = z_src.shape
     # pack to token sequence [B, N, C*p1*p2]
@@ -325,8 +337,15 @@ def run_edit_v2(source_path, ref_aligned_path, json_path, key,
         return {k: v.to(device) if isinstance(v, torch.Tensor) else v
                 for k, v in d.items()}
 
-    inp_edit = _to_dev(prepare(t5, clip_enc, z_src, prompt=prompt_edit))
-    inp_src  = _to_dev(prepare(t5, clip_enc, z_src, prompt=prompt_src))
+    if low_vram:
+        z_prepare = z_src.cpu()
+        inp_edit = _to_dev(prepare(t5, clip_enc, z_prepare, prompt=prompt_edit))
+        inp_src  = _to_dev(prepare(t5, clip_enc, z_prepare, prompt=prompt_src))
+    else:
+        _on(t5); _on(clip_enc)
+        inp_edit = _to_dev(prepare(t5, clip_enc, z_src, prompt=prompt_edit))
+        inp_src  = _to_dev(prepare(t5, clip_enc, z_src, prompt=prompt_src))
+        _off(t5); _off(clip_enc)
 
     g_edit = torch.full((B,), guidance, device=device, dtype=z_src_tok.dtype)
     g_1    = torch.ones (B,             device=device, dtype=z_src_tok.dtype)
@@ -402,8 +421,10 @@ def run_edit_v2(source_path, ref_aligned_path, json_path, key,
     # ── decode ────────────────────────────────────────────────────────────────
     z_out = rearrange(z_FE, 'b (h w) (c p1 p2) -> b c (h p1) (w p2)',
                       h=H_l//2, w=W_l//2, p1=2, p2=2, c=C)
+    _on(ae)
     with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         decoded = ae.decode(z_out)
+    _off(ae)
     decoded  = decoded.nan_to_num(0.0).clamp(-1, 1).cpu()
     out_arr  = rearrange(decoded[0], 'c h w -> h w c')
     out_img  = Image.fromarray((127.5 * (out_arr + 1.0)).byte().numpy())

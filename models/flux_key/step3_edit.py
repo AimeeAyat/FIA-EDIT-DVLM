@@ -89,7 +89,7 @@ def denoise_flux_key(model, inp_A, z_init, feat_src, feat_ref,
 def run_edit(source_path, features_path, json_path, key,
              tau, alpha_max, alpha_min, prompt,
              num_steps, guidance, device, out_dir, fg_inject=True, freq_2d=False,
-             ae=None, model=None):
+             ae=None, model=None, low_vram: bool = False):
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -107,6 +107,15 @@ def run_edit(source_path, features_path, json_path, key,
         model = load_flow_model("flux-dev", device=device)
         model.eval()
 
+    def _on(m):
+        if low_vram and m is not None:
+            m.to(device)
+
+    def _off(m):
+        if low_vram and m is not None:
+            m.cpu()
+            torch.cuda.empty_cache()
+
     torch.backends.cuda.enable_flash_sdp(False)
     torch.backends.cuda.enable_mem_efficient_sdp(False)
     torch.backends.cuda.enable_math_sdp(True)
@@ -114,7 +123,9 @@ def run_edit(source_path, features_path, json_path, key,
     src_img = Image.open(source_path).convert("RGB").resize((512, 512))
     src_arr = np.array(src_img).astype(np.float32) / 127.5 - 1.0
     src_t   = torch.from_numpy(src_arr).permute(2, 0, 1).unsqueeze(0)
+    _on(ae)
     z_A     = ae.encode(src_t.to(device)).to(torch.bfloat16)
+    _off(ae)
 
     B, C, H_l, W_l = z_A.shape
     z_A_tok = rearrange(z_A, 'b c (h p1) (w p2) -> b (h w) (c p1 p2)', p1=2, p2=2)
@@ -132,16 +143,20 @@ def run_edit(source_path, features_path, json_path, key,
     _alpha_min = alpha_min if fg_inject else 0.0
     print(f"fg_inject={fg_inject}  alpha_max={_alpha_max}  alpha_min={_alpha_min}")
 
+    _on(model)
     z_final = denoise_flux_key(
         model, inp_A, z_ssi, feat_src, feat_ref,
         mask_indices, timesteps, guidance,
         _alpha_max, _alpha_min, freq_2d=freq_2d, device=device,
     )
+    _off(model)
 
     z_out   = rearrange(z_final, 'b (h w) (c p1 p2) -> b c (h p1) (w p2)',
                         h=H_l//2, w=W_l//2, p1=2, p2=2, c=C)
+    _on(ae)
     with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         decoded = ae.decode(z_out)
+    _off(ae)
     decoded = decoded.nan_to_num(0.0).clamp(-1, 1).cpu()
     nan_pct = (z_final.isnan().float().mean() * 100).item()
     if nan_pct > 0:

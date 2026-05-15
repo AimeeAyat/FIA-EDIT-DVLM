@@ -17,3 +17,4 @@ smoke_test_output/
 settings.json
 *.safetensors
 *.pth
+test_output/**

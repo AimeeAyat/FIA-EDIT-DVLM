@@ -66,6 +66,18 @@ IMG_DIR    = "data/pie_bench/annotation_images"
 REFS_DIR   = "test_refs"
 OUT_BASE   = "test_output/flux_key"
 
+
+def _to_gpu(module, device: str):
+    if module is not None:
+        module.to(device)
+
+
+def _to_cpu(module):
+    if module is not None:
+        module.cpu()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def prepare_test_dirs():
@@ -107,7 +119,7 @@ def check_ref(key: str) -> str:
 
 # ── Step 1 ────────────────────────────────────────────────────────────────────
 
-def run_step1(tc: dict, out_dir: str, processor, model_gdino):
+def run_step1(tc: dict, out_dir: str, processor, model_gdino, step1_device: str = DEVICE):
     from models.flux_key.step1_extract import extract_and_align, mask_bbox
 
     ref_path = check_ref(tc["key"])
@@ -124,7 +136,7 @@ def run_step1(tc: dict, out_dir: str, processor, model_gdino):
 
     aligned, det_box, score = extract_and_align(
         ref_image, tc["text_ref"], target_bbox,
-        processor, model_gdino, device=DEVICE,
+        processor, model_gdino, device=step1_device,
         src_mask_bbox=target_bbox   # fallback: use mask bbox if DINO fails
     )
 
@@ -138,7 +150,7 @@ def run_step1(tc: dict, out_dir: str, processor, model_gdino):
 # ── Step 2 ────────────────────────────────────────────────────────────────────
 
 def run_step2(tc: dict, ref_aligned_path: str, out_dir: str,
-              t5, clip_enc, ae, model_flux):
+              t5, clip_enc, ae, model_flux, low_vram: bool = False):
     from models.flux_key.step2_features import (
         load_mask_from_json, mask_to_token_indices, extract_features
     )
@@ -155,6 +167,9 @@ def run_step2(tc: dict, ref_aligned_path: str, out_dir: str,
     img_A = load_img(get_source_path(tc["key"]))
     img_B = load_img(ref_aligned_path)
 
+    if low_vram:
+        _to_gpu(t5, DEVICE); _to_gpu(clip_enc, DEVICE); _to_gpu(ae, DEVICE)
+
     print(f"  Extracting source features...")
     feat_src, inp_A = extract_features(img_A, t5, clip_enc, ae, model_flux,
                                        prompt="", device=DEVICE)
@@ -162,6 +177,8 @@ def run_step2(tc: dict, ref_aligned_path: str, out_dir: str,
     feat_ref, _     = extract_features(img_B, t5, clip_enc, ae, model_flux,
                                        prompt=tc["prompt"], device=DEVICE,
                                        mask_indices=mask_indices)
+    if low_vram:
+        _to_cpu(t5); _to_cpu(clip_enc); _to_cpu(ae)
 
     feat_path = os.path.join(out_dir, "features.pt")
     torch.save({
@@ -177,7 +194,8 @@ def run_step2(tc: dict, ref_aligned_path: str, out_dir: str,
 # ── Step 3 ────────────────────────────────────────────────────────────────────
 
 def run_step3(tc: dict, feat_path: str, out_dir: str, ae, model_flux,
-              fg_inject: bool = True, freq_2d: bool = False):
+              fg_inject: bool = True, freq_2d: bool = False,
+              low_vram: bool = False):
     from models.flux_key.step3_edit import run_edit
     run_edit(
         source_path=get_source_path(tc["key"]),
@@ -196,12 +214,13 @@ def run_step3(tc: dict, feat_path: str, out_dir: str, ae, model_flux,
         freq_2d=freq_2d,
         ae=ae,
         model=model_flux,
+        low_vram=low_vram,
     )
     print(f"  Step3(v1) OK  output -> {out_dir}/{tc['key']}_edited.png")
 
 
 def run_step3_v2(tc: dict, ref_aligned_path: str, out_dir: str,
-                 ae, model_flux, t5, clip_enc):
+                 ae, model_flux, t5, clip_enc, low_vram: bool = False):
     """FlowEdit + noise-consistent reference injection (v2)."""
     from models.flux_key.step3_flowedit import run_edit_v2
     out_dir_v2 = os.path.join(OUT_BASE + "_v2", tc["key"])
@@ -223,6 +242,7 @@ def run_step3_v2(tc: dict, ref_aligned_path: str, out_dir: str,
         model=model_flux,
         t5=t5,
         clip_enc=clip_enc,
+        low_vram=low_vram,
     )
     print(f"  Step3(v2) OK  output -> {out_dir_v2}/{tc['key']}_edited.png")
 
@@ -230,7 +250,8 @@ def run_step3_v2(tc: dict, ref_aligned_path: str, out_dir: str,
 def run_step3_v3(tc: dict, ref_aligned_path: str,
                  ae, model_flux, t5, clip_enc,
                  t_start: float = 0.999, t_inject: float = 0.65,
-                 inject_alpha: float = 0.15, offload: bool = False):
+                 inject_alpha: float = 0.15, offload: bool = False,
+                 low_vram: bool = False):
     """Text-generate + reference V appearance injection (v3)."""
     from models.flux_key.step3_composite import run_edit_v3
     out_dir_v3 = os.path.join(OUT_BASE + "_v3", tc["key"])
@@ -249,6 +270,7 @@ def run_step3_v3(tc: dict, ref_aligned_path: str,
         guidance=5.0,
         use_rembg=True,
         offload=offload,
+        low_vram=low_vram,
         device=DEVICE,
         out_dir=out_dir_v3,
         ae=ae, model=model_flux, t5=t5, clip_enc=clip_enc,
@@ -288,6 +310,8 @@ def main():
                         help="v3: foreground noise level (0.999=full freedom, 0.4=preserve structure)")
     parser.add_argument("--offload", action="store_true", default=False,
                         help="CPU-offload T5/CLIP/AE when not in use — prevents VRAM overflow on 32GB GPUs")
+    parser.add_argument("--low_vram", action="store_true", default=False,
+                        help="Keep FLUX on GPU; keep T5/CLIP/AE on CPU except during active compute windows")
     args = parser.parse_args()
 
     prepare_test_dirs()
@@ -298,15 +322,19 @@ def main():
     if not args.step3_only:
         print("Loading Grounding DINO...")
         from models.flux_key.step1_extract import load_gdino
-        gdino_proc, gdino_model = load_gdino(DEVICE)
+        step1_device = "cpu" if args.low_vram else DEVICE
+        gdino_proc, gdino_model = load_gdino(step1_device)
     else:
         gdino_proc = gdino_model = None
+        step1_device = DEVICE
 
     from flux.util import load_t5, load_clip, load_ae, load_flow_model
     # When offloading: load everything to CPU so only the active component
     # occupies VRAM — prevents the 36 GB overflow (T5+CLIP+AE+FLUX > 32 GB)
     # that throttles the RTX 5090 to ~130 W / reduced clocks.
     load_dev = "cpu" if args.offload else DEVICE
+    if args.low_vram:
+        load_dev = "cpu"
 
     need_t5 = args.v2 or args.v3 or not args.step3_only
     if need_t5:
@@ -319,6 +347,8 @@ def main():
     ae    = load_ae("flux-dev", load_dev)
     model = load_flow_model("flux-dev", device=load_dev)
     model.eval()
+    if args.low_vram:
+        model.to(DEVICE)
 
     torch.backends.cuda.enable_flash_sdp(False)
     torch.backends.cuda.enable_mem_efficient_sdp(False)
@@ -344,7 +374,7 @@ def main():
             if args.step3_only and os.path.exists(os.path.join(out_dir, "ref_aligned.png")):
                 ref_aligned = os.path.join(out_dir, "ref_aligned.png")
             else:
-                ref_aligned = run_step1(tc, out_dir, gdino_proc, gdino_model)
+                ref_aligned = run_step1(tc, out_dir, gdino_proc, gdino_model, step1_device=step1_device)
 
             if args.place:
                 from models.flux_key.step3_place import run_edit_place
@@ -356,7 +386,7 @@ def main():
                     json_path=JSON_PATH, key=tc["key"],
                     prompt_edit=tc["prompt"],
                     t_start=0.35, num_steps=28, guidance=3.5,
-                    offload=args.offload, device=DEVICE,
+                    offload=args.offload, low_vram=args.low_vram, device=DEVICE,
                     out_dir=out_dir_pl,
                     ae=ae, model=model, t5=t5, clip_enc=clip_enc)
             elif args.freqref:
@@ -370,7 +400,7 @@ def main():
                     prompt_edit=tc["prompt"],
                     t_start=0.5, t_inject=0.7, gamma=0.5,
                     inject_every=2, num_steps=28, guidance=4.0,
-                    offload=args.offload, device=DEVICE,
+                    offload=args.offload, low_vram=args.low_vram, device=DEVICE,
                     out_dir=out_dir_fr,
                     ae=ae, model=model, t5=t5, clip_enc=clip_enc)
             elif args.v3a:
@@ -384,16 +414,18 @@ def main():
                     prompt_edit=tc["prompt"],
                     t_start=0.35, t_inject=0.65, inject_alpha=0.15,
                     inject_every=2, num_steps=28, guidance=3.5,
-                    offload=args.offload, device=DEVICE,
+                    offload=args.offload, low_vram=args.low_vram, device=DEVICE,
                     out_dir=out_dir_v3a,
                     ae=ae, model=model, t5=t5, clip_enc=clip_enc)
             elif args.v3:
                 run_step3_v3(tc, ref_aligned, ae, model, t5, clip_enc,
                              t_start=args.t_start, t_inject=0.65,
-                             inject_alpha=0.15, offload=args.offload)
+                             inject_alpha=0.15, offload=args.offload,
+                             low_vram=args.low_vram)
             elif args.v2:
                 # v2: FlowEdit with noise-consistent reference injection
-                run_step3_v2(tc, ref_aligned, out_dir, ae, model, t5, clip_enc)
+                run_step3_v2(tc, ref_aligned, out_dir, ae, model, t5, clip_enc,
+                             low_vram=args.low_vram)
             else:
                 # v1: SSI + KV injection
                 if args.step3_only:
@@ -402,9 +434,11 @@ def main():
                         raise FileNotFoundError(f"features.pt not found: {feat_path}")
                 else:
                     feat_path = run_step2(tc, ref_aligned, out_dir,
-                                          t5, clip_enc, ae, model)
+                                          t5, clip_enc, ae, model,
+                                          low_vram=args.low_vram)
                 run_step3(tc, feat_path, out_dir, ae, model,
-                          fg_inject=args.fg_inject, freq_2d=args.freq_2d)
+                          fg_inject=args.fg_inject, freq_2d=args.freq_2d,
+                          low_vram=args.low_vram)
             status = "OK"
         except Exception as e:
             import traceback
