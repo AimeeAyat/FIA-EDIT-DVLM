@@ -227,6 +227,35 @@ def run_step3_v2(tc: dict, ref_aligned_path: str, out_dir: str,
     print(f"  Step3(v2) OK  output -> {out_dir_v2}/{tc['key']}_edited.png")
 
 
+def run_step3_v3(tc: dict, ref_aligned_path: str,
+                 ae, model_flux, t5, clip_enc,
+                 t_start: float = 0.999, t_inject: float = 0.65,
+                 inject_alpha: float = 0.15, offload: bool = False):
+    """Text-generate + reference V appearance injection (v3)."""
+    from models.flux_key.step3_composite import run_edit_v3
+    out_dir_v3 = os.path.join(OUT_BASE + "_v3", tc["key"])
+    os.makedirs(out_dir_v3, exist_ok=True)
+    run_edit_v3(
+        source_path=get_source_path(tc["key"]),
+        ref_aligned_path=ref_aligned_path,
+        json_path=JSON_PATH,
+        key=tc["key"],
+        prompt_edit=tc["prompt"],
+        t_start=t_start,
+        t_inject=t_inject,
+        inject_alpha=inject_alpha,
+        inject_every=2,
+        num_steps=28,
+        guidance=5.0,
+        use_rembg=True,
+        offload=offload,
+        device=DEVICE,
+        out_dir=out_dir_v3,
+        ae=ae, model=model_flux, t5=t5, clip_enc=clip_enc,
+    )
+    print(f"  Step3(v3) OK  -> {out_dir_v3}/{tc['key']}_edited.png")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -247,6 +276,18 @@ def main():
                         help="Override tau for all test cases")
     parser.add_argument("--v2", action="store_true", default=False,
                         help="Use v2 FlowEdit pipeline (noise-consistent reference injection)")
+    parser.add_argument("--v3", action="store_true", default=False,
+                        help="Use v3: text-generate + late reference V injection")
+    parser.add_argument("--v3a", action="store_true", default=False,
+                        help="Use v3a: composite-first (best visual, reference placed directly)")
+    parser.add_argument("--place", action="store_true", default=False,
+                        help="Use place: original composite+harmonize (rembg+PIL paste, ~30s)")
+    parser.add_argument("--freqref", action="store_true", default=False,
+                        help="Use freqref: PIL composite + frequency-domain V blending (FSI-inspired)")
+    parser.add_argument("--t_start", type=float, default=0.999,
+                        help="v3: foreground noise level (0.999=full freedom, 0.4=preserve structure)")
+    parser.add_argument("--offload", action="store_true", default=False,
+                        help="CPU-offload T5/CLIP/AE when not in use — prevents VRAM overflow on 32GB GPUs")
     args = parser.parse_args()
 
     prepare_test_dirs()
@@ -262,16 +303,21 @@ def main():
         gdino_proc = gdino_model = None
 
     from flux.util import load_t5, load_clip, load_ae, load_flow_model
-    # v2 always needs T5+CLIP (used in FlowEdit per-step forward passes)
-    if args.step3_only and not args.v2:
+    # When offloading: load everything to CPU so only the active component
+    # occupies VRAM — prevents the 36 GB overflow (T5+CLIP+AE+FLUX > 32 GB)
+    # that throttles the RTX 5090 to ~130 W / reduced clocks.
+    load_dev = "cpu" if args.offload else DEVICE
+
+    need_t5 = args.v2 or args.v3 or not args.step3_only
+    if need_t5:
+        print(f"Loading FLUX models (T5, CLIP, AE, transformer) → {load_dev}...")
+        t5       = load_t5(load_dev, max_length=512)
+        clip_enc = load_clip(load_dev)
+    else:
         print("Loading AE + FLUX transformer (step3-only v1, skipping T5/CLIP)...")
         t5 = clip_enc = None
-    else:
-        print("Loading FLUX models (T5, CLIP, AE, transformer)...")
-        t5       = load_t5(DEVICE, max_length=512)
-        clip_enc = load_clip(DEVICE)
-    ae    = load_ae("flux-dev", DEVICE)
-    model = load_flow_model("flux-dev", device=DEVICE)
+    ae    = load_ae("flux-dev", load_dev)
+    model = load_flow_model("flux-dev", device=load_dev)
     model.eval()
 
     torch.backends.cuda.enable_flash_sdp(False)
@@ -300,8 +346,53 @@ def main():
             else:
                 ref_aligned = run_step1(tc, out_dir, gdino_proc, gdino_model)
 
-            if args.v2:
-                # v2: FlowEdit — no features.pt needed
+            if args.place:
+                from models.flux_key.step3_place import run_edit_place
+                out_dir_pl = os.path.join(OUT_BASE + "_place", tc["key"])
+                os.makedirs(out_dir_pl, exist_ok=True)
+                run_edit_place(
+                    source_path=get_source_path(tc["key"]),
+                    ref_aligned_path=ref_aligned,
+                    json_path=JSON_PATH, key=tc["key"],
+                    prompt_edit=tc["prompt"],
+                    t_start=0.35, num_steps=28, guidance=3.5,
+                    offload=args.offload, device=DEVICE,
+                    out_dir=out_dir_pl,
+                    ae=ae, model=model, t5=t5, clip_enc=clip_enc)
+            elif args.freqref:
+                from models.flux_key.step3_freqref import run_edit_freqref
+                out_dir_fr = os.path.join(OUT_BASE + "_freqref", tc["key"])
+                os.makedirs(out_dir_fr, exist_ok=True)
+                run_edit_freqref(
+                    source_path=get_source_path(tc["key"]),
+                    ref_aligned_path=ref_aligned,
+                    json_path=JSON_PATH, key=tc["key"],
+                    prompt_edit=tc["prompt"],
+                    t_start=0.5, t_inject=0.7, gamma=0.5,
+                    inject_every=2, num_steps=28, guidance=4.0,
+                    offload=args.offload, device=DEVICE,
+                    out_dir=out_dir_fr,
+                    ae=ae, model=model, t5=t5, clip_enc=clip_enc)
+            elif args.v3a:
+                from models.flux_key.step3_composite_v3a import run_edit_v3a
+                out_dir_v3a = os.path.join(OUT_BASE + "_v3a", tc["key"])
+                os.makedirs(out_dir_v3a, exist_ok=True)
+                run_edit_v3a(
+                    source_path=get_source_path(tc["key"]),
+                    ref_aligned_path=ref_aligned,
+                    json_path=JSON_PATH, key=tc["key"],
+                    prompt_edit=tc["prompt"],
+                    t_start=0.35, t_inject=0.65, inject_alpha=0.15,
+                    inject_every=2, num_steps=28, guidance=3.5,
+                    offload=args.offload, device=DEVICE,
+                    out_dir=out_dir_v3a,
+                    ae=ae, model=model, t5=t5, clip_enc=clip_enc)
+            elif args.v3:
+                run_step3_v3(tc, ref_aligned, ae, model, t5, clip_enc,
+                             t_start=args.t_start, t_inject=0.65,
+                             inject_alpha=0.15, offload=args.offload)
+            elif args.v2:
+                # v2: FlowEdit with noise-consistent reference injection
                 run_step3_v2(tc, ref_aligned, out_dir, ae, model, t5, clip_enc)
             else:
                 # v1: SSI + KV injection
