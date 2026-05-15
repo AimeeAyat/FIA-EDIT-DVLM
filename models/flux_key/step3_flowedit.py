@@ -76,6 +76,7 @@ class _ReadHooks:
             else:
                 if len(fg) > 0:
                     self.data[f"d{idx}_K"]  = K[:, fg, :].detach().cpu()
+                    self.data[f"d{idx}_V"]  = V[:, fg, :].detach().cpu()  # needed for content injection
                     self.data[f"d{idx}_fg"] = fg.cpu()
         return hook
 
@@ -104,6 +105,7 @@ class _ReadHooks:
             else:
                 if len(fg_full) > 0:
                     self.data[f"s{idx}_K"]  = K_all[:, fg_full, :].detach().cpu()
+                    self.data[f"s{idx}_V"]  = V_all[:, fg_full, :].detach().cpu()  # needed for content injection
                     self.data[f"s{idx}_fg"] = (fg_img).cpu()
         return hook
 
@@ -178,13 +180,19 @@ class _InjectHooks:
                 K_new[:, bg, :] = k_bg.to(self.device).nan_to_num(0.0)
                 V_new[:, bg, :] = v_bg.to(self.device).nan_to_num(0.0)
 
-            # ── foreground: blend K only (V from target preserved) ────────
+            # ── foreground: blend K and V from reference ──────────────────
+            # K: changes attention routing toward reference structure
+            # V: injects reference visual content (critical — K alone cannot transfer appearance)
             k_ref = self.ref.get(f"d{idx}_K")
+            v_ref = self.ref.get(f"d{idx}_V")
             if k_ref is not None and len(fg) > 0:
-                k_ref = self._norm_match(
-                    k_ref.to(self.device).nan_to_num(0.0), K[:, fg, :])
+                k_ref = self._norm_match(k_ref.to(self.device).nan_to_num(0.0), K[:, fg, :])
                 a = self._alpha(idx)
                 K_new[:, fg, :] = a * K[:, fg, :] + (1 - a) * k_ref
+            if v_ref is not None and len(fg) > 0:
+                v_ref = self._norm_match(v_ref.to(self.device).nan_to_num(0.0), V[:, fg, :])
+                a = self._alpha(idx)
+                V_new[:, fg, :] = a * V[:, fg, :] + (1 - a) * v_ref
 
             return torch.cat([Q, K_new, V_new], dim=-1)
         return hook
@@ -219,14 +227,17 @@ class _InjectHooks:
                 K_new[:, bg_full, :] = k_bg.to(self.device).nan_to_num(0.0)
                 V_new[:, bg_full, :] = v_bg.to(self.device).nan_to_num(0.0)
 
-            # foreground (K only)
+            # foreground: blend K and V from reference
             k_ref = self.ref.get(f"s{idx}_K")
+            v_ref = self.ref.get(f"s{idx}_V")
+            ell = self.n_double + idx
+            a   = self._alpha(ell)
             if k_ref is not None and len(fg_full) > 0:
-                k_ref = self._norm_match(
-                    k_ref.to(self.device).nan_to_num(0.0), K_all[:, fg_full, :])
-                ell = self.n_double + idx
-                a   = self._alpha(ell)
+                k_ref = self._norm_match(k_ref.to(self.device).nan_to_num(0.0), K_all[:, fg_full, :])
                 K_new[:, fg_full, :] = a * K_all[:, fg_full, :] + (1 - a) * k_ref
+            if v_ref is not None and len(fg_full) > 0:
+                v_ref = self._norm_match(v_ref.to(self.device).nan_to_num(0.0), V_all[:, fg_full, :])
+                V_new[:, fg_full, :] = a * V_all[:, fg_full, :] + (1 - a) * v_ref
 
             return torch.cat([Q_all, K_new, V_new, rest], dim=-1)
         return hook
@@ -325,8 +336,14 @@ def run_edit_v2(source_path, ref_aligned_path, json_path, key,
     n_double   = len(model.double_blocks)
     n_single   = len(model.single_blocks)
 
-    # ── FlowEdit loop ─────────────────────────────────────────────────────────
+    # ── Composite: place reference latent at mask positions ───────────────────
+    # This directly puts reference visual content where the source object was.
+    # FlowEdit then harmonizes the composite into the scene.
+    # Without this, delta velocity starts near zero (z_FE=z_src, so z_tar=z_src_t)
+    # and can only make gradual changes — insufficient for object replacement.
     z_FE = z_src_tok.clone()
+    z_FE[:, mask_indices, :] = z_ref_tok[:, mask_indices, :]
+    print(f"Composited reference at {len(mask_indices)} foreground tokens")
     print(f"FlowEdit v2: {len(timesteps)-1} steps, guidance={guidance}")
     print(f"  alpha_max={alpha_max}  alpha_min={alpha_min}")
 
