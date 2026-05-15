@@ -179,7 +179,6 @@ def run_step2(tc: dict, ref_aligned_path: str, out_dir: str,
 def run_step3(tc: dict, feat_path: str, out_dir: str, ae, model_flux,
               fg_inject: bool = True, freq_2d: bool = False):
     from models.flux_key.step3_edit import run_edit
-
     run_edit(
         source_path=get_source_path(tc["key"]),
         features_path=feat_path,
@@ -198,7 +197,34 @@ def run_step3(tc: dict, feat_path: str, out_dir: str, ae, model_flux,
         ae=ae,
         model=model_flux,
     )
-    print(f"  Step3 OK  output -> {out_dir}/{tc['key']}_edited.png")
+    print(f"  Step3(v1) OK  output -> {out_dir}/{tc['key']}_edited.png")
+
+
+def run_step3_v2(tc: dict, ref_aligned_path: str, out_dir: str,
+                 ae, model_flux, t5, clip_enc):
+    """FlowEdit + noise-consistent reference injection (v2)."""
+    from models.flux_key.step3_flowedit import run_edit_v2
+    out_dir_v2 = os.path.join(OUT_BASE + "_v2", tc["key"])
+    os.makedirs(out_dir_v2, exist_ok=True)
+    run_edit_v2(
+        source_path=get_source_path(tc["key"]),
+        ref_aligned_path=ref_aligned_path,
+        json_path=JSON_PATH,
+        key=tc["key"],
+        prompt_edit=tc["prompt"],
+        prompt_src="",
+        num_steps=28,
+        guidance=3.5,
+        alpha_max=0.3,
+        alpha_min=0.05,
+        device=DEVICE,
+        out_dir=out_dir_v2,
+        ae=ae,
+        model=model_flux,
+        t5=t5,
+        clip_enc=clip_enc,
+    )
+    print(f"  Step3(v2) OK  output -> {out_dir_v2}/{tc['key']}_edited.png")
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -219,6 +245,8 @@ def main():
                         help="Run only this PIE-Bench key (e.g. 000000000002)")
     parser.add_argument("--tau", type=float, default=None,
                         help="Override tau for all test cases")
+    parser.add_argument("--v2", action="store_true", default=False,
+                        help="Use v2 FlowEdit pipeline (noise-consistent reference injection)")
     args = parser.parse_args()
 
     prepare_test_dirs()
@@ -234,8 +262,9 @@ def main():
         gdino_proc = gdino_model = None
 
     from flux.util import load_t5, load_clip, load_ae, load_flow_model
-    if args.step3_only:
-        print("Loading AE + FLUX transformer (step3-only, skipping T5/CLIP)...")
+    # v2 always needs T5+CLIP (used in FlowEdit per-step forward passes)
+    if args.step3_only and not args.v2:
+        print("Loading AE + FLUX transformer (step3-only v1, skipping T5/CLIP)...")
         t5 = clip_enc = None
     else:
         print("Loading FLUX models (T5, CLIP, AE, transformer)...")
@@ -265,16 +294,26 @@ def main():
         os.makedirs(out_dir, exist_ok=True)
 
         try:
-            if args.step3_only:
-                feat_path = os.path.join(out_dir, "features.pt")
-                if not os.path.exists(feat_path):
-                    raise FileNotFoundError(f"features.pt not found: {feat_path}")
+            # ── Step 1: get aligned reference (always needed) ──────────────
+            if args.step3_only and os.path.exists(os.path.join(out_dir, "ref_aligned.png")):
+                ref_aligned = os.path.join(out_dir, "ref_aligned.png")
             else:
                 ref_aligned = run_step1(tc, out_dir, gdino_proc, gdino_model)
-                feat_path   = run_step2(tc, ref_aligned, out_dir,
-                                        t5, clip_enc, ae, model)
-            run_step3(tc, feat_path, out_dir, ae, model,
-                      fg_inject=args.fg_inject, freq_2d=args.freq_2d)
+
+            if args.v2:
+                # v2: FlowEdit — no features.pt needed
+                run_step3_v2(tc, ref_aligned, out_dir, ae, model, t5, clip_enc)
+            else:
+                # v1: SSI + KV injection
+                if args.step3_only:
+                    feat_path = os.path.join(out_dir, "features.pt")
+                    if not os.path.exists(feat_path):
+                        raise FileNotFoundError(f"features.pt not found: {feat_path}")
+                else:
+                    feat_path = run_step2(tc, ref_aligned, out_dir,
+                                          t5, clip_enc, ae, model)
+                run_step3(tc, feat_path, out_dir, ae, model,
+                          fg_inject=args.fg_inject, freq_2d=args.freq_2d)
             status = "OK"
         except Exception as e:
             import traceback
