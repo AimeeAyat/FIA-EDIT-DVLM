@@ -18,3 +18,4 @@ settings.json
 *.safetensors
 *.pth
 test_output/**
+old_test_output/**

@@ -182,7 +182,9 @@ def extract_features(image: Image.Image,
 
     # prepare text + image embeddings  (original sampling.prepare, unchanged)
     inp = prepare(t5, clip, z, prompt=prompt)
-
+    # move prepared tensors to model device for forward
+    model_dev = next(model.parameters()).device
+    inp = {k: v.to(model_dev) for k, v in inp.items()}
     # RTX 5090 (Blackwell/SM_100): Flash/mem-efficient SDP produces NaN
     torch.backends.cuda.enable_flash_sdp(False)
     torch.backends.cuda.enable_mem_efficient_sdp(False)
@@ -193,8 +195,8 @@ def extract_features(image: Image.Image,
     hooks.attach(model)
 
     # forward at t=0 (guidance_vec does not matter for feature extraction)
-    t_vec = torch.zeros(z.shape[0], device=device, dtype=torch.bfloat16)
-    guidance_vec = torch.full((z.shape[0],), 3.5, device=device,
+    t_vec = torch.zeros(z.shape[0], device=model_dev, dtype=torch.bfloat16)
+    guidance_vec = torch.full((z.shape[0],), 3.5, device=model_dev,
                               dtype=torch.bfloat16)
 
     # if RoPE override given, monkey-patch pe_embedder temporarily

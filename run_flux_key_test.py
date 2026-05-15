@@ -167,16 +167,26 @@ def run_step2(tc: dict, ref_aligned_path: str, out_dir: str,
     img_A = load_img(get_source_path(tc["key"]))
     img_B = load_img(ref_aligned_path)
 
+    step2_dev = "cpu" if low_vram else DEVICE
+
     if low_vram:
+        _to_cpu(t5); _to_cpu(clip_enc); _to_cpu(ae)
+    else:
         _to_gpu(t5, DEVICE); _to_gpu(clip_enc, DEVICE); _to_gpu(ae, DEVICE)
 
-    print(f"  Extracting source features...")
-    feat_src, inp_A = extract_features(img_A, t5, clip_enc, ae, model_flux,
-                                       prompt="", device=DEVICE)
-    print(f"  Extracting reference features...")
-    feat_ref, _     = extract_features(img_B, t5, clip_enc, ae, model_flux,
-                                       prompt=tc["prompt"], device=DEVICE,
-                                       mask_indices=mask_indices)
+    print("  Extracting source features...")
+    feat_src, inp_A = extract_features(
+        img_A, t5, clip_enc, ae, model_flux,
+        prompt="", device=step2_dev
+    )
+
+    print("  Extracting reference features...")
+    feat_ref, _ = extract_features(
+        img_B, t5, clip_enc, ae, model_flux,
+        prompt=tc["prompt"], device=step2_dev,
+        mask_indices=mask_indices
+    )
+
     if low_vram:
         _to_cpu(t5); _to_cpu(clip_enc); _to_cpu(ae)
 
