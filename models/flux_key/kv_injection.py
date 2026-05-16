@@ -124,6 +124,20 @@ class KVInjectionHooks:
         self.device = device
         self._handles: list = []
         self._t: float = 0.0   # current timestep, updated each step
+        # Per-tag device cache to avoid repeated CPU->GPU transfers every hook call.
+        self._src_cache: "OrderedDict[str, torch.Tensor]" = OrderedDict()
+        self._ref_cache: "OrderedDict[str, torch.Tensor]" = OrderedDict()
+        # Keep only a few tensors resident on GPU at a time.
+        self._cache_limit = 8
+
+    # def _alpha(self, ell: int, L_total: int) -> float:
+    #     """Layer-wise + time-aware schedule.
+    #     base: early blocks → alpha_max (text-dominant), late blocks → alpha_min (ref-dominant)
+    #     time: at high t, push alpha toward alpha_max to avoid clean/noisy mismatch.
+    #     Net effect: reference injection is strongest at late blocks AND late timesteps (low t).
+    #     """
+    #     base = self.alpha_max - (ell / max(1, L_total - 1)) * (self.alpha_max - self.alpha_min)
+    #     return float(base + (1.0 - base) * self._t)
 
     def _alpha(self, ell: int, L_total: int) -> float:
         """Layer-wise + time-aware schedule.
@@ -141,6 +155,36 @@ class KVInjectionHooks:
         Prevents magnitude mismatch between clean source and noisy target at high t.
         """
         return self.gamma + (1.0 - self.gamma) * self._t
+
+    def _get_src(self, tag: str) -> torch.Tensor | None:
+        t = self._src_cache.pop(tag, None)
+        if t is not None:
+            self._src_cache[tag] = t
+            return t
+        src = self.feat_src.get(tag)
+        if src is None:
+            return None
+        t = src.to(self.device, dtype=torch.bfloat16).nan_to_num(0.0)
+        if len(self._src_cache) >= self._cache_limit:
+            _, old = self._src_cache.popitem(last=False)
+            del old
+        self._src_cache[tag] = t
+        return t
+
+    def _get_ref(self, tag: str) -> torch.Tensor | None:
+        t = self._ref_cache.pop(tag, None)
+        if t is not None:
+            self._ref_cache[tag] = t
+            return t
+        ref = self.feat_ref.get(tag)
+        if ref is None:
+            return None
+        t = ref.to(self.device, dtype=torch.bfloat16).nan_to_num(0.0)
+        if len(self._ref_cache) >= self._cache_limit:
+            _, old = self._ref_cache.popitem(last=False)
+            del old
+        self._ref_cache[tag] = t
+        return t
 
     def _make_double_img_hook(self, block_idx: int):
         """Hook on DoubleStreamBlock img_attn.qkv — img tokens only, shape [B, N_img, 3*HD]."""
@@ -164,9 +208,12 @@ class KVInjectionHooks:
             V_new = V.clone()
 
             # ── background: frequency lock ────────────────────────────────
-            if tag_k in self.feat_src and len(bg) > 0:
-                k_src_full = self.feat_src[tag_k].to(self.device).nan_to_num(0.0)
-                v_src_full = self.feat_src[tag_v].to(self.device).nan_to_num(0.0)
+            if len(bg) > 0:
+                k_src_full = self._get_src(tag_k)
+                v_src_full = self._get_src(tag_v)
+            else:
+                k_src_full = v_src_full = None
+            if k_src_full is not None and v_src_full is not None and len(bg) > 0:
                 gamma = self._gamma()
                 if self.freq_2d and k_src_full.shape[1] == N:
                     K_new[:, bg, :] = freq_mix_2d(k_src_full, K, bg, gamma)
@@ -178,9 +225,12 @@ class KVInjectionHooks:
                     V_new[:, bg, :] = freq_mix_1d(v_src_bg, V[:, bg, :], gamma)
 
             # ── foreground: reference interpolation ───────────────────────
-            if tag_k in self.feat_ref and len(fg) > 0:
-                k_ref = self.feat_ref[tag_k].to(self.device).nan_to_num(0.0)
-                v_ref = self.feat_ref[tag_v].to(self.device).nan_to_num(0.0)
+            if len(fg) > 0:
+                k_ref = self._get_ref(tag_k)
+                v_ref = self._get_ref(tag_v)
+            else:
+                k_ref = v_ref = None
+            if k_ref is not None and v_ref is not None and len(fg) > 0:
                 # ref was extracted on I_B which may have same N
                 k_ref_fg = k_ref[:, fg, :] if k_ref.shape[1] > max(fg).item() else k_ref[:, :len(fg), :]
                 v_ref_fg = v_ref[:, fg, :] if v_ref.shape[1] > max(fg).item() else v_ref[:, :len(fg), :]
@@ -238,9 +288,12 @@ class KVInjectionHooks:
             V_new = V_all.clone()
 
             # background frequency lock
-            if tag_k in self.feat_src and len(bg_full) > 0:
-                k_src_full = self.feat_src[tag_k].to(self.device).nan_to_num(0.0)
-                v_src_full = self.feat_src[tag_v].to(self.device).nan_to_num(0.0)
+            if len(bg_full) > 0:
+                k_src_full = self._get_src(tag_k)
+                v_src_full = self._get_src(tag_v)
+            else:
+                k_src_full = v_src_full = None
+            if k_src_full is not None and v_src_full is not None and len(bg_full) > 0:
                 bg_img_idx = bg_full - img_offset
                 gamma = self._gamma()
                 if self.freq_2d and k_src_full.shape[1] == N_img:
@@ -253,9 +306,12 @@ class KVInjectionHooks:
                     V_new[:, bg_full, :] = freq_mix_1d(v_src_bg, V_all[:, bg_full, :], gamma)
 
             # foreground reference injection
-            if tag_k in self.feat_ref and len(fg_full) > 0:
-                k_ref = self.feat_ref[tag_k].to(self.device).nan_to_num(0.0)
-                v_ref = self.feat_ref[tag_v].to(self.device).nan_to_num(0.0)
+            if len(fg_full) > 0:
+                k_ref = self._get_ref(tag_k)
+                v_ref = self._get_ref(tag_v)
+            else:
+                k_ref = v_ref = None
+            if k_ref is not None and v_ref is not None and len(fg_full) > 0:
                 fg_img_idx = fg_full - img_offset
                 k_ref_fg = k_ref[:, fg_img_idx, :] if k_ref.shape[1] > max(fg_img_idx).item() else k_ref[:, :len(fg_img_idx), :]
                 v_ref_fg = v_ref[:, fg_img_idx, :] if v_ref.shape[1] > max(fg_img_idx).item() else v_ref[:, :len(fg_img_idx), :]
@@ -293,3 +349,6 @@ class KVInjectionHooks:
         for h in self._handles:
             h.remove()
         self._handles.clear()
+        # Release cached device tensors aggressively in low-VRAM workflows.
+        self._src_cache.clear()
+        self._ref_cache.clear()

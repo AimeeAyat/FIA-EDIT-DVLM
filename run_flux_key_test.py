@@ -205,7 +205,7 @@ def run_step2(tc: dict, ref_aligned_path: str, out_dir: str,
 
 def run_step3(tc: dict, feat_path: str, out_dir: str, ae, model_flux,
               fg_inject: bool = True, freq_2d: bool = False,
-              low_vram: bool = False):
+              low_vram: bool = False, step_device: str = DEVICE):
     from models.flux_key.step3_edit import run_edit
     run_edit(
         source_path=get_source_path(tc["key"]),
@@ -218,7 +218,7 @@ def run_step3(tc: dict, feat_path: str, out_dir: str, ae, model_flux,
         prompt=tc["prompt"],
         num_steps=28,
         guidance=3.5,
-        device=DEVICE,
+        device=step_device,
         out_dir=out_dir,
         fg_inject=fg_inject,
         freq_2d=freq_2d,
@@ -446,9 +446,10 @@ def main():
                     feat_path = run_step2(tc, ref_aligned, out_dir,
                                           t5, clip_enc, ae, model,
                                           low_vram=args.low_vram)
+                step_device = "cpu" if (args.offload and not args.low_vram) else DEVICE
                 run_step3(tc, feat_path, out_dir, ae, model,
                           fg_inject=args.fg_inject, freq_2d=args.freq_2d,
-                          low_vram=args.low_vram)
+                          low_vram=args.low_vram, step_device=step_device)
             status = "OK"
         except Exception as e:
             import traceback

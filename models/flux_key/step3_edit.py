@@ -79,7 +79,8 @@ def denoise_flux_key(model, inp_A, z_init, feat_src, feat_ref,
             print(f"  [WARN] NaN in prediction at t={t_curr:.3f} — clamping to continue")
             pred = pred.nan_to_num(0.0)
         img = img + (t_prev - t_curr) * pred
-
+        del pred, t_vec                  # ← add this
+        torch.cuda.empty_cache()         # ← add this
     hooks.detach()
     return img
 
@@ -123,9 +124,11 @@ def run_edit(source_path, features_path, json_path, key,
     src_img = Image.open(source_path).convert("RGB").resize((512, 512))
     src_arr = np.array(src_img).astype(np.float32) / 127.5 - 1.0
     src_t   = torch.from_numpy(src_arr).permute(2, 0, 1).unsqueeze(0)
-    _on(ae)
-    z_A     = ae.encode(src_t.to(device)).to(torch.bfloat16)
-    _off(ae)
+    enc_dev = next(ae.parameters()).device
+    src_in = src_t.to(enc_dev)
+    z_A = ae.encode(src_in).to(torch.bfloat16)
+    if low_vram:
+        z_A = z_A.to(device)  # move latent only for FLUX denoising
 
     B, C, H_l, W_l = z_A.shape
     z_A_tok = rearrange(z_A, 'b c (h p1) (w p2) -> b (h w) (c p1 p2)', p1=2, p2=2)
@@ -153,10 +156,10 @@ def run_edit(source_path, features_path, json_path, key,
 
     z_out   = rearrange(z_final, 'b (h w) (c p1 p2) -> b c (h p1) (w p2)',
                         h=H_l//2, w=W_l//2, p1=2, p2=2, c=C)
-    _on(ae)
-    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-        decoded = ae.decode(z_out)
-    _off(ae)
+    ae_dev = next(ae.parameters()).device
+    z_dec = z_out.to(ae_dev)
+    decoded = ae.decode(z_dec.to(ae.dtype if hasattr(ae, 'dtype') else torch.float32))
+    decoded = decoded.cpu()
     decoded = decoded.nan_to_num(0.0).clamp(-1, 1).cpu()
     nan_pct = (z_final.isnan().float().mean() * 100).item()
     if nan_pct > 0:
