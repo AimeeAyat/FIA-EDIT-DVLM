@@ -1,0 +1,3047 @@
+{
+  "per_group": {
+    "Real-Cartoon": {
+      "individual": [
+        {
+          "file": "001.png",
+          "prompt": "0000 a cartoon animation of a sheep in the forest",
+          "mse": 0.00027771189343184233,
+          "psnr": 35.56405520533453,
+          "ssim": 0.9757057203865762,
+          "lpips": 0.008876912295818329,
+          "clip": 34.0329475402832
+        },
+        {
+          "file": "002.png",
+          "prompt": "0001 a cartoon animation of a panda in the forest",
+          "mse": 0.00037868611980229616,
+          "psnr": 34.21720613030071,
+          "ssim": 0.9746553990632263,
+          "lpips": 0.011998597532510757,
+          "clip": 31.5953311920166
+        },
+        {
+          "file": "003.png",
+          "prompt": "0002  a cartoon animation of a sheep in the forest",
+          "mse": 0.00023750949185341597,
+          "psnr": 36.24319029503581,
+          "ssim": 0.9763251018107805,
+          "lpips": 0.007968024350702763,
+          "clip": 30.305492401123047
+        },
+        {
+          "file": "004.png",
+          "prompt": "0003  a cartoon animation of an ostrich in the forest",
+          "mse": 0.0001894082670332864,
+          "psnr": 37.226010694268105,
+          "ssim": 0.9767569234674934,
+          "lpips": 0.008270176127552986,
+          "clip": 30.28487205505371
+        },
+        {
+          "file": "005.png",
+          "prompt": "0004  a cartoon animation of a squirrel in the forest",
+          "mse": 0.00015380173863377422,
+          "psnr": 38.13038755075639,
+          "ssim": 0.976955303911892,
+          "lpips": 0.006205632351338863,
+          "clip": 28.185653686523438
+        },
+        {
+          "file": "006.png",
+          "prompt": "0005  a cartoon animation of a goose in the forest",
+          "mse": 0.0002600169100333005,
+          "psnr": 35.849984070470974,
+          "ssim": 0.9760498445452525,
+          "lpips": 0.008973629213869572,
+          "clip": 28.039342880249023
+        },
+        {
+          "file": "007.png",
+          "prompt": "0006  a cartoon animation of a fox in the forest",
+          "mse": 0.00027269122074358165,
+          "psnr": 35.643288438845275,
+          "ssim": 0.9758289988242556,
+          "lpips": 0.010507084429264069,
+          "clip": 30.992408752441406
+        },
+        {
+          "file": "008.png",
+          "prompt": "0007  a cartoon animation of a panda in the forest",
+          "mse": 0.00018231268040835857,
+          "psnr": 37.3918312377586,
+          "ssim": 0.9764734670792142,
+          "lpips": 0.008881873451173306,
+          "clip": 30.312776565551758
+        },
+        {
+          "file": "009.png",
+          "prompt": "0008  a cartoon animation of a panda in the forest",
+          "mse": 0.00018014770466834307,
+          "psnr": 37.4437126702031,
+          "ssim": 0.9768275495503209,
+          "lpips": 0.006713331677019596,
+          "clip": 31.76165008544922
+        },
+        {
+          "file": "010.png",
+          "prompt": "0009  a cartoon animation of a puppy in the forest",
+          "mse": 0.00018508454377297312,
+          "psnr": 37.32629847235104,
+          "ssim": 0.9769546215722684,
+          "lpips": 0.005984204821288586,
+          "clip": 26.19708251953125
+        },
+        {
+          "file": "011.png",
+          "prompt": "0010  a cartoon animation of an elephant in the forest",
+          "mse": 0.0002003472181968391,
+          "psnr": 36.98216683329359,
+          "ssim": 0.9763863222521344,
+          "lpips": 0.0079901572316885,
+          "clip": 29.629146575927734
+        },
+        {
+          "file": "012.png",
+          "prompt": "0011  a cartoon animation of a white fox in the forest",
+          "mse": 0.00021969784575048834,
+          "psnr": 36.58174201537671,
+          "ssim": 0.9760521741605496,
+          "lpips": 0.00779515877366066,
+          "clip": 31.82544708251953
+        },
+        {
+          "file": "013.png",
+          "prompt": "0012 a cartoon animation of a hamburger, a croissant, a piece of bread and a cup of coffee",
+          "mse": 0.0001575196220073849,
+          "psnr": 38.02665339025245,
+          "ssim": 0.991014602679642,
+          "lpips": 0.005331612192094326,
+          "clip": 31.01702308654785
+        },
+        {
+          "file": "014.png",
+          "prompt": "0013 a cartoon animation of a roast Chicken, a croissant, a piece of bread and a cup of coffee",
+          "mse": 0.0001668280310695991,
+          "psnr": 37.777309757842936,
+          "ssim": 0.9910897058586873,
+          "lpips": 0.0069661326706409454,
+          "clip": 30.152650833129883
+        },
+        {
+          "file": "015.png",
+          "prompt": "0014 a cartoon animation of a cake, a croissant, a piece of bread and a cup of coffee",
+          "mse": 0.00021547731012105942,
+          "psnr": 36.66598454542792,
+          "ssim": 0.9898764368022932,
+          "lpips": 0.008123924024403095,
+          "clip": 29.754215240478516
+        },
+        {
+          "file": "016.png",
+          "prompt": "0015 a cartoon animation of a croissant, a croissant, a piece of bread and a cup of coffee",
+          "mse": 0.00038292494718916714,
+          "psnr": 34.16886338866048,
+          "ssim": 0.9897231940526066,
+          "lpips": 0.013963354751467705,
+          "clip": 28.658771514892578
+        },
+        {
+          "file": "017.png",
+          "prompt": "0016 a cartoon animation of a waffle, a croissant, a piece of bread and a cup of coffee",
+          "mse": 7.956649642437696e-05,
+          "psnr": 40.99269764938288,
+          "ssim": 0.9919574765886793,
+          "lpips": 0.0021036406978964806,
+          "clip": 31.11168670654297
+        },
+        {
+          "file": "018.png",
+          "prompt": "0017 a cartoon animation of a muffin, a croissant, a piece of bread and a cup of coffee",
+          "mse": 7.528618152718991e-05,
+          "psnr": 41.23284729472765,
+          "ssim": 0.9919400520785588,
+          "lpips": 0.0022783176973462105,
+          "clip": 30.392053604125977
+        },
+        {
+          "file": "019.png",
+          "prompt": "0018 a cartoon animation of a teapot, a croissant, a piece of bread and a cup of coffee",
+          "mse": 0.0001263759477296844,
+          "psnr": 38.98335574489141,
+          "ssim": 0.991291705886883,
+          "lpips": 0.0033369669690728188,
+          "clip": 29.606210708618164
+        },
+        {
+          "file": "020.png",
+          "prompt": "0019 a cartoon animation of a castle and buildings",
+          "mse": 0.000354277464793995,
+          "psnr": 34.50656471790101,
+          "ssim": 0.9804353712127444,
+          "lpips": 0.0077285971492528915,
+          "clip": 23.053598403930664
+        },
+        {
+          "file": "021.png",
+          "prompt": "0020 a cartoon animation of a castle in the distance",
+          "mse": 0.000444939942099154,
+          "psnr": 33.516986060419434,
+          "ssim": 0.9622888278462263,
+          "lpips": 0.008521534502506256,
+          "clip": 29.237567901611328
+        },
+        {
+          "file": "022.png",
+          "prompt": "0021 a cartoon animation of buildings in the distance",
+          "mse": 0.00047852794523350894,
+          "psnr": 33.200926950734974,
+          "ssim": 0.9571618208487876,
+          "lpips": 0.008212442509829998,
+          "clip": 24.364778518676758
+        },
+        {
+          "file": "023.png",
+          "prompt": "0022 a cartoon animation of buildings in the distance",
+          "mse": 0.00035462353844195604,
+          "psnr": 34.502324411091024,
+          "ssim": 0.9664413479623709,
+          "lpips": 0.006106942892074585,
+          "clip": 24.02237892150879
+        },
+        {
+          "file": "024.png",
+          "prompt": "0023 a cartoon animation of a building in the distance",
+          "mse": 0.0004081828228663653,
+          "psnr": 33.891452751988666,
+          "ssim": 0.9558916079640615,
+          "lpips": 0.006617260165512562,
+          "clip": 22.72615623474121
+        },
+        {
+          "file": "025.png",
+          "prompt": "0024 a cartoon animation of an eiffel tower in the distance",
+          "mse": 0.00040344614535570145,
+          "psnr": 33.942144295560816,
+          "ssim": 0.9611597934831697,
+          "lpips": 0.0071075777523219585,
+          "clip": 24.622451782226562
+        },
+        {
+          "file": "026.png",
+          "prompt": "0025 a cartoon animation of a shopping mall in the distance",
+          "mse": 0.00038688312633894384,
+          "psnr": 34.12420211342828,
+          "ssim": 0.9495841570590668,
+          "lpips": 0.007702195085585117,
+          "clip": 23.92112922668457
+        },
+        {
+          "file": "027.png",
+          "prompt": "0026 a cartoon animation of a cabinet",
+          "mse": 0.00023849093122407794,
+          "psnr": 36.225281306457624,
+          "ssim": 0.9871630849794677,
+          "lpips": 0.003869096515700221,
+          "clip": 21.59775161743164
+        }
+      ],
+      "average": {
+        "mse": 0.00025965800321298756,
+        "psnr": 36.309535851583796,
+        "ssim": 0.9767403930343412,
+        "lpips": 0.007338310290059006,
+        "clip": 28.422243542141384
+      },
+      "count": 27
+    },
+    "Real-Painting": {
+      "individual": [
+        {
+          "file": "001.png",
+          "prompt": "0000 an oil painting of a sheep, Van Gogh Style",
+          "mse": 0.0006310548633337021,
+          "psnr": 31.999328819487125,
+          "ssim": 0.9129021177368518,
+          "lpips": 0.025048501789569855,
+          "clip": 30.26389503479004
+        },
+        {
+          "file": "002.png",
+          "prompt": "0001 an oil painting of a panda, Van Gogh Style",
+          "mse": 0.0006460487493313849,
+          "psnr": 31.89734709920058,
+          "ssim": 0.9127079394652723,
+          "lpips": 0.02561231702566147,
+          "clip": 31.77131462097168
+        },
+        {
+          "file": "003.png",
+          "prompt": "0002  an oil painting of a dog, Van Gogh Style",
+          "mse": 0.0006332769989967346,
+          "psnr": 31.984062855242385,
+          "ssim": 0.9124799094705702,
+          "lpips": 0.025919262319803238,
+          "clip": 28.31060218811035
+        },
+        {
+          "file": "004.png",
+          "prompt": "0003  an oil painting of a tortoise, Van Gogh Style",
+          "mse": 0.0006617410690523684,
+          "psnr": 31.793119112845638,
+          "ssim": 0.9117527693785469,
+          "lpips": 0.027552731335163116,
+          "clip": 29.250478744506836
+        },
+        {
+          "file": "005.png",
+          "prompt": "0004  an oil painting of a sheep, Van Gogh Style",
+          "mse": 0.0006389744230546057,
+          "psnr": 31.945165254856693,
+          "ssim": 0.9129764788731256,
+          "lpips": 0.025929700583219528,
+          "clip": 29.671161651611328
+        },
+        {
+          "file": "006.png",
+          "prompt": "0005 an oil painting of a panda, Van Gogh Style",
+          "mse": 0.0008482981356792152,
+          "psnr": 30.71451487454447,
+          "ssim": 0.9102200496463397,
+          "lpips": 0.030148020014166832,
+          "clip": 30.53386878967285
+        },
+        {
+          "file": "007.png",
+          "prompt": "0006  an oil painting of a walking cat, Van Gogh Style",
+          "mse": 0.0006492904503829777,
+          "psnr": 31.875609845852388,
+          "ssim": 0.9126182991138853,
+          "lpips": 0.02673470228910446,
+          "clip": 29.65618896484375
+        },
+        {
+          "file": "008.png",
+          "prompt": "0007  an oil painting of an elephant, Van Gogh Style",
+          "mse": 0.0006371145718730986,
+          "psnr": 31.957824617650694,
+          "ssim": 0.9127626143536691,
+          "lpips": 0.02624635025858879,
+          "clip": 31.001510620117188
+        },
+        {
+          "file": "009.png",
+          "prompt": "0008  an oil painting of a squirrel, Van Gogh Style",
+          "mse": 0.0006338820094242692,
+          "psnr": 31.979915740185916,
+          "ssim": 0.912668956476654,
+          "lpips": 0.025602418929338455,
+          "clip": 26.226032257080078
+        },
+        {
+          "file": "010.png",
+          "prompt": "0009  an oil painting of a penguin, Van Gogh Style",
+          "mse": 0.0007468760013580322,
+          "psnr": 31.267514951003356,
+          "ssim": 0.9107776997912032,
+          "lpips": 0.028518129140138626,
+          "clip": 30.079906463623047
+        },
+        {
+          "file": "011.png",
+          "prompt": "0010  an oil painting of a goat, Van Gogh Style",
+          "mse": 0.0006354134529829025,
+          "psnr": 31.96943594522422,
+          "ssim": 0.9131875913812343,
+          "lpips": 0.02653270587325096,
+          "clip": 27.531206130981445
+        },
+        {
+          "file": "012.png",
+          "prompt": "0011  an oil painting of a panda, Van Gogh Style",
+          "mse": 0.0006519781309179962,
+          "psnr": 31.85766971416737,
+          "ssim": 0.9120997790139397,
+          "lpips": 0.026166070252656937,
+          "clip": 29.333560943603516
+        },
+        {
+          "file": "013.png",
+          "prompt": "0012  an oil painting of a fox, Van Gogh Style",
+          "mse": 0.0006277987267822027,
+          "psnr": 32.021795694133324,
+          "ssim": 0.9127417720234424,
+          "lpips": 0.025423839688301086,
+          "clip": 26.861398696899414
+        },
+        {
+          "file": "014.png",
+          "prompt": "0013  an oil painting of a panda, Van Gogh Style",
+          "mse": 0.0007039939519017935,
+          "psnr": 31.52431071918911,
+          "ssim": 0.9107798883960724,
+          "lpips": 0.028086263686418533,
+          "clip": 30.228492736816406
+        },
+        {
+          "file": "015.png",
+          "prompt": "0014  an oil painting of a panda, Van Gogh Style",
+          "mse": 0.0007101423689164221,
+          "psnr": 31.486545754547862,
+          "ssim": 0.9120906660238127,
+          "lpips": 0.027501579374074936,
+          "clip": 30.240642547607422
+        },
+        {
+          "file": "016.png",
+          "prompt": "0015  an oil painting of a panda, Van Gogh Style",
+          "mse": 0.000660318008158356,
+          "psnr": 31.802468585089713,
+          "ssim": 0.9125833525198047,
+          "lpips": 0.026749830693006516,
+          "clip": 29.962146759033203
+        },
+        {
+          "file": "017.png",
+          "prompt": "0016  an oil painting of a puppy, Van Gogh Style",
+          "mse": 0.0006722882390022278,
+          "psnr": 31.72444486218296,
+          "ssim": 0.9127463474166245,
+          "lpips": 0.026911253109574318,
+          "clip": 31.692153930664062
+        },
+        {
+          "file": "018.png",
+          "prompt": "0017  an oil painting of an elephant, Van Gogh Style",
+          "mse": 0.0007449198164977133,
+          "psnr": 31.278904723882313,
+          "ssim": 0.9120874204817769,
+          "lpips": 0.029040612280368805,
+          "clip": 28.763246536254883
+        },
+        {
+          "file": "019.png",
+          "prompt": "0018 an oil painting of a hamburger, Van Gogh Style",
+          "mse": 0.0003570097906049341,
+          "psnr": 34.47319873671019,
+          "ssim": 0.9592100986385924,
+          "lpips": 0.011878946796059608,
+          "clip": 28.0214900970459
+        },
+        {
+          "file": "020.png",
+          "prompt": "0019 an oil painting of a roast Chicken, Van Gogh Style",
+          "mse": 0.0003457659622654319,
+          "psnr": 34.61217761576488,
+          "ssim": 0.9592574168203315,
+          "lpips": 0.011747652664780617,
+          "clip": 25.20836639404297
+        },
+        {
+          "file": "021.png",
+          "prompt": "0020 an oil painting of a cake, Van Gogh Style",
+          "mse": 0.00033122929744422436,
+          "psnr": 34.79871256562178,
+          "ssim": 0.9593626994092684,
+          "lpips": 0.010985136032104492,
+          "clip": 23.297197341918945
+        },
+        {
+          "file": "022.png",
+          "prompt": "0021 an oil painting of a tomato, Van Gogh Style",
+          "mse": 0.00041843566577881575,
+          "psnr": 33.78371305042349,
+          "ssim": 0.958446882759406,
+          "lpips": 0.012981146574020386,
+          "clip": 18.59593963623047
+        },
+        {
+          "file": "023.png",
+          "prompt": "0022 an oil painting of a croissant, Van Gogh Style",
+          "mse": 0.00040472974069416523,
+          "psnr": 33.92834881240279,
+          "ssim": 0.9582020285513119,
+          "lpips": 0.013769514858722687,
+          "clip": 27.52882194519043
+        },
+        {
+          "file": "024.png",
+          "prompt": "0023 an oil painting of a hot dog bread, Van Gogh Style",
+          "mse": 0.0003513316623866558,
+          "psnr": 34.54282709359208,
+          "ssim": 0.9594068565838582,
+          "lpips": 0.01128331758081913,
+          "clip": 27.906152725219727
+        },
+        {
+          "file": "025.png",
+          "prompt": "0024 an oil painting of a waffle, Van Gogh Style",
+          "mse": 0.00034586337278597057,
+          "psnr": 34.61095427691313,
+          "ssim": 0.959525850047493,
+          "lpips": 0.011024902574717999,
+          "clip": 29.61302375793457
+        },
+        {
+          "file": "026.png",
+          "prompt": "0025 an oil painting of a burrito, Van Gogh Style",
+          "mse": 0.0003197708574589342,
+          "psnr": 34.951611185181235,
+          "ssim": 0.959988689893191,
+          "lpips": 0.01008535921573639,
+          "clip": 21.13802146911621
+        },
+        {
+          "file": "027.png",
+          "prompt": "0026 an oil painting of a muffin, Van Gogh Style",
+          "mse": 0.00037761309067718685,
+          "psnr": 34.229529584673976,
+          "ssim": 0.9592318107288403,
+          "lpips": 0.011781721375882626,
+          "clip": 25.738101959228516
+        },
+        {
+          "file": "028.png",
+          "prompt": "0027 an oil painting of a cup of coffee, Van Gogh Style",
+          "mse": 0.00035023773671127856,
+          "psnr": 34.55637062243076,
+          "ssim": 0.9595306757597516,
+          "lpips": 0.011531344614923,
+          "clip": 23.2830753326416
+        },
+        {
+          "file": "029.png",
+          "prompt": "0028 an oil painting of a sandwich filled with meat, Van Gogh Style",
+          "mse": 0.00037070419057272375,
+          "psnr": 34.30972504522572,
+          "ssim": 0.9589966614590226,
+          "lpips": 0.011819913983345032,
+          "clip": 23.91856575012207
+        },
+        {
+          "file": "030.png",
+          "prompt": "0029 an oil painting of a teapot, Van Gogh Style",
+          "mse": 0.0003819306439254433,
+          "psnr": 34.18015494929088,
+          "ssim": 0.9593332963189071,
+          "lpips": 0.011554108001291752,
+          "clip": 28.604751586914062
+        },
+        {
+          "file": "031.png",
+          "prompt": "0030 an oil painting of a chocolate doughnut, Van Gogh Style",
+          "mse": 0.00034358559059910476,
+          "psnr": 34.639650580378785,
+          "ssim": 0.9596475968708821,
+          "lpips": 0.011036285199224949,
+          "clip": 28.213375091552734
+        },
+        {
+          "file": "032.png",
+          "prompt": "0031 an oil painting of a sandwich, Van Gogh Style",
+          "mse": 0.0003334147622808814,
+          "psnr": 34.770151752482825,
+          "ssim": 0.9596480489334963,
+          "lpips": 0.010576054453849792,
+          "clip": 28.56021499633789
+        },
+        {
+          "file": "033.png",
+          "prompt": "0032 an oil painting of buildings in the distance, Van Gogh Style",
+          "mse": 0.0003698116634041071,
+          "psnr": 34.32019395848113,
+          "ssim": 0.961429367565365,
+          "lpips": 0.015832386910915375,
+          "clip": 21.945425033569336
+        },
+        {
+          "file": "034.png",
+          "prompt": "0033 an oil painting of a building in the distance, Van Gogh Style",
+          "mse": 0.00033120406442321837,
+          "psnr": 34.79904342340826,
+          "ssim": 0.9597056734865204,
+          "lpips": 0.011564378626644611,
+          "clip": 18.400951385498047
+        },
+        {
+          "file": "035.png",
+          "prompt": "0034 an oil painting of an eiffel tower in the distance, Van Gogh Style",
+          "mse": 0.0005062171840108931,
+          "psnr": 32.9566311639934,
+          "ssim": 0.9548186611256858,
+          "lpips": 0.020201221108436584,
+          "clip": 23.077159881591797
+        },
+        {
+          "file": "036.png",
+          "prompt": "0035 an oil painting of a shopping mall in the distance, Van Gogh Style",
+          "mse": 0.00029358777101151645,
+          "psnr": 35.32262038309192,
+          "ssim": 0.9672510715305469,
+          "lpips": 0.011404383927583694,
+          "clip": 17.167383193969727
+        },
+        {
+          "file": "037.png",
+          "prompt": "0036 an oil painting of skyscrapers in the distance, Van Gogh Style",
+          "mse": 0.00028841602033935487,
+          "psnr": 35.39980619986781,
+          "ssim": 0.9696775098868297,
+          "lpips": 0.012460457161068916,
+          "clip": 23.559900283813477
+        }
+      ],
+      "average": {
+        "mse": 0.0005122775414870499,
+        "psnr": 33.14230811268165,
+        "ssim": 0.9368339067008683,
+        "lpips": 0.019384932981149572,
+        "clip": 26.896100688625026
+      },
+      "count": 37
+    },
+    "Real-Sketch": {
+      "individual": [
+        {
+          "file": "001.png",
+          "prompt": "0000 a pencil drawing of a sheep in the sunset",
+          "mse": 0.0004427056119311601,
+          "psnr": 33.538849726782836,
+          "ssim": 0.9667813194244973,
+          "lpips": 0.012773883529007435,
+          "clip": 29.809051513671875
+        },
+        {
+          "file": "002.png",
+          "prompt": "0001 a pencil drawing of a dog in the sunset",
+          "mse": 0.0004584912385325879,
+          "psnr": 33.386689589979,
+          "ssim": 0.9665847015873062,
+          "lpips": 0.01333895605057478,
+          "clip": 32.58836364746094
+        },
+        {
+          "file": "003.png",
+          "prompt": "0002 a pencil drawing of a tortoise in the sunset",
+          "mse": 0.0005582463345490396,
+          "psnr": 32.53174119829031,
+          "ssim": 0.9645886296451543,
+          "lpips": 0.01677488163113594,
+          "clip": 30.138376235961914
+        },
+        {
+          "file": "004.png",
+          "prompt": "0003 a pencil drawing of a puppy lying in the sunset",
+          "mse": 0.0004712446534540504,
+          "psnr": 33.26753564082862,
+          "ssim": 0.9668381791458115,
+          "lpips": 0.01359768956899643,
+          "clip": 32.02719497680664
+        },
+        {
+          "file": "005.png",
+          "prompt": "0004 a pencil drawing of a panda in the sunset",
+          "mse": 0.0006031829980202019,
+          "psnr": 32.19550908467977,
+          "ssim": 0.9644077942362399,
+          "lpips": 0.016249727457761765,
+          "clip": 34.44428253173828
+        },
+        {
+          "file": "006.png",
+          "prompt": "0005 a pencil drawing of a cat walking in the sunset",
+          "mse": 0.000455883564427495,
+          "psnr": 33.411460647559494,
+          "ssim": 0.9668479057507439,
+          "lpips": 0.013068396598100662,
+          "clip": 32.12019729614258
+        },
+        {
+          "file": "007.png",
+          "prompt": "0006 a pencil drawing of an elephant in the sunset",
+          "mse": 0.0005416696076281369,
+          "psnr": 32.6626553142347,
+          "ssim": 0.9645019077067886,
+          "lpips": 0.0163283608853817,
+          "clip": 32.4814567565918
+        },
+        {
+          "file": "008.png",
+          "prompt": "0007 a pencil drawing of a squirrel in the sunset",
+          "mse": 0.000469067512312904,
+          "psnr": 33.28764645312973,
+          "ssim": 0.9666211876717581,
+          "lpips": 0.013334818184375763,
+          "clip": 33.408321380615234
+        },
+        {
+          "file": "009.png",
+          "prompt": "0008 a pencil drawing of a fox in the sunset",
+          "mse": 0.0005078075337223709,
+          "psnr": 32.94300860315815,
+          "ssim": 0.9657026066932805,
+          "lpips": 0.015664583072066307,
+          "clip": 23.418190002441406
+        },
+        {
+          "file": "010.png",
+          "prompt": "0009 a pencil drawing of a panda in the sunset",
+          "mse": 0.0006638607592321932,
+          "psnr": 31.779230017139643,
+          "ssim": 0.9639225534892087,
+          "lpips": 0.01708896830677986,
+          "clip": 34.561134338378906
+        },
+        {
+          "file": "011.png",
+          "prompt": "0010 a pencil drawing of a puppy in the sunset",
+          "mse": 0.00046564111835323274,
+          "psnr": 33.319486763705385,
+          "ssim": 0.9668149826349519,
+          "lpips": 0.013076309114694595,
+          "clip": 28.61117935180664
+        },
+        {
+          "file": "012.png",
+          "prompt": "0011 a pencil drawing of a hamburger and other food, gray tone",
+          "mse": 0.00028623564867302775,
+          "psnr": 35.43276278829724,
+          "ssim": 0.9325027291689768,
+          "lpips": 0.01968255080282688,
+          "clip": 30.625755310058594
+        },
+        {
+          "file": "013.png",
+          "prompt": "0012 a pencil drawing of a roast Chicken and other food, gray tone",
+          "mse": 0.0002837262290995568,
+          "psnr": 35.471005139515626,
+          "ssim": 0.9324842097376496,
+          "lpips": 0.020119182765483856,
+          "clip": 31.46824836730957
+        },
+        {
+          "file": "014.png",
+          "prompt": "0013 a pencil drawing of a piece of bread and other food, gray tone",
+          "mse": 0.00029880041256546974,
+          "psnr": 35.2461880720877,
+          "ssim": 0.9321797185449147,
+          "lpips": 0.021658794954419136,
+          "clip": 35.13070297241211
+        },
+        {
+          "file": "015.png",
+          "prompt": "0014 a pencil drawing of a croissant and other food, gray tone",
+          "mse": 0.0002695659932214767,
+          "psnr": 35.69334896587018,
+          "ssim": 0.9321475929998341,
+          "lpips": 0.019575582817196846,
+          "clip": 34.76664733886719
+        },
+        {
+          "file": "016.png",
+          "prompt": "0015 a pencil drawing of a waffle and other food, gray tone",
+          "mse": 0.00024401590053457767,
+          "psnr": 36.12581873294741,
+          "ssim": 0.9333767036541859,
+          "lpips": 0.017867201939225197,
+          "clip": 29.03684425354004
+        },
+        {
+          "file": "017.png",
+          "prompt": "0016 a pencil drawing of a burrito and other food, gray tone",
+          "mse": 0.00023759026953484863,
+          "psnr": 36.241713497760955,
+          "ssim": 0.9330370234357002,
+          "lpips": 0.016807259991765022,
+          "clip": 30.072467803955078
+        },
+        {
+          "file": "018.png",
+          "prompt": "0017 a pencil drawing of a muffin and other food, gray tone",
+          "mse": 0.0003169989213347435,
+          "psnr": 34.98942215571415,
+          "ssim": 0.9317421207609465,
+          "lpips": 0.021207647398114204,
+          "clip": 36.48911666870117
+        },
+        {
+          "file": "019.png",
+          "prompt": "0018 a pencil drawing of a cup of coffee and other food, gray tone",
+          "mse": 0.0003093935956712812,
+          "psnr": 35.094886802727515,
+          "ssim": 0.9319307363926493,
+          "lpips": 0.019989490509033203,
+          "clip": 32.48091506958008
+        },
+        {
+          "file": "020.png",
+          "prompt": "0019 a pencil drawing of a castle in the distance, black and white painting",
+          "mse": 0.000554265920072794,
+          "psnr": 32.56281823877939,
+          "ssim": 0.9741900554977629,
+          "lpips": 0.013882637023925781,
+          "clip": 24.323606491088867
+        },
+        {
+          "file": "021.png",
+          "prompt": "0020 a pencil drawing of buildings in the distance, black and white painting",
+          "mse": 0.00031427681096829474,
+          "psnr": 35.026876623805826,
+          "ssim": 0.9755742425304704,
+          "lpips": 0.0122611029073596,
+          "clip": 23.587690353393555
+        },
+        {
+          "file": "022.png",
+          "prompt": "0021 a pencil drawing of skyscrapers in the distance, black and white painting",
+          "mse": 0.00030331333982758224,
+          "psnr": 35.1810848884493,
+          "ssim": 0.9757605206000436,
+          "lpips": 0.010907532647252083,
+          "clip": 23.868932723999023
+        },
+        {
+          "file": "023.png",
+          "prompt": "0022 a pencil drawing of an eiffel tower in the distance, black and white painting",
+          "mse": 0.0004052243020851165,
+          "psnr": 33.92304517050704,
+          "ssim": 0.9730457438632513,
+          "lpips": 0.014846257865428925,
+          "clip": 23.768430709838867
+        },
+        {
+          "file": "024.png",
+          "prompt": "0023 a pencil drawing of a building in the distance, black and white painting",
+          "mse": 0.00021132321853656322,
+          "psnr": 36.75052783457251,
+          "ssim": 0.9761901294956369,
+          "lpips": 0.00688827084377408,
+          "clip": 19.829275131225586
+        },
+        {
+          "file": "025.png",
+          "prompt": "0024 a pencil drawing of a shopping mall in the distance, black and white painting",
+          "mse": 0.0003292257897555828,
+          "psnr": 34.82506151862439,
+          "ssim": 0.9754562293042509,
+          "lpips": 0.01053549349308014,
+          "clip": 21.62908935546875
+        },
+        {
+          "file": "026.png",
+          "prompt": "0025 a pencil drawing of a car and a willow, black and white painting",
+          "mse": 0.0015130620449781418,
+          "psnr": 28.201432628299816,
+          "ssim": 0.9119514668519972,
+          "lpips": 0.021075762808322906,
+          "clip": 32.71036911010742
+        },
+        {
+          "file": "027.png",
+          "prompt": "0026 a pencil drawing of a car and a willow, black and white painting",
+          "mse": 0.0016598751535639167,
+          "psnr": 27.799245759101197,
+          "ssim": 0.9103329748434259,
+          "lpips": 0.027661720290780067,
+          "clip": 33.837039947509766
+        },
+        {
+          "file": "028.png",
+          "prompt": "0027 a pencil drawing of a car and a willow, black and white painting",
+          "mse": 0.0015818042447790504,
+          "psnr": 28.008472633620848,
+          "ssim": 0.9104346911824829,
+          "lpips": 0.024332484230399132,
+          "clip": 31.662208557128906
+        },
+        {
+          "file": "029.png",
+          "prompt": "0028 a pencil drawing of a car and a willow, black and white painting",
+          "mse": 0.0016747964546084404,
+          "psnr": 27.760379671416977,
+          "ssim": 0.9084699423882739,
+          "lpips": 0.024166375398635864,
+          "clip": 35.320281982421875
+        },
+        {
+          "file": "030.png",
+          "prompt": "0029 a pencil drawing of a microwave oven on a shelf, black and white painting",
+          "mse": 0.00029503897530958056,
+          "psnr": 35.301206089581065,
+          "ssim": 0.9948801474466099,
+          "lpips": 0.006893138401210308,
+          "clip": 21.732229232788086
+        },
+        {
+          "file": "031.png",
+          "prompt": "0030 a pencil drawing of a castle in the distance, black and white painting",
+          "mse": 0.000205911579541862,
+          "psnr": 36.863192299252965,
+          "ssim": 0.9774755338297735,
+          "lpips": 0.00646989094093442,
+          "clip": 25.376684188842773
+        }
+      ],
+      "average": {
+        "mse": 0.0005462014753814606,
+        "psnr": 33.51039685646515,
+        "ssim": 0.9531217509843414,
+        "lpips": 0.01606854685251751,
+        "clip": 29.720138180640436
+      },
+      "count": 31
+    },
+    "Real-Real": {
+      "individual": [
+        {
+          "file": "001.png",
+          "prompt": "0001 a professional photograph of a puppy in the snow, ultra realistic",
+          "mse": 0.0003470748197287321,
+          "psnr": 34.59576893241713,
+          "ssim": 0.9620310735626519,
+          "lpips": 0.013845724985003471,
+          "clip": 30.65104866027832
+        },
+        {
+          "file": "002.png",
+          "prompt": "0002 a professional photograph of a panda crawling on the beach, ultra realistic",
+          "mse": 0.00034329938353039324,
+          "psnr": 34.643269764448846,
+          "ssim": 0.959845825906569,
+          "lpips": 0.014316060580313206,
+          "clip": 26.4559268951416
+        },
+        {
+          "file": "003.png",
+          "prompt": "0003 a professional photograph of a puppy in the fountain, ultra realistic",
+          "mse": 0.0023576770909130573,
+          "psnr": 26.275156764409715,
+          "ssim": 0.845112181932849,
+          "lpips": 0.06246514990925789,
+          "clip": 22.317440032958984
+        },
+        {
+          "file": "004.png",
+          "prompt": "0004 a professional photograph of an elephant in the fountain, ultra realistic",
+          "mse": 0.002189835300669074,
+          "psnr": 26.595885475801406,
+          "ssim": 0.8735632607956149,
+          "lpips": 0.04955502599477768,
+          "clip": 29.063310623168945
+        },
+        {
+          "file": "005.png",
+          "prompt": "0005 a professional photograph of a castle is located in the distance of the forest, ultra realistic",
+          "mse": 0.00011771074059652165,
+          "psnr": 39.2918390785339,
+          "ssim": 0.9833033103261575,
+          "lpips": 0.02062138542532921,
+          "clip": 20.147022247314453
+        },
+        {
+          "file": "006.png",
+          "prompt": "0006 a professional photograph of a huge buddha in the distance, ultra realistic",
+          "mse": 0.0003332537307869643,
+          "psnr": 34.77224979945244,
+          "ssim": 0.945200849015126,
+          "lpips": 0.017124544829130173,
+          "clip": 24.03653335571289
+        },
+        {
+          "file": "007.png",
+          "prompt": "0007 a professional photograph of a huge buddha in the distance, ultra realistic",
+          "mse": 0.00034890708047896624,
+          "psnr": 34.572902171906314,
+          "ssim": 0.9469256105219088,
+          "lpips": 0.01971261575818062,
+          "clip": 24.65009117126465
+        },
+        {
+          "file": "008.png",
+          "prompt": "0008 a professional photograph of a panda crawling on the beach, ultra realistic",
+          "mse": 0.00035645265597850084,
+          "psnr": 34.479981449501224,
+          "ssim": 0.9612549396988236,
+          "lpips": 0.013347416184842587,
+          "clip": 27.439844131469727
+        },
+        {
+          "file": "009.png",
+          "prompt": "0009 a professional photograph of a puppy on a bench, ultra realistic",
+          "mse": 0.003717259503901005,
+          "psnr": 24.29777119512753,
+          "ssim": 0.8375339158949696,
+          "lpips": 0.046726636588573456,
+          "clip": 32.9061164855957
+        },
+        {
+          "file": "010.png",
+          "prompt": "0010 a professional photograph of a panda sitting on a bench, ultra realistic",
+          "mse": 0.0035335372667759657,
+          "psnr": 24.51790323998385,
+          "ssim": 0.841282413046998,
+          "lpips": 0.04679633304476738,
+          "clip": 32.04875183105469
+        },
+        {
+          "file": "011.png",
+          "prompt": "0011 a professional photograph of a bird on a bench, ultra realistic",
+          "mse": 0.0037063229829072952,
+          "psnr": 24.310567373154495,
+          "ssim": 0.8357372903895056,
+          "lpips": 0.04602205380797386,
+          "clip": 21.73756980895996
+        },
+        {
+          "file": "012.png",
+          "prompt": "0012 a professional photograph of a fox on the bench, ultra realistic",
+          "mse": 0.0035421326756477356,
+          "psnr": 24.507351757200393,
+          "ssim": 0.8435762502054481,
+          "lpips": 0.04367451369762421,
+          "clip": 34.10338592529297
+        },
+        {
+          "file": "013.png",
+          "prompt": "0013 a professional photograph of a fox sitting on the ground, ultra realistic",
+          "mse": 0.0035660096909850836,
+          "psnr": 24.47817480920724,
+          "ssim": 0.8504947402936954,
+          "lpips": 0.0511506050825119,
+          "clip": 23.514530181884766
+        },
+        {
+          "file": "014.png",
+          "prompt": "0014 a professional photograph of a chick on the bench, ultra realistic",
+          "mse": 0.0037826027255505323,
+          "psnr": 24.222092688476828,
+          "ssim": 0.8358249724467429,
+          "lpips": 0.0467204675078392,
+          "clip": 29.438976287841797
+        },
+        {
+          "file": "015.png",
+          "prompt": "0015 a professional photograph of a chick on the ground, ultra realistic",
+          "mse": 0.0036506440956145525,
+          "psnr": 24.376305047234826,
+          "ssim": 0.842367950082218,
+          "lpips": 0.04572101682424545,
+          "clip": 21.50555419921875
+        },
+        {
+          "file": "016.png",
+          "prompt": "0016 a professional photograph of a sheep on the ground, ultra realistic",
+          "mse": 0.003599884221330285,
+          "psnr": 24.437114666899213,
+          "ssim": 0.8601437836365471,
+          "lpips": 0.04455479234457016,
+          "clip": 22.48306655883789
+        },
+        {
+          "file": "017.png",
+          "prompt": "0017 a professional photograph of a puppy on the bench, ultra realistic",
+          "mse": 0.0037098706234246492,
+          "psnr": 24.306412355365662,
+          "ssim": 0.836800992747385,
+          "lpips": 0.04589821770787239,
+          "clip": 31.64421272277832
+        },
+        {
+          "file": "018.png",
+          "prompt": "0018 a professional photograph of a fox on the grass, ultra realistic",
+          "mse": 0.0009534715209156275,
+          "psnr": 30.20692274294855,
+          "ssim": 0.885719926554474,
+          "lpips": 0.029340848326683044,
+          "clip": 23.08875274658203
+        },
+        {
+          "file": "019.png",
+          "prompt": "0019 a professional photograph of a puppy on the grass, ultra realistic",
+          "mse": 0.000943944847676903,
+          "psnr": 30.25053379694843,
+          "ssim": 0.8916392259133507,
+          "lpips": 0.028581514954566956,
+          "clip": 26.25940704345703
+        },
+        {
+          "file": "020.png",
+          "prompt": "0020 a professional photograph of a fire hydrant on the grass, ultra realistic",
+          "mse": 0.0011491436744108796,
+          "psnr": 29.396256692203252,
+          "ssim": 0.8592535374310493,
+          "lpips": 0.043293297290802,
+          "clip": 27.209758758544922
+        },
+        {
+          "file": "021.png",
+          "prompt": "0021 a professional photograph of a mailbox on the grass, ultra realistic",
+          "mse": 0.0010365537600591779,
+          "psnr": 29.844081686385408,
+          "ssim": 0.8619125390257282,
+          "lpips": 0.03514404594898224,
+          "clip": 21.534595489501953
+        },
+        {
+          "file": "022.png",
+          "prompt": "0022 a professional photograph of a huge Buddha, ultra realistic",
+          "mse": 0.00042283147922717035,
+          "psnr": 33.738326875289,
+          "ssim": 0.941070793935714,
+          "lpips": 0.02009010687470436,
+          "clip": 24.495119094848633
+        },
+        {
+          "file": "023.png",
+          "prompt": "0023 a professional photograph of a huge Buddha, ultra realistic",
+          "mse": 0.0004795111308339983,
+          "psnr": 33.19201307150924,
+          "ssim": 0.9652464999892093,
+          "lpips": 0.009104657918214798,
+          "clip": 26.91715431213379
+        },
+        {
+          "file": "024.png",
+          "prompt": "0024 a professional photograph of a huge Buddha, ultra realistic",
+          "mse": 0.0005553977680392563,
+          "psnr": 32.553958698687694,
+          "ssim": 0.9624110778663256,
+          "lpips": 0.013847343623638153,
+          "clip": 28.076223373413086
+        },
+        {
+          "file": "025.png",
+          "prompt": "0025 a professional photograph of a hamburger and some strawberries, ultra realistic",
+          "mse": 0.00013977430353406817,
+          "psnr": 38.545726630618816,
+          "ssim": 0.9690701500621208,
+          "lpips": 0.005259083118289709,
+          "clip": 31.56232261657715
+        },
+        {
+          "file": "026.png",
+          "prompt": "0026 a professional photograph of a roast Chicken and some strawberries, ultra realistic",
+          "mse": 0.00013669849431607872,
+          "psnr": 38.642362690007204,
+          "ssim": 0.9694929406645642,
+          "lpips": 0.005346332211047411,
+          "clip": 29.221296310424805
+        },
+        {
+          "file": "027.png",
+          "prompt": "0027 a professional photograph of a piece of bread and strawberries, ultra realistic",
+          "mse": 0.0005585664184764028,
+          "psnr": 32.529251780313494,
+          "ssim": 0.9588295538809607,
+          "lpips": 0.019791990518569946,
+          "clip": 24.82721519470215
+        },
+        {
+          "file": "028.png",
+          "prompt": "0028 a professional photograph of a cake and strawberries, ultra realistic",
+          "mse": 0.00026898219948634505,
+          "psnr": 35.70276459479551,
+          "ssim": 0.9605962822062509,
+          "lpips": 0.009798133745789528,
+          "clip": 22.425750732421875
+        },
+        {
+          "file": "029.png",
+          "prompt": "0029 a professional photograph of a tomato and strawberries, ultra realistic",
+          "mse": 0.0015064746839925647,
+          "psnr": 28.220381621616916,
+          "ssim": 0.9524964735539022,
+          "lpips": 0.028396468609571457,
+          "clip": 19.562822341918945
+        },
+        {
+          "file": "030.png",
+          "prompt": "0030 a professional photograph of a roast fish and strawberries, ultra realistic",
+          "mse": 0.00011526782327564433,
+          "psnr": 39.38291908005212,
+          "ssim": 0.9775215092963324,
+          "lpips": 0.00393629539757967,
+          "clip": 26.717206954956055
+        },
+        {
+          "file": "031.png",
+          "prompt": "0031 a professional photograph of a croissant and strawberries, ultra realistic",
+          "mse": 0.00039408972952514887,
+          "psnr": 34.04404883248266,
+          "ssim": 0.9600674530741512,
+          "lpips": 0.011696004308760166,
+          "clip": 30.70744514465332
+        },
+        {
+          "file": "032.png",
+          "prompt": "0032 a professional photograph of a hot dog bread and strawberries, ultra realistic",
+          "mse": 0.00017453001055400819,
+          "psnr": 37.58129885052149,
+          "ssim": 0.9633862463363813,
+          "lpips": 0.005317782051861286,
+          "clip": 29.820602416992188
+        },
+        {
+          "file": "033.png",
+          "prompt": "0033 a professional photograph of a waffle and strawberries, ultra realistic",
+          "mse": 0.000179848910192959,
+          "psnr": 37.450921894752625,
+          "ssim": 0.9662478452611994,
+          "lpips": 0.0053454297594726086,
+          "clip": 29.33384132385254
+        },
+        {
+          "file": "034.png",
+          "prompt": "0034 a professional photograph of a pancake and strawberries, ultra realistic",
+          "mse": 0.0004493562737479806,
+          "psnr": 33.47409190470262,
+          "ssim": 0.960201381920764,
+          "lpips": 0.011759655550122261,
+          "clip": 29.163265228271484
+        },
+        {
+          "file": "035.png",
+          "prompt": "0035 a professional photograph of popcorn and strawberries, ultra realistic",
+          "mse": 0.0001699134591035545,
+          "psnr": 37.69772218641874,
+          "ssim": 0.9600850120187192,
+          "lpips": 0.006827846169471741,
+          "clip": 24.362266540527344
+        },
+        {
+          "file": "036.png",
+          "prompt": "0036 a professional photograph of a burrito and strawberries, ultra realistic",
+          "mse": 0.0001778286532498896,
+          "psnr": 37.49998260543955,
+          "ssim": 0.9588092582280278,
+          "lpips": 0.0077132959850132465,
+          "clip": 18.06812286376953
+        },
+        {
+          "file": "037.png",
+          "prompt": "0037 a professional photograph of a burrito and strawberries, ultra realistic",
+          "mse": 0.0001277463452424854,
+          "psnr": 38.93651515958229,
+          "ssim": 0.9744676108255755,
+          "lpips": 0.0074376314878463745,
+          "clip": 27.68581199645996
+        },
+        {
+          "file": "038.png",
+          "prompt": "0038 a professional photograph of a muffin and strawberries, ultra realistic",
+          "mse": 0.00035902581294067204,
+          "psnr": 34.44874325754028,
+          "ssim": 0.9577221758327639,
+          "lpips": 0.011713407002389431,
+          "clip": 24.433670043945312
+        },
+        {
+          "file": "039.png",
+          "prompt": "0039 a professional photograph of a glass of juice, a cake, and strawberries, ultra realistic",
+          "mse": 0.0002326670364709571,
+          "psnr": 36.33265141822139,
+          "ssim": 0.9605474323378514,
+          "lpips": 0.008154947310686111,
+          "clip": 30.02813720703125
+        },
+        {
+          "file": "040.png",
+          "prompt": "0040 a professional photograph of a cup of coffee and strawberries, ultra realistic",
+          "mse": 0.0003352703351993114,
+          "psnr": 34.74604871352528,
+          "ssim": 0.9626879052801466,
+          "lpips": 0.016907835379242897,
+          "clip": 29.61518096923828
+        },
+        {
+          "file": "041.png",
+          "prompt": "0041 a professional photograph of a cup of coffee and strawberries, ultra realistic",
+          "mse": 0.00016953865997493267,
+          "psnr": 37.70731253806952,
+          "ssim": 0.9681564015369265,
+          "lpips": 0.006476104259490967,
+          "clip": 26.830110549926758
+        },
+        {
+          "file": "042.png",
+          "prompt": "0042 a professional photograph of paper towel, a cake and strawberries, ultra realistic",
+          "mse": 0.0002106331376126036,
+          "psnr": 36.76473302902782,
+          "ssim": 0.9519554130430405,
+          "lpips": 0.007971412502229214,
+          "clip": 28.908252716064453
+        },
+        {
+          "file": "043.png",
+          "prompt": "0043 a professional photograph of a tart, a cake and strawberries, ultra realistic",
+          "mse": 0.00023631997464690357,
+          "psnr": 36.26499568624502,
+          "ssim": 0.9523225033074557,
+          "lpips": 0.007935264147818089,
+          "clip": 26.224369049072266
+        },
+        {
+          "file": "044.png",
+          "prompt": "0044 a professional photograph of a sandwich filled with meat and strawberries, ultra realistic",
+          "mse": 0.0002114192466251552,
+          "psnr": 36.7485547907864,
+          "ssim": 0.9611397019615994,
+          "lpips": 0.012701443396508694,
+          "clip": 31.202638626098633
+        },
+        {
+          "file": "045.png",
+          "prompt": "0045 a professional photograph of a teapot and strawberries, ultra realistic",
+          "mse": 0.00034244675771333277,
+          "psnr": 34.654069413357426,
+          "ssim": 0.9639195608933585,
+          "lpips": 0.016854366287589073,
+          "clip": 32.4495735168457
+        },
+        {
+          "file": "046.png",
+          "prompt": "0046 a professional photograph of half a lemon, a cake and strawberries, ultra realistic",
+          "mse": 0.0002566667681094259,
+          "psnr": 35.90630357900342,
+          "ssim": 0.9487886586381759,
+          "lpips": 0.008571242913603783,
+          "clip": 26.809518814086914
+        },
+        {
+          "file": "047.png",
+          "prompt": "0047 a professional photograph of half a lemon, a cake and strawberries, ultra realistic",
+          "mse": 0.0003567205567378551,
+          "psnr": 34.476718628495526,
+          "ssim": 0.9438982356897108,
+          "lpips": 0.012339070439338684,
+          "clip": 27.33566665649414
+        },
+        {
+          "file": "048.png",
+          "prompt": "0048 a professional photograph of a small candle, a cake and strawberries, ultra realistic",
+          "mse": 0.0002494990767445415,
+          "psnr": 36.029310571167144,
+          "ssim": 0.9440939477696642,
+          "lpips": 0.007549872621893883,
+          "clip": 27.1946964263916
+        },
+        {
+          "file": "049.png",
+          "prompt": "0049 a professional photograph of a spoon, a cake and strawberries, ultra realistic",
+          "mse": 0.00025170602020807564,
+          "psnr": 35.99106397038526,
+          "ssim": 0.9461624825748602,
+          "lpips": 0.010029522702097893,
+          "clip": 22.5406436920166
+        },
+        {
+          "file": "050.png",
+          "prompt": "0050 a professional photograph of a grapefruit and strawberries, ultra realistic",
+          "mse": 0.00022637360962107778,
+          "psnr": 36.4517420409146,
+          "ssim": 0.96431878004088,
+          "lpips": 0.007675704546272755,
+          "clip": 27.930980682373047
+        },
+        {
+          "file": "051.png",
+          "prompt": "0051 a professional photograph of a turkey and strawberries, ultra realistic",
+          "mse": 0.0006118023302406073,
+          "psnr": 32.13388873201765,
+          "ssim": 0.9558598091402212,
+          "lpips": 0.025127332657575607,
+          "clip": 21.724346160888672
+        },
+        {
+          "file": "052.png",
+          "prompt": "0052 a professional photograph of a pomegranate and strawberries, ultra realistic",
+          "mse": 0.00033091651857830584,
+          "psnr": 34.80281553334703,
+          "ssim": 0.9592006100723953,
+          "lpips": 0.018737126141786575,
+          "clip": 26.2032413482666
+        },
+        {
+          "file": "053.png",
+          "prompt": "0053 a professional photograph of a chocolate doughnut, a cake and strawberries, ultra realistic",
+          "mse": 0.000304357468849048,
+          "psnr": 35.16616036312393,
+          "ssim": 0.9459444674022005,
+          "lpips": 0.009133972227573395,
+          "clip": 27.112960815429688
+        },
+        {
+          "file": "054.png",
+          "prompt": "0054 a professional photograph of a cantaloupe and strawberries, ultra realistic",
+          "mse": 0.0002479265385773033,
+          "psnr": 36.0567698295062,
+          "ssim": 0.9599198430191899,
+          "lpips": 0.010949435643851757,
+          "clip": 22.509784698486328
+        },
+        {
+          "file": "055.png",
+          "prompt": "0055 a professional photograph of a sandwich and strawberries, ultra realistic",
+          "mse": 0.0001872396096587181,
+          "psnr": 37.2760227292401,
+          "ssim": 0.9620586551591344,
+          "lpips": 0.006806261837482452,
+          "clip": 25.338294982910156
+        },
+        {
+          "file": "056.png",
+          "prompt": "0056 a professional photograph of a sandwich and spring rolls, ultra realistic",
+          "mse": 8.740765042603016e-05,
+          "psnr": 40.58450553722565,
+          "ssim": 0.9846906048795715,
+          "lpips": 0.004960240330547094,
+          "clip": 29.713037490844727
+        },
+        {
+          "file": "057.png",
+          "prompt": "0057 a professional photograph of a cantaloupe and spring rolls, ultra realistic",
+          "mse": 5.080893970443867e-05,
+          "psnr": 42.94059867977249,
+          "ssim": 0.9815740644562007,
+          "lpips": 0.0028223975095897913,
+          "clip": 28.783252716064453
+        },
+        {
+          "file": "058.png",
+          "prompt": "0058 a professional photograph of a chocolate doughnut and spring rolls, ultra realistic",
+          "mse": 6.481289892690256e-05,
+          "psnr": 41.88338553152604,
+          "ssim": 0.9777083256519882,
+          "lpips": 0.003934930078685284,
+          "clip": 33.5001220703125
+        },
+        {
+          "file": "059.png",
+          "prompt": "0059 a professional photograph of a turkey and spring rolls, ultra realistic",
+          "mse": 0.0003232844464946538,
+          "psnr": 34.904151891837834,
+          "ssim": 0.9796620691500152,
+          "lpips": 0.013150598853826523,
+          "clip": 29.980257034301758
+        },
+        {
+          "file": "060.png",
+          "prompt": "0060 a professional photograph of a grapefruit and spring rolls, ultra realistic",
+          "mse": 6.864452006993815e-05,
+          "psnr": 41.63394127012501,
+          "ssim": 0.98429301643274,
+          "lpips": 0.004341423511505127,
+          "clip": 32.66469192504883
+        },
+        {
+          "file": "061.png",
+          "prompt": "0061 a professional photograph of a spoon and spring rolls, ultra realistic",
+          "mse": 8.904208516469225e-05,
+          "psnr": 40.50404678357576,
+          "ssim": 0.9719538349121652,
+          "lpips": 0.0032082167454063892,
+          "clip": 28.327238082885742
+        },
+        {
+          "file": "062.png",
+          "prompt": "0062 a professional photograph of a candle and spring rolls, ultra realistic",
+          "mse": 8.859701483743265e-05,
+          "psnr": 40.52580910860932,
+          "ssim": 0.9724535115901046,
+          "lpips": 0.0033573948312550783,
+          "clip": 35.35329818725586
+        },
+        {
+          "file": "063.png",
+          "prompt": "0063 a professional photograph of a teapot and spring rolls, ultra realistic",
+          "mse": 0.00012409233022481203,
+          "psnr": 39.0625506011269,
+          "ssim": 0.9710978371327234,
+          "lpips": 0.005929008591920137,
+          "clip": 35.916717529296875
+        },
+        {
+          "file": "064.png",
+          "prompt": "0064 a professional photograph of  a sandwich filled with meat and spring rolls, ultra realistic",
+          "mse": 6.831745122326538e-05,
+          "psnr": 41.65468344607102,
+          "ssim": 0.9778215976357711,
+          "lpips": 0.00491354800760746,
+          "clip": 30.99089813232422
+        },
+        {
+          "file": "065.png",
+          "prompt": "0065 a professional photograph of a tart and spring rolls, ultra realistic",
+          "mse": 0.00013070176646579057,
+          "psnr": 38.83718542785476,
+          "ssim": 0.9715476584817443,
+          "lpips": 0.007960570976138115,
+          "clip": 27.632766723632812
+        },
+        {
+          "file": "066.png",
+          "prompt": "0066 a professional photograph of paper towel and spring rolls, ultra realistic",
+          "mse": 5.9558773500612006e-05,
+          "psnr": 42.25054254294623,
+          "ssim": 0.9814413054724332,
+          "lpips": 0.002440673764795065,
+          "clip": 35.20692443847656
+        },
+        {
+          "file": "067.png",
+          "prompt": "0067 a professional photograph of a cup of coffee and spring rolls, ultra realistic",
+          "mse": 6.987326923990622e-05,
+          "psnr": 41.55688936441727,
+          "ssim": 0.9747631124936484,
+          "lpips": 0.004955434240400791,
+          "clip": 32.40603256225586
+        },
+        {
+          "file": "068.png",
+          "prompt": "0068 a professional photograph of a glass of juice and spring rolls, ultra realistic",
+          "mse": 7.38478556741029e-05,
+          "psnr": 41.31662110811409,
+          "ssim": 0.9804903239519834,
+          "lpips": 0.0043325782753527164,
+          "clip": 32.85514831542969
+        },
+        {
+          "file": "069.png",
+          "prompt": "0069 a professional photograph of a muffin and spring rolls, ultra realistic",
+          "mse": 0.0001849977852543816,
+          "psnr": 37.32833470827031,
+          "ssim": 0.9664766175249939,
+          "lpips": 0.008263040333986282,
+          "clip": 30.2028751373291
+        },
+        {
+          "file": "070.png",
+          "prompt": "0070 a professional photograph of a burrito and spring rolls, ultra realistic",
+          "mse": 2.8587754059117287e-05,
+          "psnr": 45.43819962796828,
+          "ssim": 0.9876670195766137,
+          "lpips": 0.0015578554011881351,
+          "clip": 24.69475555419922
+        },
+        {
+          "file": "071.png",
+          "prompt": "0071 a professional photograph of popcorn and spring rolls, ultra realistic",
+          "mse": 6.700706580886617e-05,
+          "psnr": 41.738793990901755,
+          "ssim": 0.980425053853141,
+          "lpips": 0.003262192476540804,
+          "clip": 29.649341583251953
+        },
+        {
+          "file": "072.png",
+          "prompt": "0072 a professional photograph of a cup of coffee and spring rolls, ultra realistic",
+          "mse": 0.00015168658865150064,
+          "psnr": 38.190528156017045,
+          "ssim": 0.9757600678347197,
+          "lpips": 0.004581604152917862,
+          "clip": 33.378448486328125
+        },
+        {
+          "file": "073.png",
+          "prompt": "0073 a professional photograph of a pancake and spring rolls, ultra realistic",
+          "mse": 0.00010942015796899796,
+          "psnr": 39.609026625706626,
+          "ssim": 0.982318122732026,
+          "lpips": 0.005103554576635361,
+          "clip": 30.61843490600586
+        },
+        {
+          "file": "074.png",
+          "prompt": "0074 a professional photograph of a waffle and spring rolls, ultra realistic",
+          "mse": 4.4752287067240104e-05,
+          "psnr": 43.49184765145804,
+          "ssim": 0.982301368802959,
+          "lpips": 0.00232059508562088,
+          "clip": 29.833852767944336
+        },
+        {
+          "file": "075.png",
+          "prompt": "0075 a professional photograph of a hamburger and spring rolls, ultra realistic",
+          "mse": 5.1709721446968615e-05,
+          "psnr": 42.86427801705213,
+          "ssim": 0.9855412721914446,
+          "lpips": 0.0032357159070670605,
+          "clip": 30.371702194213867
+        },
+        {
+          "file": "076.png",
+          "prompt": "0076 a professional photograph of a roast chicken and spring rolls, ultra realistic",
+          "mse": 5.8012898080050945e-05,
+          "psnr": 42.3647543846731,
+          "ssim": 0.9835187685802884,
+          "lpips": 0.004210128448903561,
+          "clip": 28.401201248168945
+        },
+        {
+          "file": "077.png",
+          "prompt": "0077 a professional photograph of a piece of bread and spring rolls, ultra realistic",
+          "mse": 0.00018061806622426957,
+          "psnr": 37.43238811779451,
+          "ssim": 0.9785403856737966,
+          "lpips": 0.009808927774429321,
+          "clip": 28.20131492614746
+        },
+        {
+          "file": "078.png",
+          "prompt": "0078 a professional photograph of a cake and spring rolls, ultra realistic",
+          "mse": 5.245795182418078e-05,
+          "psnr": 42.80188670070886,
+          "ssim": 0.983858078132234,
+          "lpips": 0.002649532398208976,
+          "clip": 28.552085876464844
+        },
+        {
+          "file": "079.png",
+          "prompt": "0079 a professional photograph of a tomato and spring rolls, ultra realistic",
+          "mse": 0.00010705090971896425,
+          "psnr": 39.70409637718001,
+          "ssim": 0.9698059137743537,
+          "lpips": 0.004101995378732681,
+          "clip": 31.359493255615234
+        },
+        {
+          "file": "080.png",
+          "prompt": "0080 a professional photograph of a roast fish and spring rolls, ultra realistic",
+          "mse": 4.848211756325327e-05,
+          "psnr": 43.144184196595944,
+          "ssim": 0.9805899727277474,
+          "lpips": 0.0027656813617795706,
+          "clip": 36.24056625366211
+        },
+        {
+          "file": "081.png",
+          "prompt": "0081 a professional photograph of a croissant and spring rolls, ultra realistic",
+          "mse": 0.00011504084250191227,
+          "psnr": 39.391479463927666,
+          "ssim": 0.9760697658662729,
+          "lpips": 0.007271643728017807,
+          "clip": 24.275312423706055
+        },
+        {
+          "file": "082.png",
+          "prompt": "0082 a professional photograph of a hot dog bread and spring rolls, ultra realistic",
+          "mse": 7.24386700312607e-05,
+          "psnr": 41.4002953190004,
+          "ssim": 0.9785211158322298,
+          "lpips": 0.003927570767700672,
+          "clip": 31.304920196533203
+        },
+        {
+          "file": "083.png",
+          "prompt": "0083 a professional photograph of skyscrapers in the distance, ultra realistic",
+          "mse": 0.0003800819395110011,
+          "psnr": 34.20122766432315,
+          "ssim": 0.9870944716396913,
+          "lpips": 0.01662115380167961,
+          "clip": 20.680919647216797
+        },
+        {
+          "file": "084.png",
+          "prompt": "0084 a professional photograph of skyscrapers behind the forest, ultra realistic",
+          "mse": 0.0001061990114976652,
+          "psnr": 39.7387952565669,
+          "ssim": 0.9839619829718852,
+          "lpips": 0.02072083204984665,
+          "clip": 21.236892700195312
+        },
+        {
+          "file": "085.png",
+          "prompt": "0085 a professional photograph of skyscrapers, ultra realistic",
+          "mse": 0.0005901466938666999,
+          "psnr": 32.29040021547465,
+          "ssim": 0.9867242737077383,
+          "lpips": 0.017215091735124588,
+          "clip": 17.032930374145508
+        },
+        {
+          "file": "086.png",
+          "prompt": "0086 a professional photograph of skyscrapers, ultra realistic",
+          "mse": 0.00014851470768917352,
+          "psnr": 38.282305352224746,
+          "ssim": 0.9852929739189861,
+          "lpips": 0.020558297634124756,
+          "clip": 15.808561325073242
+        },
+        {
+          "file": "087.png",
+          "prompt": "0087 a professional photograph of a castle, ultra realistic",
+          "mse": 0.0006420247373171151,
+          "psnr": 31.924482381720388,
+          "ssim": 0.9592322241499277,
+          "lpips": 0.013242648914456367,
+          "clip": 14.027400016784668
+        },
+        {
+          "file": "088.png",
+          "prompt": "0088 a professional photograph of a rocket launch, ultra realistic",
+          "mse": 0.00047692752559669316,
+          "psnr": 33.21547611787599,
+          "ssim": 0.9629220220133629,
+          "lpips": 0.010327783413231373,
+          "clip": 18.916025161743164
+        },
+        {
+          "file": "089.png",
+          "prompt": "0089 a professional photograph of a wooden chair in the bedroom",
+          "mse": 0.00016780842270236462,
+          "psnr": 37.75186244691121,
+          "ssim": 0.940653987658429,
+          "lpips": 0.011222364380955696,
+          "clip": 20.92626953125
+        },
+        {
+          "file": "090.png",
+          "prompt": "0090 a professional photograph of a cabinet on the wooden floor, ultra realistic",
+          "mse": 0.00032837680191732943,
+          "psnr": 34.83627531074983,
+          "ssim": 0.9534675906099356,
+          "lpips": 0.010726520791649818,
+          "clip": 26.123268127441406
+        },
+        {
+          "file": "091.png",
+          "prompt": "0091 a professional photograph of a cabinet on the wooden floor, ultra realistic",
+          "mse": 0.0005300128250382841,
+          "psnr": 32.757136213879505,
+          "ssim": 0.9480969715579897,
+          "lpips": 0.011419115588068962,
+          "clip": 22.120695114135742
+        },
+        {
+          "file": "092.png",
+          "prompt": "0092 a professional photograph of a cabinet, ultra realistic",
+          "mse": 0.000425818347139284,
+          "psnr": 33.707756301459625,
+          "ssim": 0.9508636314327853,
+          "lpips": 0.014267055317759514,
+          "clip": 20.676671981811523
+        },
+        {
+          "file": "093.png",
+          "prompt": "0093 a professional photograph of a chair, ultra realistic",
+          "mse": 0.00017221440793946385,
+          "psnr": 37.639305170702485,
+          "ssim": 0.9457670714977549,
+          "lpips": 0.013255394995212555,
+          "clip": 14.122149467468262
+        },
+        {
+          "file": "094.png",
+          "prompt": "0094 a professional photograph of a chair, ultra realistic",
+          "mse": 0.00035747094079852104,
+          "psnr": 34.46759256698688,
+          "ssim": 0.9557872284638731,
+          "lpips": 0.019557436928153038,
+          "clip": 15.855657577514648
+        },
+        {
+          "file": "095.png",
+          "prompt": "0095 a professional photograph of a cabinet, ultra realistic",
+          "mse": 0.0002072419156320393,
+          "psnr": 36.83522401983358,
+          "ssim": 0.96191540904799,
+          "lpips": 0.009780917316675186,
+          "clip": 17.613216400146484
+        },
+        {
+          "file": "096.png",
+          "prompt": "0096 a professional photograph of a cabinet, ultra realistic",
+          "mse": 0.00020507215231191367,
+          "psnr": 36.8809331046727,
+          "ssim": 0.9632424440830785,
+          "lpips": 0.01016552560031414,
+          "clip": 17.237178802490234
+        },
+        {
+          "file": "097.png",
+          "prompt": "0097 a professional photograph of a bag on the desk, ultra realistic",
+          "mse": 0.00021798980014864355,
+          "psnr": 36.61563826775182,
+          "ssim": 0.9555475944334034,
+          "lpips": 0.007638096809387207,
+          "clip": 23.14186668395996
+        },
+        {
+          "file": "098.png",
+          "prompt": "0098 a professional photograph of a bag on the desk, ultra realistic",
+          "mse": 0.0003000795841217041,
+          "psnr": 35.22763550742745,
+          "ssim": 0.9543785938027894,
+          "lpips": 0.012417208403348923,
+          "clip": 24.244014739990234
+        },
+        {
+          "file": "099.png",
+          "prompt": "0099 a professional photograph of a teddy bear, ultra realistic",
+          "mse": 0.0004477287584450096,
+          "psnr": 33.48985009184008,
+          "ssim": 0.9351202564627871,
+          "lpips": 0.013763186521828175,
+          "clip": 20.774629592895508
+        },
+        {
+          "file": "100.png",
+          "prompt": "0100 a professional photograph of a teddy bear, ultra realistic",
+          "mse": 0.0007111963350325823,
+          "psnr": 31.480104900570034,
+          "ssim": 0.9262591723068012,
+          "lpips": 0.023701339960098267,
+          "clip": 18.356122970581055
+        },
+        {
+          "file": "101.png",
+          "prompt": "0101 a professional photograph of a castle in the distance, ultra realistic",
+          "mse": 0.0005484324065037072,
+          "psnr": 32.60876890954153,
+          "ssim": 0.9189326213440001,
+          "lpips": 0.018316859379410744,
+          "clip": 19.11697006225586
+        },
+        {
+          "file": "102.png",
+          "prompt": "0102 a professional photograph of a skyscraper in the distance, ultra realistic",
+          "mse": 0.0005801811348646879,
+          "psnr": 32.364363967973446,
+          "ssim": 0.9171915465062281,
+          "lpips": 0.020028186962008476,
+          "clip": 17.561805725097656
+        },
+        {
+          "file": "103.png",
+          "prompt": "0103 a professional photograph of a teddy bear in the distance, ultra realistic",
+          "mse": 0.0005017353105358779,
+          "psnr": 32.99525333631902,
+          "ssim": 0.9292693474188184,
+          "lpips": 0.016649197787046432,
+          "clip": 19.83146858215332
+        },
+        {
+          "file": "104.png",
+          "prompt": "0104 a professional photograph of skyscrapers in the distance, ultra realistic",
+          "mse": 0.0005425741546787322,
+          "psnr": 32.65540897540406,
+          "ssim": 0.9196355194419503,
+          "lpips": 0.017952950671315193,
+          "clip": 15.130292892456055
+        },
+        {
+          "file": "105.png",
+          "prompt": "0105 a professional photograph of a mall in the distance, ultra realistic",
+          "mse": 0.0005544414161704481,
+          "psnr": 32.56144335859322,
+          "ssim": 0.9183606158593752,
+          "lpips": 0.018825173377990723,
+          "clip": 13.09539794921875
+        },
+        {
+          "file": "106.png",
+          "prompt": "0106 a professional photograph of an eiffel tower in the distance, ultra realistic",
+          "mse": 0.0005415554041974247,
+          "psnr": 32.663571059706136,
+          "ssim": 0.9187587237802529,
+          "lpips": 0.01746564544737339,
+          "clip": 22.02179718017578
+        },
+        {
+          "file": "107.png",
+          "prompt": "0107 a professional photograph of a building in the distance, ultra realistic",
+          "mse": 0.000593063363339752,
+          "psnr": 32.2689890380485,
+          "ssim": 0.9167843229513831,
+          "lpips": 0.02192046120762825,
+          "clip": 18.498266220092773
+        },
+        {
+          "file": "108.png",
+          "prompt": "0108 a professional photograph of a building in the distance, ultra realistic",
+          "mse": 0.00028425667551346123,
+          "psnr": 35.46289327503489,
+          "ssim": 0.9462093835896087,
+          "lpips": 0.017593462020158768,
+          "clip": 22.537982940673828
+        },
+        {
+          "file": "109.png",
+          "prompt": "0109 a professional photograph of an eiffel tower in the distance, ultra realistic",
+          "mse": 0.00024957090499810874,
+          "psnr": 36.02806046134185,
+          "ssim": 0.9470410874869132,
+          "lpips": 0.015183476731181145,
+          "clip": 21.47056770324707
+        },
+        {
+          "file": "110.png",
+          "prompt": "0110 a professional photograph of skyscrapers in the distance, ultra realistic",
+          "mse": 0.0002712630375754088,
+          "psnr": 35.66609379370191,
+          "ssim": 0.9501585874819488,
+          "lpips": 0.016196398064494133,
+          "clip": 20.079410552978516
+        },
+        {
+          "file": "111.png",
+          "prompt": "0111 a professional photograph of a mall in the distance, ultra realistic",
+          "mse": 0.0002445630670990795,
+          "psnr": 36.116091277009524,
+          "ssim": 0.9471862271785806,
+          "lpips": 0.017134416848421097,
+          "clip": 17.80948829650879
+        },
+        {
+          "file": "112.png",
+          "prompt": "0112 a professional photograph of a building in the distance, ultra realistic",
+          "mse": 0.0003822083817794919,
+          "psnr": 34.176997931557636,
+          "ssim": 0.9530877480300103,
+          "lpips": 0.016251645982265472,
+          "clip": 16.259601593017578
+        },
+        {
+          "file": "113.png",
+          "prompt": "0113 a professional photograph of an eiffel tower in the distance, ultra realistic",
+          "mse": 0.00041224664892069995,
+          "psnr": 33.84842865971287,
+          "ssim": 0.9525837433888663,
+          "lpips": 0.01723824068903923,
+          "clip": 20.185832977294922
+        },
+        {
+          "file": "114.png",
+          "prompt": "0114 a professional photograph of a puppy on the beach, ultra realistic",
+          "mse": 0.0003315680369269103,
+          "psnr": 34.79427341979807,
+          "ssim": 0.9619359330330974,
+          "lpips": 0.013216792605817318,
+          "clip": 25.342487335205078
+        },
+        {
+          "file": "115.png",
+          "prompt": "0115 a professional photograph of a puppy on the beach, ultra realistic",
+          "mse": 0.0003404697636142373,
+          "psnr": 34.67921450795431,
+          "ssim": 0.9628486408921814,
+          "lpips": 0.013121755793690681,
+          "clip": 23.310911178588867
+        },
+        {
+          "file": "116.png",
+          "prompt": "0116 a professional photograph of a puppy on the beach, ultra realistic",
+          "mse": 0.0005629273946397007,
+          "psnr": 32.49547616055801,
+          "ssim": 0.9600021099494565,
+          "lpips": 0.018439386039972305,
+          "clip": 19.718870162963867
+        },
+        {
+          "file": "117.png",
+          "prompt": "0117 a professional photograph of a puppy on the beach, ultra realistic",
+          "mse": 0.0006568681565113366,
+          "psnr": 31.825217912401975,
+          "ssim": 0.9566501735668907,
+          "lpips": 0.01981647126376629,
+          "clip": 20.810123443603516
+        },
+        {
+          "file": "118.png",
+          "prompt": "0118 a professional photograph of a puppy on the beach, ultra realistic",
+          "mse": 0.0003709294833242893,
+          "psnr": 34.30708645409182,
+          "ssim": 0.9568835339270384,
+          "lpips": 0.013672125525772572,
+          "clip": 22.1854248046875
+        },
+        {
+          "file": "119.png",
+          "prompt": "0119 a professional photograph of a panda sitting on the beach, ultra realistic",
+          "mse": 0.0003776473749894649,
+          "psnr": 34.22913529718442,
+          "ssim": 0.9620749302271593,
+          "lpips": 0.014891695231199265,
+          "clip": 29.30358123779297
+        },
+        {
+          "file": "120.png",
+          "prompt": "0120 a professional photograph of a dog on the beach, ultra realistic",
+          "mse": 0.0005544381565414369,
+          "psnr": 32.561468891372925,
+          "ssim": 0.961335160333819,
+          "lpips": 0.02413512021303177,
+          "clip": 22.678903579711914
+        },
+        {
+          "file": "121.png",
+          "prompt": "0121 a professional photograph of a dog on the beach, ultra realistic",
+          "mse": 0.00031493903952650726,
+          "psnr": 35.01773501319461,
+          "ssim": 0.9612888882264411,
+          "lpips": 0.011995026841759682,
+          "clip": 20.815399169921875
+        },
+        {
+          "file": "122.png",
+          "prompt": "0122 a professional photograph of a dog on the beach, ultra realistic",
+          "mse": 0.0003611771098803729,
+          "psnr": 34.42279781524788,
+          "ssim": 0.9595789387422126,
+          "lpips": 0.015605062246322632,
+          "clip": 20.125564575195312
+        },
+        {
+          "file": "123.png",
+          "prompt": "0123 a professional photograph of a dog lying on the beach, ultra realistic",
+          "mse": 0.0003233468160033226,
+          "psnr": 34.903314111943516,
+          "ssim": 0.9654997195989522,
+          "lpips": 0.011890819296240807,
+          "clip": 21.059383392333984
+        },
+        {
+          "file": "124.png",
+          "prompt": "0124 a professional photograph of a flower on the beach, ultra realistic",
+          "mse": 0.00050860655028373,
+          "psnr": 32.9361805089692,
+          "ssim": 0.9514731615918824,
+          "lpips": 0.02465846575796604,
+          "clip": 20.04762840270996
+        },
+        {
+          "file": "125.png",
+          "prompt": "0125 a professional photograph of a panda on the beach, ultra realistic",
+          "mse": 0.0003884407633449882,
+          "psnr": 34.10675201094467,
+          "ssim": 0.9601512749388771,
+          "lpips": 0.014218355529010296,
+          "clip": 32.09918975830078
+        },
+        {
+          "file": "126.png",
+          "prompt": "0126 a professional photograph of a flower on the beach, ultra realistic",
+          "mse": 0.00038475802284665406,
+          "psnr": 34.14812315637603,
+          "ssim": 0.9540058540859624,
+          "lpips": 0.01583154685795307,
+          "clip": 18.74652862548828
+        },
+        {
+          "file": "127.png",
+          "prompt": "0127 a professional photograph of a dog on the beach, ultra realistic",
+          "mse": 0.0002779247297439724,
+          "psnr": 35.56072807977901,
+          "ssim": 0.9659260002887072,
+          "lpips": 0.010110792703926563,
+          "clip": 19.98805046081543
+        },
+        {
+          "file": "128.png",
+          "prompt": "0128 a professional photograph of a tortoise on the beach, ultra realistic",
+          "mse": 0.0003891504602506757,
+          "psnr": 34.09882451572115,
+          "ssim": 0.9606463421277224,
+          "lpips": 0.018374990671873093,
+          "clip": 23.274179458618164
+        },
+        {
+          "file": "129.png",
+          "prompt": "0129 a professional photograph of a sparrow on the beach, ultra realistic",
+          "mse": 0.0003554811410140246,
+          "psnr": 34.49183434514516,
+          "ssim": 0.9574247585613428,
+          "lpips": 0.014038437977433205,
+          "clip": 21.764659881591797
+        },
+        {
+          "file": "130.png",
+          "prompt": "0130 a professional photograph of a puppy lying on the beach, ultra realistic",
+          "mse": 0.0003849739150609821,
+          "psnr": 34.14568696280761,
+          "ssim": 0.9572091754780443,
+          "lpips": 0.01495209988206625,
+          "clip": 26.575302124023438
+        },
+        {
+          "file": "131.png",
+          "prompt": "0131 a professional photograph of a sheep on the beach, ultra realistic",
+          "mse": 0.0003223677340429276,
+          "psnr": 34.91648433456175,
+          "ssim": 0.9639864396616984,
+          "lpips": 0.010901689529418945,
+          "clip": 27.93893814086914
+        },
+        {
+          "file": "132.png",
+          "prompt": "0132 a professional photograph of an ostrich on the beach, ultra realistic",
+          "mse": 0.0003629316342994571,
+          "psnr": 34.40175175632662,
+          "ssim": 0.9610634124288637,
+          "lpips": 0.015220467001199722,
+          "clip": 22.708515167236328
+        },
+        {
+          "file": "133.png",
+          "prompt": "0133 a professional photograph of a dog on the beach, ultra realistic",
+          "mse": 0.0004064305394422263,
+          "psnr": 33.91013666341933,
+          "ssim": 0.9590261807703991,
+          "lpips": 0.01886189728975296,
+          "clip": 21.053050994873047
+        },
+        {
+          "file": "134.png",
+          "prompt": "0134 a professional photograph of a horse on the beach, ultra realistic",
+          "mse": 0.0003328540187794715,
+          "psnr": 34.77746195139494,
+          "ssim": 0.9625051293754471,
+          "lpips": 0.013935569673776627,
+          "clip": 25.323305130004883
+        },
+        {
+          "file": "135.png",
+          "prompt": "0135 a professional photograph of a cat lying on the beach, ultra realistic",
+          "mse": 0.00037401574081741273,
+          "psnr": 34.27110119707841,
+          "ssim": 0.9559495030167776,
+          "lpips": 0.015205702744424343,
+          "clip": 23.776185989379883
+        },
+        {
+          "file": "136.png",
+          "prompt": "0136 a professional photograph of a dog jumping on the beach, ultra realistic",
+          "mse": 0.0005006424617022276,
+          "psnr": 33.00472318729152,
+          "ssim": 0.9569368835322587,
+          "lpips": 0.017558928579092026,
+          "clip": 21.514423370361328
+        },
+        {
+          "file": "137.png",
+          "prompt": "0137 a professional photograph of an elephant on the beach, ultra realistic",
+          "mse": 0.00032194069353863597,
+          "psnr": 34.92224124705213,
+          "ssim": 0.9633436246698017,
+          "lpips": 0.014343148097395897,
+          "clip": 25.949954986572266
+        },
+        {
+          "file": "138.png",
+          "prompt": "0138 a professional photograph of a goose on the beach, ultra realistic",
+          "mse": 0.00043389375787228346,
+          "psnr": 33.62616597718501,
+          "ssim": 0.9535621274438926,
+          "lpips": 0.021093307062983513,
+          "clip": 24.042531967163086
+        },
+        {
+          "file": "139.png",
+          "prompt": "0139 a professional photograph of a tiger on the beach, ultra realistic",
+          "mse": 0.0006429707282222807,
+          "psnr": 31.918087982436,
+          "ssim": 0.9556220309336757,
+          "lpips": 0.02344350516796112,
+          "clip": 27.056697845458984
+        },
+        {
+          "file": "140.png",
+          "prompt": "0140 a professional photograph of an eagle in the sky, ultra realistic",
+          "mse": 0.00040933219133876264,
+          "psnr": 33.87924099549608,
+          "ssim": 0.9541713535672608,
+          "lpips": 0.01928061433136463,
+          "clip": 25.82463836669922
+        },
+        {
+          "file": "141.png",
+          "prompt": "0141 a professional photograph of the back of a cat sitting near a lake, ultra realistic",
+          "mse": 0.0003508286608848721,
+          "psnr": 34.54904934246436,
+          "ssim": 0.9656772932513075,
+          "lpips": 0.01403669361025095,
+          "clip": 23.19401741027832
+        },
+        {
+          "file": "142.png",
+          "prompt": "0142 a professional photograph of a chick on the beach, ultra realistic",
+          "mse": 0.0004731489752884954,
+          "psnr": 33.25002096135116,
+          "ssim": 0.9555990824737005,
+          "lpips": 0.02030258998274803,
+          "clip": 19.23630142211914
+        },
+        {
+          "file": "143.png",
+          "prompt": "0143 a professional photograph of a squirrel on the beach, ultra realistic",
+          "mse": 0.0003368271281942725,
+          "psnr": 34.72592937509041,
+          "ssim": 0.9599988435064808,
+          "lpips": 0.012862488627433777,
+          "clip": 26.19868278503418
+        },
+        {
+          "file": "144.png",
+          "prompt": "0144 a professional photograph of a raccoon bear on the beach, ultra realistic",
+          "mse": 0.00042884296271950006,
+          "psnr": 33.677017122673725,
+          "ssim": 0.9558113983955702,
+          "lpips": 0.02233191765844822,
+          "clip": 11.827266693115234
+        },
+        {
+          "file": "145.png",
+          "prompt": "0145 a professional photograph of a penguin on the beach, ultra realistic",
+          "mse": 0.00041729246731847525,
+          "psnr": 33.79559454807933,
+          "ssim": 0.9540427006289898,
+          "lpips": 0.01723908819258213,
+          "clip": 24.569133758544922
+        },
+        {
+          "file": "146.png",
+          "prompt": "0146 a professional photograph of a sea lion on the beach, ultra realistic",
+          "mse": 0.0005600088625214994,
+          "psnr": 32.518050999335735,
+          "ssim": 0.9586001820546787,
+          "lpips": 0.019479498267173767,
+          "clip": 23.024669647216797
+        },
+        {
+          "file": "147.png",
+          "prompt": "0147 a professional photograph of a goose on the beach, ultra realistic",
+          "mse": 0.00034609693102538586,
+          "psnr": 34.60802251745021,
+          "ssim": 0.9580720186645194,
+          "lpips": 0.013753542676568031,
+          "clip": 19.96210289001465
+        },
+        {
+          "file": "148.png",
+          "prompt": "0148 a professional photograph of a panda on the beach, ultra realistic",
+          "mse": 0.00048489810433238745,
+          "psnr": 33.14349513718241,
+          "ssim": 0.9588144754419438,
+          "lpips": 0.017154958099126816,
+          "clip": 29.535930633544922
+        },
+        {
+          "file": "149.png",
+          "prompt": "0149 a professional photograph of a goat on the beach, ultra realistic",
+          "mse": 0.0009463066817261279,
+          "psnr": 30.239680934114187,
+          "ssim": 0.9612933260093622,
+          "lpips": 0.022277161478996277,
+          "clip": 26.854055404663086
+        },
+        {
+          "file": "150.png",
+          "prompt": "0150 a professional photograph of an owl on the beach, ultra realistic",
+          "mse": 0.0005676911096088588,
+          "psnr": 32.45887907039424,
+          "ssim": 0.9589661739597473,
+          "lpips": 0.021615521982312202,
+          "clip": 24.384563446044922
+        },
+        {
+          "file": "151.png",
+          "prompt": "0151 a professional photograph of a squirrel on the beach, ultra realistic",
+          "mse": 0.00041850903653539717,
+          "psnr": 33.78295160191417,
+          "ssim": 0.9585519833192563,
+          "lpips": 0.017198869958519936,
+          "clip": 23.760652542114258
+        },
+        {
+          "file": "152.png",
+          "prompt": "0152 a professional photograph of a dog on the beach, ultra realistic",
+          "mse": 0.00039676460437476635,
+          "psnr": 34.01467078479504,
+          "ssim": 0.9550370610462405,
+          "lpips": 0.017248835414648056,
+          "clip": 21.15222930908203
+        },
+        {
+          "file": "153.png",
+          "prompt": "0153 a professional photograph of a goat on the beach, ultra realistic",
+          "mse": 0.0004937976482324302,
+          "psnr": 33.064509827761206,
+          "ssim": 0.9612818361923461,
+          "lpips": 0.018017571419477463,
+          "clip": 26.992576599121094
+        },
+        {
+          "file": "154.png",
+          "prompt": "0154 a professional photograph of a wet puppy in a pool, ultra realistic",
+          "mse": 0.0008202968747355044,
+          "psnr": 30.860289430725942,
+          "ssim": 0.9221303452418992,
+          "lpips": 0.01767147146165371,
+          "clip": 26.109760284423828
+        },
+        {
+          "file": "155.png",
+          "prompt": "0155 a professional photograph of a dog in a garden, ultra realistic",
+          "mse": 0.0011094440706074238,
+          "psnr": 29.548945865719567,
+          "ssim": 0.865294265218633,
+          "lpips": 0.0260865967720747,
+          "clip": 20.689878463745117
+        },
+        {
+          "file": "156.png",
+          "prompt": "0156 a professional photograph of a panda lying on the beach, ultra realistic",
+          "mse": 0.0002910432231146842,
+          "psnr": 35.36042508724616,
+          "ssim": 0.965704792714224,
+          "lpips": 0.010542912408709526,
+          "clip": 32.38018035888672
+        },
+        {
+          "file": "157.png",
+          "prompt": "0157 a professional photograph of a panda on the beach, ultra realistic",
+          "mse": 0.00046704275882802904,
+          "psnr": 33.30643356964979,
+          "ssim": 0.9594020524800818,
+          "lpips": 0.01918039098381996,
+          "clip": 29.055381774902344
+        },
+        {
+          "file": "158.png",
+          "prompt": "0158 a professional photograph of a puppy in a garden, ultra realistic",
+          "mse": 0.001115002785809338,
+          "psnr": 29.52724047539487,
+          "ssim": 0.8589710072779106,
+          "lpips": 0.02686532773077488,
+          "clip": 21.800519943237305
+        },
+        {
+          "file": "159.png",
+          "prompt": "0159 a professional photograph of a dog in a garden, ultra realistic",
+          "mse": 0.0011218794388696551,
+          "psnr": 29.500538113925877,
+          "ssim": 0.8721280047144248,
+          "lpips": 0.027427228167653084,
+          "clip": 20.003929138183594
+        },
+        {
+          "file": "160.png",
+          "prompt": "0160 a professional photograph of a panda in a garden, ultra realistic",
+          "mse": 0.0011585269821807742,
+          "psnr": 29.360938470049852,
+          "ssim": 0.8672518164868537,
+          "lpips": 0.029930416494607925,
+          "clip": 29.740449905395508
+        },
+        {
+          "file": "161.png",
+          "prompt": "0161 a professional photograph of a dog in a garden, ultra realistic",
+          "mse": 0.001256556366570294,
+          "psnr": 29.008180250647364,
+          "ssim": 0.8659870052183368,
+          "lpips": 0.033577580004930496,
+          "clip": 24.291484832763672
+        },
+        {
+          "file": "162.png",
+          "prompt": "0162 a professional photograph of a dog in a garden, ultra realistic",
+          "mse": 0.001109863049350679,
+          "psnr": 29.547306073220767,
+          "ssim": 0.8699696893221119,
+          "lpips": 0.027196038514375687,
+          "clip": 21.502159118652344
+        },
+        {
+          "file": "163.png",
+          "prompt": "0163 a professional photograph of a tortoise in a garden, ultra realistic",
+          "mse": 0.0011872127652168274,
+          "psnr": 29.254714423940378,
+          "ssim": 0.8630882645603242,
+          "lpips": 0.030197210609912872,
+          "clip": 27.665912628173828
+        },
+        {
+          "file": "164.png",
+          "prompt": "0164 a professional photograph of a sparrow in a garden, ultra realistic",
+          "mse": 0.0011223162291571498,
+          "psnr": 29.498847569587827,
+          "ssim": 0.8548966236346586,
+          "lpips": 0.02800390124320984,
+          "clip": 20.344738006591797
+        },
+        {
+          "file": "165.png",
+          "prompt": "0165 a professional photograph of a sheep in a garden, ultra realistic",
+          "mse": 0.001104329596273601,
+          "psnr": 29.569012884910375,
+          "ssim": 0.8787580221863838,
+          "lpips": 0.024795835837721825,
+          "clip": 27.600473403930664
+        },
+        {
+          "file": "166.png",
+          "prompt": "0166 a professional photograph of a puppy lying in a garden, ultra realistic",
+          "mse": 0.0011785498354583979,
+          "psnr": 29.28652048432842,
+          "ssim": 0.8574313340331559,
+          "lpips": 0.028813418000936508,
+          "clip": 19.599332809448242
+        },
+        {
+          "file": "167.png",
+          "prompt": "0167 a professional photograph of an ostrich in a garden, ultra realistic",
+          "mse": 0.0011305384105071425,
+          "psnr": 29.46714677734441,
+          "ssim": 0.8687720836491691,
+          "lpips": 0.026777062565088272,
+          "clip": 25.826709747314453
+        },
+        {
+          "file": "168.png",
+          "prompt": "0168 a professional photograph of a dog lying in a garden, ultra realistic",
+          "mse": 0.001089088385924697,
+          "psnr": 29.6293687326376,
+          "ssim": 0.8755571369677103,
+          "lpips": 0.024088822305202484,
+          "clip": 20.411418914794922
+        },
+        {
+          "file": "169.png",
+          "prompt": "0169 a professional photograph of a horse in a garden, ultra realistic",
+          "mse": 0.0010841932380571961,
+          "psnr": 29.64893305673396,
+          "ssim": 0.8826713244378536,
+          "lpips": 0.025491230189800262,
+          "clip": 27.339946746826172
+        },
+        {
+          "file": "170.png",
+          "prompt": "0170 a professional photograph of a cat walking in a garden, ultra realistic",
+          "mse": 0.0011279125465080142,
+          "psnr": 29.47724572375176,
+          "ssim": 0.8576856609775212,
+          "lpips": 0.02815651334822178,
+          "clip": 14.507804870605469
+        },
+        {
+          "file": "171.png",
+          "prompt": "0171 a professional photograph of a dog jumping in a garden, ultra realistic",
+          "mse": 0.0010747030610218644,
+          "psnr": 29.687115141424385,
+          "ssim": 0.8799428169354265,
+          "lpips": 0.024130700156092644,
+          "clip": 29.05443572998047
+        },
+        {
+          "file": "172.png",
+          "prompt": "0172 a professional photograph of an elephant in a garden, ultra realistic",
+          "mse": 0.0011236207792535424,
+          "psnr": 29.493802379363665,
+          "ssim": 0.8817647861361154,
+          "lpips": 0.02972412109375,
+          "clip": 20.92778968811035
+        },
+        {
+          "file": "173.png",
+          "prompt": "0173 a professional photograph of a goose in a garden, ultra realistic",
+          "mse": 0.0011165208416059613,
+          "psnr": 29.521331657318328,
+          "ssim": 0.8572191546009619,
+          "lpips": 0.028334293514490128,
+          "clip": 24.069034576416016
+        },
+        {
+          "file": "174.png",
+          "prompt": "0174 a professional photograph of a white tiger in a garden, ultra realistic",
+          "mse": 0.0011537981918081641,
+          "psnr": 29.378701459883388,
+          "ssim": 0.8715713763413794,
+          "lpips": 0.032866425812244415,
+          "clip": 25.030052185058594
+        },
+        {
+          "file": "175.png",
+          "prompt": "0175 a professional photograph of an eagle in a garden, ultra realistic",
+          "mse": 0.001111321966163814,
+          "psnr": 29.541601013910636,
+          "ssim": 0.8614073262702503,
+          "lpips": 0.03201186656951904,
+          "clip": 27.033531188964844
+        },
+        {
+          "file": "176.png",
+          "prompt": "0176 a professional photograph of a chick in a garden, ultra realistic",
+          "mse": 0.001103062997572124,
+          "psnr": 29.573996836462456,
+          "ssim": 0.8606118112360118,
+          "lpips": 0.026098981499671936,
+          "clip": 24.261966705322266
+        },
+        {
+          "file": "177.png",
+          "prompt": "0177 a professional photograph of a squirrel in a garden, ultra realistic",
+          "mse": 0.001118837739340961,
+          "psnr": 29.51232892934133,
+          "ssim": 0.8592168446107596,
+          "lpips": 0.02673867717385292,
+          "clip": 16.31541633605957
+        },
+        {
+          "file": "178.png",
+          "prompt": "0178 a professional photograph of a penguin in a garden, ultra realistic",
+          "mse": 0.001139171072281897,
+          "psnr": 29.434110518917844,
+          "ssim": 0.8613665667050219,
+          "lpips": 0.02864595130085945,
+          "clip": 28.881359100341797
+        },
+        {
+          "file": "179.png",
+          "prompt": "0179 a professional photograph of a goose in a garden, ultra realistic",
+          "mse": 0.0011911680921912193,
+          "psnr": 29.240269485423816,
+          "ssim": 0.8552385608552179,
+          "lpips": 0.031010553240776062,
+          "clip": 25.543079376220703
+        },
+        {
+          "file": "180.png",
+          "prompt": "0180 a professional photograph of a white tiger in a garden, ultra realistic",
+          "mse": 0.0011230764212086797,
+          "psnr": 29.495906905951767,
+          "ssim": 0.8694002606740172,
+          "lpips": 0.02746531553566456,
+          "clip": 21.724590301513672
+        },
+        {
+          "file": "181.png",
+          "prompt": "0181 a professional photograph of a goat in a garden, ultra realistic",
+          "mse": 0.0011556927347555757,
+          "psnr": 29.37157616899882,
+          "ssim": 0.8722571047192864,
+          "lpips": 0.029060091823339462,
+          "clip": 26.7545108795166
+        },
+        {
+          "file": "182.png",
+          "prompt": "0182 a professional photograph of an owl in a garden, ultra realistic",
+          "mse": 0.0012659336207434535,
+          "psnr": 28.975890659621232,
+          "ssim": 0.8617498612113996,
+          "lpips": 0.02945065125823021,
+          "clip": 23.680479049682617
+        },
+        {
+          "file": "183.png",
+          "prompt": "0183 a professional photograph of a dog in a garden, ultra realistic",
+          "mse": 0.0010994424810633063,
+          "psnr": 29.588274864580217,
+          "ssim": 0.866101656846899,
+          "lpips": 0.02672809176146984,
+          "clip": 21.03254508972168
+        },
+        {
+          "file": "184.png",
+          "prompt": "0184 a professional photograph of a panda in a garden, ultra realistic",
+          "mse": 0.0011214484693482518,
+          "psnr": 29.50220677490612,
+          "ssim": 0.8702444712552451,
+          "lpips": 0.026352521032094955,
+          "clip": 28.26165008544922
+        },
+        {
+          "file": "185.png",
+          "prompt": "0185 a professional photograph of a panda in a garden, ultra realistic",
+          "mse": 0.0011753415456041694,
+          "psnr": 29.29835912271293,
+          "ssim": 0.8683135214793362,
+          "lpips": 0.028456995263695717,
+          "clip": 29.182369232177734
+        },
+        {
+          "file": "186.png",
+          "prompt": "0186 a professional photograph of a panda lying in a garden, ultra realistic",
+          "mse": 0.0011183624155819416,
+          "psnr": 29.514174365372718,
+          "ssim": 0.8848508756667727,
+          "lpips": 0.02663736417889595,
+          "clip": 31.552457809448242
+        },
+        {
+          "file": "187.png",
+          "prompt": "0187 a professional photograph of a panda in a garden, ultra realistic",
+          "mse": 0.001153306569904089,
+          "psnr": 29.380552339712498,
+          "ssim": 0.8776308664360822,
+          "lpips": 0.025791849941015244,
+          "clip": 26.902433395385742
+        },
+        {
+          "file": "188.png",
+          "prompt": "0188 a professional photograph of a panda in a garden, ultra realistic",
+          "mse": 0.0011105654994025826,
+          "psnr": 29.54455822356172,
+          "ssim": 0.8784277690011034,
+          "lpips": 0.024401552975177765,
+          "clip": 26.316177368164062
+        },
+        {
+          "file": "189.png",
+          "prompt": "0189 a professional photograph of a panda in a garden, ultra realistic",
+          "mse": 0.001131131430156529,
+          "psnr": 29.46486929932653,
+          "ssim": 0.884047914773212,
+          "lpips": 0.025154583156108856,
+          "clip": 25.608158111572266
+        },
+        {
+          "file": "190.png",
+          "prompt": "0190 a professional photograph of a puppy in a garden, ultra realistic",
+          "mse": 0.0011454325867816806,
+          "psnr": 29.410304656629258,
+          "ssim": 0.865168086199982,
+          "lpips": 0.02899928390979767,
+          "clip": 25.06316566467285
+        },
+        {
+          "file": "191.png",
+          "prompt": "0191 a professional photograph of a puppy in a garden, ultra realistic",
+          "mse": 0.0011196736013516784,
+          "psnr": 29.50908561072007,
+          "ssim": 0.8615013481063162,
+          "lpips": 0.02765408717095852,
+          "clip": 25.856807708740234
+        },
+        {
+          "file": "192.png",
+          "prompt": "0192 a professional photograph of an elephant in a garden, ultra realistic",
+          "mse": 0.0010645641013979912,
+          "psnr": 29.728281829384144,
+          "ssim": 0.8899991379888972,
+          "lpips": 0.023332566022872925,
+          "clip": 24.648061752319336
+        },
+        {
+          "file": "193.png",
+          "prompt": "0193 a professional photograph of a white fox in a garden, ultra realistic",
+          "mse": 0.0011220454471185803,
+          "psnr": 29.499895521412725,
+          "ssim": 0.8778037801832735,
+          "lpips": 0.029641546308994293,
+          "clip": 24.9792537689209
+        },
+        {
+          "file": "194.png",
+          "prompt": "0194 a professional photograph of a dog in a garden, ultra realistic",
+          "mse": 0.0011090025072917342,
+          "psnr": 29.55067471973713,
+          "ssim": 0.8657524558197323,
+          "lpips": 0.02728237956762314,
+          "clip": 20.835783004760742
+        },
+        {
+          "file": "195.png",
+          "prompt": "0195 a professional photograph of a puppy lying in a garden, ultra realistic",
+          "mse": 0.0010978858917951584,
+          "psnr": 29.594427957137334,
+          "ssim": 0.8639209220432954,
+          "lpips": 0.027322635054588318,
+          "clip": 21.200746536254883
+        },
+        {
+          "file": "196.png",
+          "prompt": "0196 a professional photograph of a fox in a garden, ultra realistic",
+          "mse": 0.0010745824547484517,
+          "psnr": 29.687602546552245,
+          "ssim": 0.8809206331398288,
+          "lpips": 0.024219777435064316,
+          "clip": 25.599992752075195
+        },
+        {
+          "file": "197.png",
+          "prompt": "0197 a professional photograph of a sheep in a garden, ultra realistic",
+          "mse": 0.00118410459253937,
+          "psnr": 29.266099344741825,
+          "ssim": 0.8695328999260238,
+          "lpips": 0.029412735253572464,
+          "clip": 28.858936309814453
+        },
+        {
+          "file": "198.png",
+          "prompt": "0198 a professional photograph of a sheep in the wild, ultra realistic",
+          "mse": 0.0012872443767264485,
+          "psnr": 28.903389966939752,
+          "ssim": 0.8536351156949543,
+          "lpips": 0.03326212614774704,
+          "clip": 28.786420822143555
+        },
+        {
+          "file": "199.png",
+          "prompt": "0199 a professional photograph of a panda in the wild, ultra realistic",
+          "mse": 0.0013542544329538941,
+          "psnr": 28.682997341389402,
+          "ssim": 0.8314984533255849,
+          "lpips": 0.03675775229930878,
+          "clip": 32.325958251953125
+        },
+        {
+          "file": "200.png",
+          "prompt": "0200  a professional photograph of a puppy in the wild, ultra realistic",
+          "mse": 0.0013822419568896294,
+          "psnr": 28.594159284925826,
+          "ssim": 0.8146938002990565,
+          "lpips": 0.04275105148553848,
+          "clip": 20.386680603027344
+        },
+        {
+          "file": "201.png",
+          "prompt": "0201  a professional photograph of a dog in the wild, ultra realistic",
+          "mse": 0.001266056322492659,
+          "psnr": 28.97546973620656,
+          "ssim": 0.8435680339493086,
+          "lpips": 0.03413426876068115,
+          "clip": 25.084829330444336
+        },
+        {
+          "file": "202.png",
+          "prompt": "0202  a professional photograph of a panda in the wild, ultra realistic",
+          "mse": 0.0014030724996700883,
+          "psnr": 28.529198874939734,
+          "ssim": 0.8331638321073821,
+          "lpips": 0.0424671471118927,
+          "clip": 30.377643585205078
+        },
+        {
+          "file": "203.png",
+          "prompt": "0203  a professional photograph of a dog in the wild, ultra realistic",
+          "mse": 0.0013392899418249726,
+          "psnr": 28.731253927389247,
+          "ssim": 0.8200899280218711,
+          "lpips": 0.03911583125591278,
+          "clip": 26.214426040649414
+        },
+        {
+          "file": "204.png",
+          "prompt": "0204  a professional photograph of a dog in the wild, ultra realistic",
+          "mse": 0.0012183566577732563,
+          "psnr": 29.142255591341915,
+          "ssim": 0.8373205937693787,
+          "lpips": 0.03519441932439804,
+          "clip": 24.84140968322754
+        },
+        {
+          "file": "205.png",
+          "prompt": "0205  a professional photograph of a tortoise in the wild, ultra realistic",
+          "mse": 0.001269084750674665,
+          "psnr": 28.965093743423935,
+          "ssim": 0.8283371228321611,
+          "lpips": 0.036651499569416046,
+          "clip": 29.046545028686523
+        },
+        {
+          "file": "206.png",
+          "prompt": "0206  a professional photograph of a sparrow in the wild, ultra realistic",
+          "mse": 0.0014015025226399302,
+          "psnr": 28.534061161929458,
+          "ssim": 0.8063562985246122,
+          "lpips": 0.04639129340648651,
+          "clip": 22.225595474243164
+        },
+        {
+          "file": "207.png",
+          "prompt": "0207  a professional photograph of a sheep in the wild, ultra realistic",
+          "mse": 0.0011511314660310745,
+          "psnr": 29.388750745357708,
+          "ssim": 0.8553395683539838,
+          "lpips": 0.03196422755718231,
+          "clip": 29.236751556396484
+        },
+        {
+          "file": "208.png",
+          "prompt": "0208  a professional photograph of a puppy lying in the wild, ultra realistic",
+          "mse": 0.0013395074056461453,
+          "psnr": 28.730548809939094,
+          "ssim": 0.8166632564615449,
+          "lpips": 0.04274364560842514,
+          "clip": 27.07682228088379
+        },
+        {
+          "file": "209.png",
+          "prompt": "0209  a professional photograph of an ostrich in the wild, ultra realistic",
+          "mse": 0.0012528476072475314,
+          "psnr": 29.021017521155787,
+          "ssim": 0.8386815197006636,
+          "lpips": 0.03809734433889389,
+          "clip": 28.366004943847656
+        },
+        {
+          "file": "210.png",
+          "prompt": "0210 a professional photograph of a panda in the wild, ultra realistic",
+          "mse": 0.0012502893805503845,
+          "psnr": 29.02989457527042,
+          "ssim": 0.8496764336001009,
+          "lpips": 0.03480231389403343,
+          "clip": 31.764015197753906
+        },
+        {
+          "file": "211.png",
+          "prompt": "0211  a professional photograph of a horse in the wild, ultra realistic",
+          "mse": 0.001099915592931211,
+          "psnr": 29.586406411424242,
+          "ssim": 0.8626471112908614,
+          "lpips": 0.031499724835157394,
+          "clip": 26.4617862701416
+        },
+        {
+          "file": "212.png",
+          "prompt": "0212  a professional photograph of a cat walking in the wild, ultra realistic",
+          "mse": 0.0013465093215927482,
+          "psnr": 28.70790635715315,
+          "ssim": 0.8159167672438888,
+          "lpips": 0.04260106384754181,
+          "clip": 27.52985382080078
+        },
+        {
+          "file": "213.png",
+          "prompt": "0213  a professional photograph of a dog jumping in the wild, ultra realistic",
+          "mse": 0.0010622442932799459,
+          "psnr": 29.73775593402662,
+          "ssim": 0.8606267471047889,
+          "lpips": 0.02960265800356865,
+          "clip": 29.490386962890625
+        },
+        {
+          "file": "214.png",
+          "prompt": "0214  a professional photograph of an elephant in the wild, ultra realistic",
+          "mse": 0.0011202690657228231,
+          "psnr": 29.50677656147117,
+          "ssim": 0.8578107032549905,
+          "lpips": 0.030614031478762627,
+          "clip": 25.28487205505371
+        },
+        {
+          "file": "215.png",
+          "prompt": "0215  a professional photograph of a goose in the wild, ultra realistic",
+          "mse": 0.0014288538368418813,
+          "psnr": 28.450121946517303,
+          "ssim": 0.8112255608849074,
+          "lpips": 0.04884077608585358,
+          "clip": 25.784809112548828
+        },
+        {
+          "file": "216.png",
+          "prompt": "0216  a professional photograph of a white tiger in the wild, ultra realistic",
+          "mse": 0.001329348306171596,
+          "psnr": 28.763612134668936,
+          "ssim": 0.8381118568680117,
+          "lpips": 0.037980563938617706,
+          "clip": 28.461280822753906
+        },
+        {
+          "file": "217.png",
+          "prompt": "0217  a professional photograph of an eagle in the wild, ultra realistic",
+          "mse": 0.0013927179388701916,
+          "psnr": 28.561368304503016,
+          "ssim": 0.8189535337587287,
+          "lpips": 0.04274933785200119,
+          "clip": 26.02216911315918
+        },
+        {
+          "file": "218.png",
+          "prompt": "0218  a professional photograph of a chick in the wild, ultra realistic",
+          "mse": 0.0013800370506942272,
+          "psnr": 28.601092536740893,
+          "ssim": 0.8077934455737082,
+          "lpips": 0.045775458216667175,
+          "clip": 21.640399932861328
+        },
+        {
+          "file": "219.png",
+          "prompt": "0219  a professional photograph of a squirrel in the wild, ultra realistic",
+          "mse": 0.0013679295079782605,
+          "psnr": 28.639362820638944,
+          "ssim": 0.816479912956907,
+          "lpips": 0.039878956973552704,
+          "clip": 26.179658889770508
+        },
+        {
+          "file": "220.png",
+          "prompt": "0220  a professional photograph of a penguin in the wild, ultra realistic",
+          "mse": 0.0015092655085027218,
+          "psnr": 28.21234352845667,
+          "ssim": 0.8119988461447311,
+          "lpips": 0.04884742945432663,
+          "clip": 29.176939010620117
+        },
+        {
+          "file": "221.png",
+          "prompt": "0221  a professional photograph of a goose in the wild, ultra realistic",
+          "mse": 0.001450485666282475,
+          "psnr": 28.384865585436224,
+          "ssim": 0.8113300855656703,
+          "lpips": 0.04692366346716881,
+          "clip": 28.287918090820312
+        },
+        {
+          "file": "222.png",
+          "prompt": "0222  a professional photograph of a white tiger in the wild, ultra realistic",
+          "mse": 0.0013170175952836871,
+          "psnr": 28.80408422848719,
+          "ssim": 0.8445292920278541,
+          "lpips": 0.035936325788497925,
+          "clip": 27.6286563873291
+        },
+        {
+          "file": "223.png",
+          "prompt": "0223  a professional photograph of a goat in the wild, ultra realistic",
+          "mse": 0.0013485391391441226,
+          "psnr": 28.70136444340754,
+          "ssim": 0.8384728629167394,
+          "lpips": 0.03510089963674545,
+          "clip": 24.942459106445312
+        },
+        {
+          "file": "224.png",
+          "prompt": "0224  a professional photograph of an owl in the wild, ultra realistic",
+          "mse": 0.0014286740915849805,
+          "psnr": 28.450668309494525,
+          "ssim": 0.8204280963579192,
+          "lpips": 0.04407021775841713,
+          "clip": 26.693693161010742
+        },
+        {
+          "file": "225.png",
+          "prompt": "0225  a professional photograph of a dog in the wild, ultra realistic",
+          "mse": 0.0012907020282000303,
+          "psnr": 28.891740074972247,
+          "ssim": 0.825137603630119,
+          "lpips": 0.03845389559864998,
+          "clip": 26.132118225097656
+        },
+        {
+          "file": "226.png",
+          "prompt": "0226  a professional photograph of a sheep in the wild, ultra realistic",
+          "mse": 0.0013833347475156188,
+          "psnr": 28.590727140283537,
+          "ssim": 0.8342790778475537,
+          "lpips": 0.03851432353258133,
+          "clip": 28.58712387084961
+        },
+        {
+          "file": "227.png",
+          "prompt": "0227  a professional photograph of a panda in the wild, ultra realistic",
+          "mse": 0.0013194385683164,
+          "psnr": 28.796108252713477,
+          "ssim": 0.8350595827245989,
+          "lpips": 0.04159931093454361,
+          "clip": 30.561477661132812
+        },
+        {
+          "file": "228.png",
+          "prompt": "0228  a professional photograph of a fox in the wild, ultra realistic",
+          "mse": 0.0012021942529827356,
+          "psnr": 29.200253524810694,
+          "ssim": 0.8553045686018431,
+          "lpips": 0.03172367066144943,
+          "clip": 28.222888946533203
+        },
+        {
+          "file": "229.png",
+          "prompt": "0229  a professional photograph of a panda in the wild, ultra realistic",
+          "mse": 0.0012658184859901667,
+          "psnr": 28.976285661864377,
+          "ssim": 0.8517886079136124,
+          "lpips": 0.035533495247364044,
+          "clip": 32.049339294433594
+        },
+        {
+          "file": "230.png",
+          "prompt": "0230  a professional photograph of a panda in the wild, ultra realistic",
+          "mse": 0.001237313263118267,
+          "psnr": 29.075203317210708,
+          "ssim": 0.8521531074552621,
+          "lpips": 0.033307209610939026,
+          "clip": 30.021909713745117
+        },
+        {
+          "file": "231.png",
+          "prompt": "0231  a professional photograph of a panda in the wild, ultra realistic",
+          "mse": 0.0012741746613755822,
+          "psnr": 28.947710356801124,
+          "ssim": 0.8592204837822238,
+          "lpips": 0.03144131600856781,
+          "clip": 32.449119567871094
+        },
+        {
+          "file": "232.png",
+          "prompt": "0232  a professional photograph of a puppy in the wild, ultra realistic",
+          "mse": 0.0011349181877449155,
+          "psnr": 29.450354441021737,
+          "ssim": 0.8299384172275444,
+          "lpips": 0.04179006442427635,
+          "clip": 27.422237396240234
+        },
+        {
+          "file": "233.png",
+          "prompt": "0233  a professional photograph of a puppy in the wild, ultra realistic",
+          "mse": 0.0012696768390014768,
+          "psnr": 28.963068025854852,
+          "ssim": 0.8248982368884055,
+          "lpips": 0.0403808169066906,
+          "clip": 23.431772232055664
+        },
+        {
+          "file": "234.png",
+          "prompt": "0234  a professional photograph of an elephant in the wild, ultra realistic",
+          "mse": 0.0015127231599763036,
+          "psnr": 28.20240543950051,
+          "ssim": 0.8458988539569435,
+          "lpips": 0.0395282506942749,
+          "clip": 26.53178596496582
+        },
+        {
+          "file": "235.png",
+          "prompt": "0235  a professional photograph of a white fox in the wild, ultra realistic",
+          "mse": 0.0012469558278098702,
+          "psnr": 29.041489307060647,
+          "ssim": 0.8516919368146918,
+          "lpips": 0.03670260310173035,
+          "clip": 29.477428436279297
+        },
+        {
+          "file": "236.png",
+          "prompt": "0236  a professional photograph of a dog in the wild, ultra realistic",
+          "mse": 0.0013550692237913609,
+          "psnr": 28.680385182636027,
+          "ssim": 0.8261176101214819,
+          "lpips": 0.03941622003912926,
+          "clip": 28.132720947265625
+        },
+        {
+          "file": "237.png",
+          "prompt": "0237  a professional photograph of a puppy lying in the wild, ultra realistic",
+          "mse": 0.0013658954994753003,
+          "psnr": 28.64582525938004,
+          "ssim": 0.8235909324559595,
+          "lpips": 0.03965659439563751,
+          "clip": 30.571943283081055
+        }
+      ],
+      "average": {
+        "mse": 0.0007869186430466106,
+        "psnr": 32.921673758319606,
+        "ssim": 0.9163948401435281,
+        "lpips": 0.02175316308086683,
+        "clip": 25.346682697408813
+      },
+      "count": 237
+    }
+  },
+  "overall_average": {
+    "mse": 0.000690954817050131,
+    "psnr": 33.276752564560695,
+    "ssim": 0.9270096281758744,
+    "lpips": 0.019786149098577135,
+    "clip": 26.17784453012857
+  }
+}
