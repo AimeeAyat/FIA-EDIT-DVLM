@@ -136,7 +136,8 @@ class RefAwareFluxAttnProcessor2_0:
             q_rope = query[:, :, :rope_len]
             k_rope = key  [:, :, :rope_len]
 
-            q_rope, k_rope = apply_rotary_emb(q_rope, k_rope, image_rotary_emb)
+            q_rope = apply_rotary_emb(q_rope, image_rotary_emb)
+            k_rope = apply_rotary_emb(k_rope, image_rotary_emb)
 
             # Preserve any reference tokens beyond the rope coverage
             query = torch.cat([q_rope, query[:, :, rope_len:]], dim=2)
