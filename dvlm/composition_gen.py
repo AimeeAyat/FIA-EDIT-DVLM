@@ -26,7 +26,7 @@ from MyCodes.MyFluxCompositionPipeline import FluxCompositionPipeline
 import MyCodes.MyFluxForward as MyFluxForward
 from MyCodes.myutils import seed_everything
 
-from dvlm.prompt_utils import augment_prompt, detect_domain
+from dvlm.prompt_utils import augment_prompt, get_negative_prompt, detect_domain
 
 # Blackwell (sm_120) bfloat16 LayerNorm fix
 import torch.nn as nn
@@ -73,6 +73,8 @@ def parse_args():
     p.add_argument('--detect_nan',    action='store_true')
     p.add_argument('--no_prompt_aug', action='store_true',
                    help='Disable automatic prompt augmentation')
+    p.add_argument('--use_tail_cfg', action='store_true',
+                   help='Pass domain negative prompt to pipeline (tail-CFG)')
     return p.parse_args()
 
 
@@ -179,9 +181,11 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
 
         torch.manual_seed(42)
         t0 = time.time()
+        neg_prompt = get_negative_prompt(domain) if args.use_tail_cfg else img_config.get("neg_prompt", None)
+
         res = pipe.gen(
             prompt=prompt,
-            neg_prompt=img_config.get("neg_prompt", None),
+            neg_prompt=neg_prompt,
             main_image=main_image,
             ref_image=ref_image,
             ref_segment=ref_segment,
