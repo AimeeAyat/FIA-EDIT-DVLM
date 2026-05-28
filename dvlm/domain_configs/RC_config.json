@@ -1,8 +1,8 @@
 {
-  "_comment": "Real-Cartoon: lower eta lets FLUX stylize the reference into the cartoon domain. ref_inject_blocks provides identity anchoring so the model doesn't completely hallucinate a new cartoon object.",
+  "_comment": "Real-Cartoon: high eta preserves reference identity against the cartoon prior. Reference injection anchors appearance. Prompts guide only scene integration, not style transformation.",
   "params": [
     {
-      "eta": 0.5,
+      "eta": 0.85,
       "gamma": 0.9,
       "blend_ratio": 0,
       "start_timestep": 0,

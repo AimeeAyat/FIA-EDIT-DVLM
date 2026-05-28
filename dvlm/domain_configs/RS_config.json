@@ -1,8 +1,8 @@
 {
-  "_comment": "Real-Sketch: very low eta — sketch has the strongest domain prior (B&W line-art). Reference injection is critical here to preserve object shape/structure against the greyscale sketch prior.",
+  "_comment": "Real-Sketch: raised eta for identity preservation — reference injection carries shape/structure into the sketch prior.",
   "params": [
     {
-      "eta": 0.35,
+      "eta": 0.80,
       "gamma": 0.85,
       "blend_ratio": 0,
       "start_timestep": 0,
