@@ -57,30 +57,20 @@ must be preserved as-is.
 
 _POS_SUFFIX = {
     "RC": (
-        "Naturally integrated into the scene with realistic ground contact, accurate cast shadows, "
-        "correct perspective, depth, and scale relative to the background. "
-        "The reference subject retains its original identity, facial features, clothing, and proportions, "
-        "but is rendered in a vibrant, consistent cartoon style that matches the overall scene. "
-        "Seamless blending, no visible cut-out or pasting artifacts."
+        ", naturally placed in the scene, correct ground contact, cast shadow, "
+        "cartoon style, vibrant colors, clean outlines, seamless blending."
     ),
     "RP": (
-        "Naturally placed in the scene with proper ground contact, soft cast shadows, "
-        "coherent artistic lighting, correct depth and scale. "
-        "The reference subject keeps exact identity, face, pose, and details but is rendered "
-        "in a high-quality painterly/oil-painting style consistent with the background. "
-        "Visible brush strokes and artistic texture, yet perfectly merged."
+        ", naturally placed in the scene, correct ground contact, soft shadow, "
+        "painterly style, visible brush strokes, seamless blending."
     ),
     "RS": (
-        "Naturally embedded in the scene with correct grounding, cast shadows, and perspective. "
-        "The reference subject maintains identical shape, face, features, proportions, and pose as the reference, "
-        "but is represented as a clean, high-quality sketch/line drawing with hatching and line work "
-        "that harmonizes with the background. Artistic sketch style, not photorealistic."
+        ", naturally placed in the scene, correct ground contact, cast shadow, "
+        "sketch style, clean line art, hatching, seamless blending."
     ),
     "RR": (
-        "Photorealistically integrated into the scene with perfect ground contact, realistic cast shadows, "
-        "consistent lighting, accurate perspective, depth, and scale. "
-        "The reference subject retains its exact original appearance, details, and photorealism. "
-        "High fidelity, seamless composition, indistinguishable from a real photograph."
+        ", naturally placed in the scene, correct ground contact, realistic shadow, "
+        "photorealistic, consistent lighting, seamless blending."
     ),
 }
 _NEG_PROMPT = {

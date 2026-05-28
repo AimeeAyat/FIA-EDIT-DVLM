@@ -38,6 +38,8 @@ from diffusers import DiffusionPipeline
 from diffusers.pipelines.flux.pipeline_output import FluxPipelineOutput
 from diffusers.pipelines.flux.pipeline_flux_inpaint import FluxInpaintPipeline
 import torch.nn.functional as F
+
+logger = logging.get_logger(__name__)
 EXAMPLE_DOC_STRING = """
     Examples:
         ```py
@@ -670,6 +672,7 @@ class FluxCompositionPipeline(FluxInpaintPipeline):
         self,
         prompt: Union[str, List[str]] = None,
         neg_prompt: Optional[Union[str, List[str]]] = None,
+        do_cfg: bool = False,
         main_image: PipelineImageInput = None,
         ref_image: PipelineImageInput = None,
         ref_segment: PipelineImageInput = None,
@@ -917,6 +920,19 @@ class FluxCompositionPipeline(FluxInpaintPipeline):
             max_sequence_length=max_sequence_length,
             lora_scale=lora_scale,
         )
+        # Encode negative prompt for CFG (falls back to null if do_cfg=False)
+        (
+            neg_prompt_embeds,
+            neg_pooled_prompt_embeds,
+            neg_text_ids,
+        ) = self.encode_prompt(
+            prompt=neg_prompt,
+            prompt_2="",
+            device=device,
+            num_images_per_prompt=num_images_per_prompt,
+            max_sequence_length=max_sequence_length,
+            lora_scale=lora_scale,
+        )
 
         # 4.Prepare timesteps
         sigmas = np.linspace(1.0, 1 / num_inference_steps, num_inference_steps)
@@ -1094,17 +1110,42 @@ class FluxCompositionPipeline(FluxInpaintPipeline):
                 # broadcast to batch dimension in a way that's compatible with ONNX/Core ML
                 timestep = t.expand(gen_latents.shape[0]).to(gen_latents.dtype)
                 
-                noise_pred = self.transformer(
-                    hidden_states=gen_latents,
-                    timestep=timestep / 1000,
-                    guidance=guidance,
-                    pooled_projections=pooled_prompt_embeds,
-                    encoder_hidden_states=prompt_embeds,
-                    txt_ids=text_ids,
-                    img_ids=main_latent_image_ids,
-                    joint_attention_kwargs=self.joint_attention_kwargs,
-                    return_dict=False,
-                )[0]
+                if do_cfg:
+                    noise_pred_neg = self.transformer(
+                        hidden_states=gen_latents,
+                        timestep=timestep / 1000,
+                        guidance=guidance,
+                        pooled_projections=neg_pooled_prompt_embeds,
+                        encoder_hidden_states=neg_prompt_embeds,
+                        txt_ids=text_ids,
+                        img_ids=main_latent_image_ids,
+                        joint_attention_kwargs=self.joint_attention_kwargs,
+                        return_dict=False,
+                    )[0]
+                    noise_pred_pos = self.transformer(
+                        hidden_states=gen_latents,
+                        timestep=timestep / 1000,
+                        guidance=guidance,
+                        pooled_projections=pooled_prompt_embeds,
+                        encoder_hidden_states=prompt_embeds,
+                        txt_ids=text_ids,
+                        img_ids=main_latent_image_ids,
+                        joint_attention_kwargs=self.joint_attention_kwargs,
+                        return_dict=False,
+                    )[0]
+                    noise_pred = noise_pred_neg + guidance_scale * (noise_pred_pos - noise_pred_neg)
+                else:
+                    noise_pred = self.transformer(
+                        hidden_states=gen_latents,
+                        timestep=timestep / 1000,
+                        guidance=guidance,
+                        pooled_projections=pooled_prompt_embeds,
+                        encoder_hidden_states=prompt_embeds,
+                        txt_ids=text_ids,
+                        img_ids=main_latent_image_ids,
+                        joint_attention_kwargs=self.joint_attention_kwargs,
+                        return_dict=False,
+                    )[0]
                 # rf_inversion applied
                 if use_rf_inversion:
                     v_t_cond = (y_0 - gen_latents) / (1 - t_i)
