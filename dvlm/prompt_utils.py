@@ -56,33 +56,56 @@ must be preserved as-is.
 # }
 
 _POS_SUFFIX = {
-    "RC": (
-    "Cartoon-style subject naturally integrated into the scene with matching "
-    "lighting, cast shadows, perspective, depth, and scale. Clean stylized linework, "
-    "vibrant cartoon rendering, seamless blending, no pasted appearance  Original identity, "
-    "face, clothing, and proportions preserved. "
+#     "RC": (
+#     "Cartoon-style subject naturally integrated into the scene with matching "
+#     "lighting, cast shadows, perspective, depth, and scale. Clean stylized linework, "
+#     "vibrant cartoon rendering, seamless blending, no pasted appearance  Original identity, "
+#     "face, clothing, and proportions preserved. "
+# ),
+
+# "RP": (
+#     "Painterly subject naturally integrated into the scene with coherent lighting, "
+#     "soft shadows, correct perspective, depth, and scale. visible brushwork, artistic texture, seamless blending."
+#     " Original identity, face, pose, and proportions preserved."
+    
+# ),
+
+# "RS": (
+#     "Sketch-style subject naturally integrated into the scene with matching "
+#     "perspective, grounding, shadows, depth, and scale."
+#      "artistic shading, seamless sketch rendering, not photorealistic. Original identity, "
+#     "face, pose, and proportions preserved. Clean pencil linework, hatching, "
+    
+# ),
+
+# "RR": (
+#     "Photorealistic subject naturally integrated into the scene with realistic "
+#     "lighting, cast shadows, perspective, depth, and scale. Original identity, "
+#     "face, clothing, textures, and proportions preserved. High-fidelity realistic "
+#     "rendering with seamless environmental blending."
+# ),
+"RC": (
+    "Cartoon style. Seamless integration into the scene. "
+    "Matching linework, cel-shading, lighting, shadows, perspective, and scale. "
+    "Original face, identity, and proportions preserved."
 ),
 
 "RP": (
-    "Painterly subject naturally integrated into the scene with coherent lighting, "
-    "soft shadows, correct perspective, depth, and scale. visible brushwork, artistic texture, seamless blending."
-    " Original identity, face, pose, and proportions preserved."
-    
+    "Painterly style. Seamless integration into the scene. "
+    "Matching brushwork, texture, lighting, shadows, perspective, and scale. "
+    "Original face, identity, and proportions preserved."
 ),
 
 "RS": (
-    "Sketch-style subject naturally integrated into the scene with matching "
-    "perspective, grounding, shadows, depth, and scale."
-     "artistic shading, seamless sketch rendering, not photorealistic. Original identity, "
-    "face, pose, and proportions preserved. Clean pencil linework, hatching, "
-    
+    "Sketch style. Seamless integration into the scene. "
+    "Matching linework, hatching, shading, perspective, and scale. Non-photorealistic. "
+    "Original face, identity, and proportions preserved."
 ),
 
 "RR": (
-    "Photorealistic subject naturally integrated into the scene with realistic "
-    "lighting, cast shadows, perspective, depth, and scale. Original identity, "
-    "face, clothing, textures, and proportions preserved. High-fidelity realistic "
-    "rendering with seamless environmental blending."
+    "Photorealistic style. Seamless integration into the scene. "
+    "Matching lighting, shadows, textures, perspective, and scale. "
+    "Original face, identity, and proportions preserved."
 ),
 }
 _NEG_PROMPT = {
