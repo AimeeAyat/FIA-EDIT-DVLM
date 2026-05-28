@@ -11,6 +11,10 @@ Key design decisions:
   - Only in first N double-stream blocks → high-level composition, not detail refinement
   - Only for the first M denoising steps → matches the RF-Inversion correction window
   - x_embedder + LayerNorm normalisation of ref tokens before projection
+
+Return signature matches MyFluxAttnProcessor2_0 exactly:
+  double-stream → (hidden_states, encoder_hidden_states, attn_map_or_None)
+  single-stream → (hidden_states, attn_map_or_None)
 """
 
 import torch
@@ -60,7 +64,10 @@ class RefAwareFluxAttnProcessor2_0:
             and step < ref_inject_steps
         )
 
-        batch_size = hidden_states.shape[0]
+        batch_size, _, _ = (
+            hidden_states.shape if not is_double_stream
+            else encoder_hidden_states.shape
+        )
 
         # ── image token projections ──────────────────────────────────────────
         query = attn.to_q(hidden_states)
@@ -100,15 +107,15 @@ class RefAwareFluxAttnProcessor2_0:
             if attn.norm_added_k is not None:
                 enc_k = attn.norm_added_k(enc_k)
 
+            # concatenate text (enc) + image tokens
             query = torch.cat([enc_q, query], dim=2)
             key   = torch.cat([enc_k, key],   dim=2)
             value = torch.cat([enc_v, value],  dim=2)
 
         # ── reference token K,V injection ───────────────────────────────────
         if should_inject:
-            # ref_tokens_embedded is [B, ref_seq, model_dim], after x_embedder.
-            # Apply a simple LayerNorm (no time-adaptive scale) so the projection
-            # operates on a normalised distribution.
+            # ref_tokens_embedded: [B, ref_seq, model_dim] after x_embedder.
+            # LayerNorm so the projection operates on a normalised distribution.
             ref_norm = F.layer_norm(
                 ref_tokens_embedded,
                 [ref_tokens_embedded.shape[-1]],
@@ -128,31 +135,32 @@ class RefAwareFluxAttnProcessor2_0:
             key   = torch.cat([key,   ref_k], dim=2)
             value = torch.cat([value, ref_v], dim=2)
 
-        # ── rotary embeddings (applied to text + image tokens only) ─────────
+        # ── rotary embeddings ────────────────────────────────────────────────
+        # Query has no reference tokens, apply RoPE to all of it.
+        # Key may have reference tokens appended; apply RoPE only to the
+        # text+image prefix (first rope_len positions).
         if image_rotary_emb is not None:
             from diffusers.models.embeddings import apply_rotary_emb
-            rope_len = image_rotary_emb[0].shape[0]   # seq len covered by RoPE
-
-            q_rope = query[:, :, :rope_len]
-            k_rope = key  [:, :, :rope_len]
-
-            q_rope = apply_rotary_emb(q_rope, image_rotary_emb)
-            k_rope = apply_rotary_emb(k_rope, image_rotary_emb)
-
-            # Preserve any reference tokens beyond the rope coverage
-            query = torch.cat([q_rope, query[:, :, rope_len:]], dim=2)
-            key   = torch.cat([k_rope, key  [:, :, rope_len:]], dim=2)
+            query = apply_rotary_emb(query, image_rotary_emb)
+            if should_inject:
+                rope_len = image_rotary_emb[0].shape[0]
+                k_main = apply_rotary_emb(key[:, :, :rope_len], image_rotary_emb)
+                key = torch.cat([k_main, key[:, :, rope_len:]], dim=2)
+            else:
+                key = apply_rotary_emb(key, image_rotary_emb)
 
         # ── attention ────────────────────────────────────────────────────────
         if use_attn_map:
-            q = query * (head_dim ** -0.5)
+            q = query * attn.scale
             attn_weights = torch.matmul(q, key.transpose(-2, -1))
-            attn_map     = attn_weights.softmax(dim=-1)
-            hidden_states = torch.matmul(attn_map, value)
+            attn_map_out = attn_weights.softmax(dim=-1)
+            hidden_states = torch.matmul(attn_map_out, value)
+            attn_map_out  = attn_map_out.mean(dim=1)
         else:
             hidden_states = F.scaled_dot_product_attention(
                 query, key, value, dropout_p=0.0, is_causal=False
             )
+            attn_map_out = None
 
         hidden_states = hidden_states.transpose(1, 2).reshape(
             batch_size, -1, attn.heads * head_dim
@@ -165,14 +173,14 @@ class RefAwareFluxAttnProcessor2_0:
             encoder_hidden_states_out = hidden_states[:, :enc_len]
             hidden_states             = hidden_states[:, enc_len:]
 
+            hidden_states             = attn.to_out[0](hidden_states)
+            hidden_states             = attn.to_out[1](hidden_states)
             encoder_hidden_states_out = attn.to_add_out(encoder_hidden_states_out)
-
-        hidden_states = attn.to_out[0](hidden_states)
-        hidden_states = attn.to_out[1](hidden_states)
-
-        if is_double_stream:
-            return hidden_states, encoder_hidden_states_out
-        return hidden_states
+            return hidden_states, encoder_hidden_states_out, attn_map_out
+        else:
+            hidden_states = attn.to_out[0](hidden_states)
+            hidden_states = attn.to_out[1](hidden_states)
+            return hidden_states, attn_map_out
 
 
 def install_ref_attn_processors(transformer, num_double_blocks: int = 8):
