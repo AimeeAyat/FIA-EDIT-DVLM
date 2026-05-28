@@ -11,50 +11,97 @@ must be preserved as-is.
 # Integration-only: scene coherence, shadows, ground contact.
 # No style-transfer language that would cause FLUX to re-generate the object.
 
+# _POS_SUFFIX = {
+#     "RC": (
+#         " Naturally placed in the scene with correct ground contact, "
+#         "consistent cast shadow, proper depth and scale relative to the background. "
+#         "The object retains its original appearance and is not re-drawn or re-styled."
+#     ),
+#     "RP": (
+#         " Naturally placed in the scene with correct ground contact, "
+#         "consistent cast shadow, proper depth and scale relative to the background. "
+#         "The object retains its original appearance and is not re-drawn or re-styled."
+#     ),
+#     "RS": (
+#         " Naturally placed in the scene with correct ground contact, "
+#         "consistent cast shadow, proper depth and scale relative to the background. "
+#         "The object retains its shape and style but looks hand sketch in the scene."
+#     ),
+#     "RR": (
+#         " Naturally placed in the scene with correct ground contact, "
+#         "consistent lighting and cast shadow, proper depth and scale. "
+#         "High quality, photorealistic integration."
+#     ),
+# }
+
+# # ── Per-domain negative-prompt templates ─────────────────────────────────────
+
+# _NEG_PROMPT = {
+#     "RC": (
+#         "artifacts, hard edge, blurry boundary, distorted proportions, low quality, "
+#         "truncated body, cut off, partial figure, missing limbs, floating object"
+#     ),
+#     "RP": (
+#         "artifacts, hard edge, low quality, distorted, "
+#         "truncated, cut off, partial body, floating object"
+#     ),
+#     "RS": (
+#         "artifacts, blurry, low quality, "
+#         "truncated, cut off, partial figure, floating object"
+#     ),
+#     "RR": (
+#         "distorted, artifacts, low quality, blurry, watermark, text, "
+#         "truncated body, cut off, partial figure, floating object"
+#     ),
+# }
+
 _POS_SUFFIX = {
     "RC": (
-        " Naturally placed in the scene with correct ground contact, "
-        "consistent cast shadow, proper depth and scale relative to the background. "
-        "The object retains its original appearance and is not re-drawn or re-styled."
+        "Naturally integrated into the scene with realistic ground contact, accurate cast shadows, "
+        "correct perspective, depth, and scale relative to the background. "
+        "The reference subject retains its original identity, facial features, clothing, and proportions, "
+        "but is rendered in a vibrant, consistent cartoon style that matches the overall scene. "
+        "Seamless blending, no visible cut-out or pasting artifacts."
     ),
     "RP": (
-        " Naturally placed in the scene with correct ground contact, "
-        "consistent cast shadow, proper depth and scale relative to the background. "
-        "The object retains its original appearance and is not re-drawn or re-styled."
+        "Naturally placed in the scene with proper ground contact, soft cast shadows, "
+        "coherent artistic lighting, correct depth and scale. "
+        "The reference subject keeps exact identity, face, pose, and details but is rendered "
+        "in a high-quality painterly/oil-painting style consistent with the background. "
+        "Visible brush strokes and artistic texture, yet perfectly merged."
     ),
     "RS": (
-        " Naturally placed in the scene with correct ground contact, "
-        "consistent cast shadow, proper depth and scale relative to the background. "
-        "The object retains its original appearance and is not re-drawn or re-styled."
+        "Naturally embedded in the scene with correct grounding, cast shadows, and perspective. "
+        "The reference subject maintains identical shape, face, features, proportions, and pose as the reference, "
+        "but is represented as a clean, high-quality sketch/line drawing with hatching and line work "
+        "that harmonizes with the background. Artistic sketch style, not photorealistic."
     ),
     "RR": (
-        " Naturally placed in the scene with correct ground contact, "
-        "consistent lighting and cast shadow, proper depth and scale. "
-        "High quality, photorealistic integration."
+        "Photorealistically integrated into the scene with perfect ground contact, realistic cast shadows, "
+        "consistent lighting, accurate perspective, depth, and scale. "
+        "The reference subject retains its exact original appearance, details, and photorealism. "
+        "High fidelity, seamless composition, indistinguishable from a real photograph."
     ),
 }
-
-# ── Per-domain negative-prompt templates ─────────────────────────────────────
-
 _NEG_PROMPT = {
     "RC": (
-        "artifacts, hard edge, blurry boundary, distorted proportions, low quality, "
-        "truncated body, cut off, partial figure, missing limbs, floating object"
+        "artifacts, hard edges, blurry boundaries, cut-out look, pasted appearance, floating object, "
+        "distorted proportions, deformed anatomy, extra limbs, missing limbs, low quality, cartoon style mismatch, "
+        "photorealistic patches, inconsistent line thickness"
     ),
     "RP": (
-        "artifacts, hard edge, low quality, distorted, "
-        "truncated, cut off, partial body, floating object"
+        "artifacts, hard edges, cut-out, pasted, floating, distorted, low quality, "
+        "photorealistic details, flat colors, pixelation, style mismatch, overly smooth skin"
     ),
     "RS": (
-        "artifacts, blurry, low quality, "
-        "truncated, cut off, partial figure, floating object"
+        "artifacts, blurry, hard edges, cut-out, floating object, realistic shading, photorealistic textures, "
+        "thick unnatural lines, low quality sketch, filled solid areas, inconsistent line art"
     ),
     "RR": (
-        "distorted, artifacts, low quality, blurry, watermark, text, "
-        "truncated body, cut off, partial figure, floating object"
+        "artifacts, distorted, blurry, watermark, text, hard edges, cut-out appearance, pasted look, "
+        "floating, style leakage, cartoonish, painterly, sketch lines, low resolution, bad anatomy"
     ),
 }
-
 
 def detect_domain(config_path: str) -> str:
     cp = config_path.lower()
