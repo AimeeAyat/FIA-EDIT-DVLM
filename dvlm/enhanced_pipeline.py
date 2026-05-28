@@ -61,6 +61,8 @@ from dvlm.composite_prep import (
     seamless_composite,
     _soft_blend_composite,
     expand_bbox_for_partial,
+    domain_preprocess_ref,
+    color_harmonize_ref,
 )
 from dvlm.prompt_utils import augment_prompt, get_negative_prompt, detect_domain
 
