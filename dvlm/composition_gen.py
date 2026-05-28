@@ -130,6 +130,10 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
     ref_segment = load_image(img_config["ref_segment"])
     height = width = 512
 
+    # RS domain: convert reference to monochrome so it matches the sketch scene
+    if domain == "RS":
+        ref_image = ref_image.convert("L").convert("RGB")
+
     prompt = img_config["prompt"]
     if not args.no_prompt_aug:
         prompt = augment_prompt(prompt, domain)
