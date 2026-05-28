@@ -23,16 +23,12 @@ from PIL import Image, ImageDraw
 from dvlm.prompt_utils import augment_prompt, get_negative_prompt
 
 DOMAIN_CHOICES = [
-    ("Choose style…",        "RC"),   # default → RC prompts shown on load
+    ("Choose style…",        ""),
     ("Real → Cartoon  (RC)", "RC"),
     ("Real → Painting (RP)", "RP"),
     ("Real → Sketch   (RS)", "RS"),
     ("Real → Real     (RR)", "RR"),
 ]
-
-_DEFAULT_KEY     = "RC"
-_DEFAULT_AUG_POS = augment_prompt("(your base prompt here)", _DEFAULT_KEY)
-_DEFAULT_AUG_NEG = get_negative_prompt(_DEFAULT_KEY)
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -215,9 +211,9 @@ def build_ui():
                 scale=2,
             )
         aug_pos = gr.Textbox(label="Augmented positive prompt (what FLUX sees)",
-                             value=_DEFAULT_AUG_POS, interactive=False, lines=3)
+                             value="", interactive=False, lines=3)
         aug_neg = gr.Textbox(label="Negative prompt",
-                             value=_DEFAULT_AUG_NEG, interactive=False, lines=2)
+                             value="", interactive=False, lines=2)
 
         def _domain_key(label):
             for lbl, key in DOMAIN_CHOICES:
@@ -227,6 +223,8 @@ def build_ui():
 
         def _update_prompts(base, domain_label):
             key = _domain_key(domain_label)
+            if not key:
+                return "", ""
             pos = augment_prompt(base.strip(), key) if base.strip() else augment_prompt("(your prompt here)", key)
             neg = get_negative_prompt(key)
             return pos, neg

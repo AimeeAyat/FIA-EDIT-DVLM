@@ -38,16 +38,12 @@ from transformers import SamModel, SamProcessor, T5EncoderModel
 from dvlm.prompt_utils import augment_prompt, get_negative_prompt
 
 DOMAIN_CHOICES = [
-    ("Choose style…",        "RC"),   # default → RC prompts shown on load
+    ("Choose style…",        ""),
     ("Real → Cartoon  (RC)", "RC"),
     ("Real → Painting (RP)", "RP"),
     ("Real → Sketch   (RS)", "RS"),
     ("Real → Real     (RR)", "RR"),
 ]
-
-_DEFAULT_KEY     = "RC"
-_DEFAULT_AUG_POS = augment_prompt("(your base prompt here)", _DEFAULT_KEY)
-_DEFAULT_AUG_NEG = get_negative_prompt(_DEFAULT_KEY)
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -466,7 +462,7 @@ def build_app() -> gr.Blocks:
                 )
                 aug_prompt_box = gr.Textbox(
                     label="Augmented Prompt (auto-generated — what FLUX sees)",
-                    value=_DEFAULT_AUG_POS,
+                    value="",
                     lines=3,
                     interactive=False,
                 )
@@ -605,7 +601,9 @@ def build_app() -> gr.Blocks:
 
         def _preview_aug_prompt(base, domain_label):
             key = _domain_key(domain_label)
-            return augment_prompt(base.strip(), key) if base.strip() else ""
+            if not key:
+                return ""
+            return augment_prompt(base.strip(), key) if base.strip() else augment_prompt("(your prompt here)", key)
 
         for trigger in [target_prompt, domain_dd]:
             trigger.change(
