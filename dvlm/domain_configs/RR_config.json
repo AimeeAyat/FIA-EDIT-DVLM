@@ -1,0 +1,26 @@
+{
+  "_comment": "Real-Real: same-domain composition. High eta preserves the photorealistic reference directly. Reference injection still helps for fine texture details but fewer blocks needed.",
+  "params": [
+    {
+      "eta": 1.0,
+      "gamma": 1.0,
+      "blend_ratio": 0,
+      "start_timestep": 0,
+      "stop_timestep": 14,
+      "use_rf_inversion": true,
+      "use_cache": true,
+      "num_inference_steps": 28,
+      "cascade_num": 5,
+      "fresh_ratio": 0.1,
+      "fresh_threshold": 3,
+      "soft_fresh_weight": 0.25,
+      "tailing_step": 1,
+      "inv_skip": 2,
+      "cache_type": "ours_predefine",
+      "ref_inject_blocks": 6,
+      "ref_inject_steps": 10,
+      "cfg_tail_steps": 4,
+      "cfg_scale": 2.5
+    }
+  ]
+}

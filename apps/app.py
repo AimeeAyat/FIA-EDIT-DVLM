@@ -4,6 +4,7 @@ from PIL import Image
 import numpy as np
 import os
 import sys
+import shutil
 from pathlib import Path
 import traceback
 import time
@@ -15,6 +16,15 @@ import tempfile
 # Add project root to sys.path to allow imports from other directories
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+# On Blackwell (sm_120) + PyTorch 2.11, bfloat16 LayerNorm variance underflows to
+# negative -> sqrt(negative) = NaN. Patch to compute in float32 (input+weight+bias).
+import torch.nn.functional as _F
+def _ln_fp32_forward(self, x):
+    w = self.weight.float() if self.weight is not None else None
+    b = self.bias.float() if self.bias is not None else None
+    return _F.layer_norm(x.float(), self.normalized_shape, w, b, self.eps).to(x.dtype)
+torch.nn.LayerNorm.forward = _ln_fp32_forward
+
 from cache_functions import *
 from MyCodes.MyFluxInpaintPipeline import FluxInpaintPipeline
 from transformers import T5EncoderModel
@@ -24,8 +34,20 @@ from MyCodes import MyFluxForward # Import the new forward pass
 import types
 
 # --- Global Settings & Model Pre-loading ---
-WEIGHTS_DIR = "/mnt/tidalfs-bdsz01/usr/tusen/yanzexuan/weight/flux"
+WEIGHTS_DIR = os.path.join(Path(__file__).resolve().parents[1], "weights")
 pipe = None
+
+def _resolve_transformer_config(weights_dir):
+    import shutil
+    dir_path = os.path.join(weights_dir, "transformer")
+    if os.path.isfile(os.path.join(dir_path, "config.json")):
+        return dir_path
+    fallback_dir = os.path.join(weights_dir, "transformer_config_dir")
+    os.makedirs(fallback_dir, exist_ok=True)
+    dst = os.path.join(fallback_dir, "config.json")
+    if not os.path.exists(dst):
+        shutil.copy2(os.path.join(weights_dir, "transformer_config.json"), dst)
+    return fallback_dir
 
 def load_models(weights_dir, dtype=torch.bfloat16):
     global pipe
@@ -36,30 +58,43 @@ def load_models(weights_dir, dtype=torch.bfloat16):
     print("Loading models...")
     try:
         from MyCodes.FluxTransformer2DModel_PREDEFINE import FluxTransformer2DModel
-        transformer = FluxTransformer2DModel.from_pretrained(
-            weights_dir,
-            subfolder="transformer",
+        transformer = FluxTransformer2DModel.from_single_file(
+            pretrained_model_link_or_path_or_dict=os.path.join(weights_dir, "flux1-dev.safetensors"),
+            config=_resolve_transformer_config(weights_dir),
             torch_dtype=dtype,
             local_files_only=True)
-        
+
         text_encoder_2 = T5EncoderModel.from_pretrained(
-            weights_dir, 
-            subfolder="text_encoder_2", 
+            weights_dir,
+            subfolder="text_encoder_2",
             torch_dtype=dtype,
             local_files_only=True)
 
         pipe_instance = FluxInpaintPipeline.from_pretrained(
-            weights_dir, 
-            transformer=None, 
-            text_encoder_2=None, 
+            weights_dir,
+            transformer=None,
+            text_encoder_2=None,
             torch_dtype=dtype,
             local_files_only=True)
         pipe_instance.transformer = transformer
         pipe_instance.text_encoder_2 = text_encoder_2
-        
-        # Apply the new, compatible forward pass for the flux-fill model
+
         pipe_instance.transformer.forward = types.MethodType(MyFluxForward.forward, pipe_instance.transformer)
-        pipe_instance.to('cuda')
+
+        if torch.cuda.is_available():
+            print(f"Using GPU: {torch.cuda.get_device_name(0)}")
+            # RTX 5090 (32 GB) can't hold FLUX transformer + T5 simultaneously;
+            # cpu_offload keeps transformer on GPU for all diffusion steps.
+            vram_gb = torch.cuda.get_device_properties(0).total_memory / 1024**3
+            if vram_gb < 40:
+                print(f"VRAM {vram_gb:.1f} GB < 40 GB — enabling model CPU offload")
+                pipe_instance.enable_model_cpu_offload()
+            else:
+                pipe_instance.to('cuda')
+        else:
+            print("CUDA not available, falling back to CPU (inference will be slow)")
+            pipe_instance.to('cpu')
+
         pipe = pipe_instance
         print("Models loaded successfully.")
         return pipe

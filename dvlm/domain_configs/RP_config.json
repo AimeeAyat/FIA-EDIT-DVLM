@@ -1,0 +1,26 @@
+{
+  "_comment": "Real-Painting: moderate eta. Painting style is softer than cartoon so less stylisation pressure. Reference injection helps preserve object texture against brushstroke blending.",
+  "params": [
+    {
+      "eta": 0.65,
+      "gamma": 0.9,
+      "blend_ratio": 0,
+      "start_timestep": 0,
+      "stop_timestep": 18,
+      "use_rf_inversion": true,
+      "use_cache": true,
+      "num_inference_steps": 28,
+      "cascade_num": 5,
+      "fresh_ratio": 0.1,
+      "fresh_threshold": 3,
+      "soft_fresh_weight": 0.25,
+      "tailing_step": 1,
+      "inv_skip": 2,
+      "cache_type": "ours_predefine",
+      "ref_inject_blocks": 8,
+      "ref_inject_steps": 14,
+      "cfg_tail_steps": 5,
+      "cfg_scale": 3.0
+    }
+  ]
+}

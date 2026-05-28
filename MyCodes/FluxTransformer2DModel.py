@@ -99,6 +99,8 @@ class FluxSingleTransformerBlock(nn.Module):
             layer = current['layer']
             
             cal_type(cache_dic=cache_dic, current=current)
+            if current['type'] == 'ToCa' and 'norm' not in cache_dic['cache'][-1][layer]:
+                current['type'] = 'full'
 
             if current['type'] == 'full': # Force Activation: Compute all tokens and save them in cache
                 current['module'] = 'norm'
@@ -150,7 +152,7 @@ class FluxSingleTransformerBlock(nn.Module):
                 
             hidden_states = residual + hidden_states
             if hidden_states.dtype == torch.float16:
-                hidden_states = hidden_states.clip(-65504, 65504)
+                hidden_states = hidden_states.clamp(-32000, 32000)
 
             return hidden_states
         else:
@@ -167,7 +169,7 @@ class FluxSingleTransformerBlock(nn.Module):
             hidden_states = gate * self.proj_out(hidden_states)
             hidden_states = residual + hidden_states
             if hidden_states.dtype == torch.float16:
-                hidden_states = hidden_states.clip(-65504, 65504)
+                hidden_states = hidden_states.clamp(-32000, 32000)
 
             return hidden_states
 
@@ -249,6 +251,8 @@ class FluxTransformerBlock(nn.Module):
             cache_type = cache_dic['cache_type']
             layer = current['layer']
             cal_type(cache_dic=cache_dic, current=current)
+            if current['type'] == 'ToCa' and 'shift' not in cache_dic['cache'][-1][layer]:
+                current['type'] = 'full'
 
             if current['type'] == 'full':
                 current['module'] = 'shift'
@@ -313,10 +317,10 @@ class FluxTransformerBlock(nn.Module):
                 cache_dic['cache'][-1][current['layer']][current['module']] = context_ff_output
                 force_init(cache_dic, current, encoder_hidden_states.shape)
                 encoder_hidden_states = encoder_hidden_states+c_gate_mlp.unsqueeze(1) * context_ff_output
-                
-                
+
+
                 if encoder_hidden_states.dtype == torch.float16:
-                    encoder_hidden_states = encoder_hidden_states.clip(-65504, 65504)
+                    encoder_hidden_states = encoder_hidden_states.clamp(-32000, 32000)
 
                 return encoder_hidden_states, hidden_states
                 
@@ -358,7 +362,7 @@ class FluxTransformerBlock(nn.Module):
                 encoder_hidden_states = encoder_hidden_states + c_gate_mlp.unsqueeze(1) * cache_dic['cache'][-1][current['layer']][current['module']]
 
                 if encoder_hidden_states.dtype == torch.float16:
-                    encoder_hidden_states = encoder_hidden_states.clip(-65504, 65504)
+                    encoder_hidden_states = encoder_hidden_states.clamp(-32000, 32000)
 
                 return encoder_hidden_states, hidden_states
         else:
@@ -397,7 +401,7 @@ class FluxTransformerBlock(nn.Module):
             context_ff_output = self.ff_context(norm_encoder_hidden_states)
             encoder_hidden_states = encoder_hidden_states + c_gate_mlp.unsqueeze(1) * context_ff_output
             if encoder_hidden_states.dtype == torch.float16:
-                encoder_hidden_states = encoder_hidden_states.clip(-65504, 65504)
+                encoder_hidden_states = encoder_hidden_states.clamp(-32000, 32000)
 
             return encoder_hidden_states, hidden_states
 

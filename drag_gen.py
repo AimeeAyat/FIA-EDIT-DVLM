@@ -11,6 +11,16 @@ from MyCodes import MyFluxForward
 import os
 import types
 
+# On Blackwell (sm_120) + PyTorch 2.11, bfloat16 LayerNorm variance underflows to
+# negative -> sqrt(negative) = NaN. Patch to compute in float32 (input+weight+bias).
+import torch.nn as nn
+import torch.nn.functional as _F
+def _ln_fp32_forward(self, x):
+    w = self.weight.float() if self.weight is not None else None
+    b = self.bias.float() if self.bias is not None else None
+    return _F.layer_norm(x.float(), self.normalized_shape, w, b, self.eps).to(x.dtype)
+nn.LayerNorm.forward = _ln_fp32_forward
+
 def get_next_number(dirname):
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -37,7 +47,21 @@ def parse_args():
     parser.add_argument('--use_predefine', type=bool,
                        default=False,
                        help='whether to use predefine')
+    parser.add_argument('--cpu_offload', action='store_true',
+                       help='use enable_model_cpu_offload instead of pipe.to(cuda)')
     return parser.parse_args()
+
+def _resolve_transformer_config(weights_dir):
+    import shutil
+    dir_path = os.path.join(weights_dir, "transformer")
+    if os.path.isfile(os.path.join(dir_path, "config.json")):
+        return dir_path
+    fallback_dir = os.path.join(weights_dir, "transformer_config_dir")
+    os.makedirs(fallback_dir, exist_ok=True)
+    dst = os.path.join(fallback_dir, "config.json")
+    if not os.path.exists(dst):
+        shutil.copy2(os.path.join(weights_dir, "transformer_config.json"), dst)
+    return fallback_dir
 
 def load_models(args, dtype=torch.bfloat16):
     if args.use_predefine:
@@ -46,26 +70,30 @@ def load_models(args, dtype=torch.bfloat16):
         from MyCodes.FluxTransformer2DModel import FluxTransformer2DModel
     transformer = FluxTransformer2DModel.from_single_file(
         pretrained_model_link_or_path_or_dict=f"{args.weights_dir}/flux1-dev.safetensors",
-        config=f"{args.weights_dir}/transformer_config.json",
+        config=_resolve_transformer_config(args.weights_dir),
         torch_dtype=dtype,
         local_files_only=True)
-    
+
     text_encoder_2 = T5EncoderModel.from_pretrained(
-        args.weights_dir, 
-        subfolder="text_encoder_2", 
+        args.weights_dir,
+        subfolder="text_encoder_2",
         torch_dtype=dtype)
 
     pipe = FluxDragEditPipeline.from_pretrained(
-        args.weights_dir, 
-        transformer=None, 
-        text_encoder_2=None, 
+        args.weights_dir,
+        transformer=None,
+        text_encoder_2=None,
         torch_dtype=dtype)
     pipe.transformer = transformer
     pipe.text_encoder_2 = text_encoder_2
-    
+
     pipe.transformer.forward = types.MethodType(MyFluxForward.forward, pipe.transformer)
-    pipe.to('cuda')
-    
+    vram_gb = torch.cuda.get_device_properties(0).total_memory / 1024**3
+    if args.cpu_offload or vram_gb < 40:
+        pipe.enable_model_cpu_offload()
+    else:
+        pipe.to('cuda')
+
     return pipe
 
 def generate_image(pipe, img_config, param_config, output_dir):
