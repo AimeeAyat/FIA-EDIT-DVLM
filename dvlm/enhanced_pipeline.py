@@ -104,6 +104,8 @@ class EnhancedFluxCompositionPipeline(FluxCompositionPipeline):
         expand_top_frac: float = 0.0,
         expand_sides_frac: float = 0.0,
         domain: str = "RR",
+        preprocess_ref: bool = True,
+        color_harmonize: bool = True,
         # Optional tail-CFG with negative prompt
         use_tail_cfg: bool = False,
         cfg_scale: float = 3.5,
@@ -127,6 +129,13 @@ class EnhancedFluxCompositionPipeline(FluxCompositionPipeline):
     ):
         # ── ref token injection: install processors once ─────────────────────
         self._install_ref_processors(ref_inject_blocks)
+
+        # ── optionally preprocess reference for domain adaptation ─────────────
+        if preprocess_ref and domain != "RR":
+            from PIL import Image as _PIL_Image
+            if not isinstance(ref_image, _PIL_Image.Image):
+                ref_image = ref_image if hasattr(ref_image, "convert") else _PIL_Image.fromarray(ref_image)
+            ref_image = domain_preprocess_ref(ref_image, domain)
 
         masked_image_latents = None
         main_latents = None
@@ -284,6 +293,15 @@ class EnhancedFluxCompositionPipeline(FluxCompositionPipeline):
         resized_ref_mask_condition = F.interpolate(
             ref_mask_condition, size=(ref_height, ref_width), mode="bilinear"
         )
+
+        # ── Step 0b: Reinhard colour harmonisation ────────────────────────────
+        if color_harmonize and x1 is not None:
+            resized_ref_masked_image = color_harmonize_ref(
+                resized_ref_masked_image,
+                resized_ref_mask_condition,
+                init_image,
+                x1, y1, x2, y2,
+            )
 
         # ── optionally expand bounding box downward for partial objects ──────
         # Sides are NOT expanded by default to avoid regenerating surrounding
