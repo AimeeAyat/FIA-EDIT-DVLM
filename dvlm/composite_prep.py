@@ -84,7 +84,7 @@ def _soft_blend_composite(
     ref_cropped: torch.Tensor,
     mask_cropped: torch.Tensor,
     y1: int, y2: int, x1: int, x2: int,
-    edge_blur_px: int = 4,
+    edge_blur_px: int = 1,
 ) -> torch.Tensor:
     """
     Hard paste with a soft Gaussian edge to reduce boundary artefacts.
