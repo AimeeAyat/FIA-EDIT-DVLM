@@ -2,8 +2,9 @@
 SAM smoke-test — no FLUX, no EEdit, no dataset required.
 
 Tests:
-  1. Upload reference image → draw bbox → SAM extracts foreground mask
-  2. Upload background image → set placement bbox → preview composite
+  LEFT  — draw a rectangle on the reference image  → SAM extracts the mask
+           (or type a text label; without a drawing SAM uses the image centre)
+  RIGHT — draw a rectangle on the background image → composite preview
 
 Launch:
     python gradio_sam_smoke.py              # local  http://localhost:7860
@@ -18,7 +19,6 @@ from PIL import Image, ImageDraw
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-# ── SAM singleton ─────────────────────────────────────────────────────────────
 _sam_model     = None
 _sam_processor = None
 
@@ -34,12 +34,37 @@ def _load_sam():
     print("SAM loaded on", DEVICE)
 
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# ── Extract bbox from a painted ImageEditor layer ─────────────────────────────
 
-def _draw_rect(img_pil, x1, y1, x2, y2, colour="red", width=3):
-    out = img_pil.copy().convert("RGB")
-    ImageDraw.Draw(out).rectangle([x1, y1, x2, y2], outline=colour, width=width)
-    return out
+def _bbox_from_layer(editor_val):
+    """Return (x1,y1,x2,y2) bounding box of whatever the user painted, or None."""
+    if editor_val is None:
+        return None
+    layers = editor_val.get("layers") or []
+    if not layers or layers[0] is None:
+        return None
+    arr = np.asarray(layers[0])
+    if arr.ndim == 3 and arr.shape[2] == 4:
+        painted = arr[:, :, 3] > 10
+    elif arr.ndim == 3:
+        painted = arr.any(axis=2)
+    else:
+        return None
+    if not painted.any():
+        return None
+    rows = np.where(painted.any(axis=1))[0]
+    cols = np.where(painted.any(axis=0))[0]
+    return int(cols[0]), int(rows[0]), int(cols[-1]), int(rows[-1])
+
+
+def _get_bg_image(editor_val):
+    """Pull the background (uploaded) image from an ImageEditor value."""
+    if editor_val is None:
+        return None
+    bg = editor_val.get("background")
+    if bg is None:
+        return None
+    return Image.fromarray(np.asarray(bg)).convert("RGB")
 
 
 def _green_overlay(img_pil, mask_np, alpha=0.45):
@@ -52,45 +77,37 @@ def _green_overlay(img_pil, mask_np, alpha=0.45):
     return Image.alpha_composite(img_rgba, ov).convert("RGB")
 
 
-# ── Auto-fill bbox on upload ──────────────────────────────────────────────────
-
-def _default_bbox(img):
-    if img is None:
-        return 50, 50, 200, 200
-    h, w = img.shape[:2]
-    return int(w * 0.1), int(h * 0.1), int(w * 0.9), int(h * 0.9)
-
-
-def _default_placement(img):
-    if img is None:
-        return 50, 50, 250, 400
-    h, w = img.shape[:2]
-    cx, cy = w // 2, h // 2
-    bw, bh = w // 4, h // 3
-    return cx - bw // 2, cy - bh // 2, cx + bw // 2, cy + bh // 2
-
-
 # ── SAM extraction ────────────────────────────────────────────────────────────
 
-def run_sam(ref_img, x1, y1, x2, y2):
-    if ref_img is None:
-        return None, None, None, "⚠️  Upload a reference image first."
-
-    img_pil = Image.fromarray(ref_img).convert("RGB")
-    w, h    = img_pil.size
-    x1, y1, x2, y2 = max(0,int(x1)), max(0,int(y1)), min(w,int(x2)), min(h,int(y2))
-
-    if x2 <= x1 or y2 <= y1:
-        return None, None, None, "⚠️  Invalid box — x2 must be > x1 and y2 must be > y1."
+def run_sam(ref_editor, ref_text):
+    """
+    Draw a rectangle on the reference image → SAM uses it as bbox prompt.
+    If no drawing, falls back to the image centre point.
+    Text label is shown in the status but does not change SAM behaviour
+    (full text-guided segmentation needs Grounded SAM).
+    """
+    img_pil = _get_bg_image(ref_editor)
+    if img_pil is None:
+        return None, None, None, None, "⚠️  Upload a reference image first (use the left panel)."
 
     _load_sam()
-    preview = _draw_rect(img_pil, x1, y1, x2, y2)
 
-    inputs = _sam_processor(
-        images=img_pil,
-        input_boxes=[[[x1, y1, x2, y2]]],
-        return_tensors="pt",
-    ).to(DEVICE)
+    bbox = _bbox_from_layer(ref_editor)
+    if bbox is not None:
+        x1, y1, x2, y2 = bbox
+        prompt_desc = f"bbox ({x1},{y1})→({x2},{y2})"
+        inputs = _sam_processor(
+            images=img_pil, input_boxes=[[[x1, y1, x2, y2]]], return_tensors="pt"
+        ).to(DEVICE)
+    else:
+        cx, cy = img_pil.width // 2, img_pil.height // 2
+        prompt_desc = f"centre point ({cx},{cy}) — draw a rectangle for better results"
+        inputs = _sam_processor(
+            images=img_pil,
+            input_points=[[[cx, cy]]],
+            input_labels=[[1]],
+            return_tensors="pt",
+        ).to(DEVICE)
 
     with torch.no_grad():
         out = _sam_model(**inputs)
@@ -104,40 +121,47 @@ def run_sam(ref_img, x1, y1, x2, y2):
     best    = int(np.argmax(scores))
     mask_np = masks[0][0, best].numpy().astype(bool)
 
-    mask_pil    = Image.fromarray((mask_np * 255).astype(np.uint8), mode="L")
+    mask_pil    = Image.fromarray((mask_np * 255).astype(np.uint8), "L")
     overlay_pil = _green_overlay(img_pil, mask_np)
 
-    status = (f"✅ SAM done — coverage {mask_np.sum()/mask_np.size*100:.1f}%  |  "
-              f"IoU scores: {[f'{s:.2f}' for s in scores]}  (best={best})")
-    return preview, mask_pil, overlay_pil, status
+    label   = f' — label: "{ref_text}"' if ref_text and ref_text.strip() else ""
+    status  = (f"✅ SAM done{label} | prompt: {prompt_desc} | "
+               f"coverage {mask_np.sum()/mask_np.size*100:.1f}% | "
+               f"IoU {[f'{s:.2f}' for s in scores]} (best={best})")
+    return img_pil, mask_pil, overlay_pil, mask_pil, status
 
 
 # ── Composite preview ─────────────────────────────────────────────────────────
 
-def composite_preview(bg_img, ref_img, mask_state, px1, py1, px2, py2):
-    if bg_img is None:
-        return None, "⚠️  Upload a background image first."
-    if ref_img is None:
-        return None, "⚠️  Upload a reference image first."
+def composite_preview(bg_editor, ref_editor, mask_state):
+    """
+    Draw a rectangle on the background image → that's where the reference is placed.
+    """
+    bg_pil  = _get_bg_image(bg_editor)
+    ref_pil = _get_bg_image(ref_editor)
 
-    px1, py1 = max(0,int(px1)), max(0,int(py1))
-    px2, py2 = int(px2), int(py2)
-    bw, bh   = max(1, px2-px1), max(1, py2-py1)
+    if bg_pil is None:
+        return None, "⚠️  Upload a background image first (use the right panel)."
+    if ref_pil is None:
+        return None, "⚠️  Upload a reference image first (use the left panel)."
 
-    bg  = Image.fromarray(bg_img).convert("RGB")
-    ref = Image.fromarray(ref_img).convert("RGB").resize((bw, bh), Image.LANCZOS)
+    bbox = _bbox_from_layer(bg_editor)
+    if bbox is None:
+        return None, "⚠️  Draw a rectangle on the background to set the placement region."
 
-    if mask_state is not None:
-        msk = mask_state.resize((bw, bh), Image.LANCZOS)
-    else:
-        msk = Image.new("L", (bw, bh), 255)   # no mask yet → paste full ref
+    x1, y1, x2, y2 = bbox
+    bw, bh = max(1, x2-x1), max(1, y2-y1)
 
-    comp = bg.copy()
-    comp.paste(ref, (px1, py1), msk)
-    ImageDraw.Draw(comp).rectangle([px1, py1, px2, py2], outline="#FF4444", width=3)
+    ref_r = ref_pil.resize((bw, bh), Image.LANCZOS)
+    msk   = mask_state.resize((bw, bh), Image.LANCZOS) if mask_state is not None \
+            else Image.new("L", (bw, bh), 255)
 
-    status = (f"✅ Preview ready — placement box ({px1},{py1})→({px2},{py2})  "
-              + ("(mask applied)" if mask_state is not None else "(no mask yet — run SAM first)"))
+    comp  = bg_pil.copy()
+    comp.paste(ref_r, (x1, y1), msk)
+    ImageDraw.Draw(comp).rectangle([x1, y1, x2, y2], outline="#FF4444", width=3)
+
+    note   = "(mask applied)" if mask_state is not None else "(no mask — run Extract Mask first)"
+    status = f"✅ Composite ready — placement ({x1},{y1})→({x2},{y2}) {note}"
     return comp, status
 
 
@@ -146,76 +170,65 @@ def composite_preview(bg_img, ref_img, mask_state, px1, py1, px2, py2):
 def build_ui():
     with gr.Blocks(title="SAM Smoke Test") as demo:
         gr.Markdown(
-            "## SAM Smoke Test — Foreground Selection + Placement Preview\n"
-            "**Left:** upload reference, draw SAM box → extract mask.  \n"
-            "**Right:** upload background, set placement box → preview composite."
+            "## SAM Smoke Test — Draw to select, no coordinates needed\n"
+            "**Left:** paint over the object in the reference image → Extract Mask.  \n"
+            "**Right:** paint the area on the background where the object should go → Preview Composite."
         )
 
-        mask_state = gr.State(None)   # holds the extracted PIL mask
+        mask_state = gr.State(None)
 
         with gr.Row():
 
-            # ── LEFT: Reference + SAM ────────────────────────────────────────
+            # ── LEFT: Reference + SAM ─────────────────────────────────────────
             with gr.Column():
-                gr.Markdown("### ① Reference Image — extract foreground mask")
-                ref_img = gr.Image(label="Reference image", type="numpy")
-
-                gr.Markdown("**SAM bounding box** around the object to segment")
-                with gr.Row():
-                    rx1 = gr.Number(label="x1", value=50,  precision=0)
-                    ry1 = gr.Number(label="y1", value=50,  precision=0)
-                with gr.Row():
-                    rx2 = gr.Number(label="x2", value=200, precision=0)
-                    ry2 = gr.Number(label="y2", value=200, precision=0)
-
+                gr.Markdown("### ① Reference — draw around the object")
+                ref_editor = gr.ImageEditor(
+                    label="Upload reference, then draw a rectangle around the object",
+                    type="numpy",
+                    brush=gr.Brush(default_size=8, colors=["#FF4444"]),
+                    height=320,
+                )
+                ref_text = gr.Textbox(
+                    label="Object label (optional — e.g. 'sheep')",
+                    placeholder="Describe what you're extracting…",
+                    lines=1,
+                )
                 sam_btn    = gr.Button("Extract Mask", variant="primary")
-                sam_status = gr.Textbox(label="SAM status", interactive=False)
+                sam_status = gr.Textbox(label="Status", interactive=False, lines=2)
 
                 with gr.Row():
-                    out_preview = gr.Image(label="Box preview",        height=200)
-                    out_mask    = gr.Image(label="Mask (B&W)",          height=200)
-                    out_overlay = gr.Image(label="Overlay (green=FG)", height=200)
+                    out_orig    = gr.Image(label="Reference",          height=180)
+                    out_mask    = gr.Image(label="Mask (B&W)",          height=180)
+                    out_overlay = gr.Image(label="Overlay (green=FG)", height=180)
 
             # ── RIGHT: Background + Placement ────────────────────────────────
             with gr.Column():
-                gr.Markdown("### ② Background Image — set placement region")
-                bg_img = gr.Image(label="Background / source image", type="numpy")
-
-                gr.Markdown("**Placement bounding box** — where the object will be pasted")
-                with gr.Row():
-                    px1 = gr.Number(label="x1", value=50,  precision=0)
-                    py1 = gr.Number(label="y1", value=50,  precision=0)
-                with gr.Row():
-                    px2 = gr.Number(label="x2", value=250, precision=0)
-                    py2 = gr.Number(label="y2", value=400, precision=0)
-
+                gr.Markdown("### ② Background — draw the placement region")
+                bg_editor = gr.ImageEditor(
+                    label="Upload background, then draw where the object should appear",
+                    type="numpy",
+                    brush=gr.Brush(default_size=8, colors=["#4488FF"]),
+                    height=320,
+                )
                 comp_btn    = gr.Button("Preview Composite", variant="primary")
-                comp_status = gr.Textbox(label="Composite status", interactive=False)
-                comp_out    = gr.Image(label="Composite preview (red box = placement)", height=340)
+                comp_status = gr.Textbox(label="Status", interactive=False, lines=2)
+                comp_out    = gr.Image(label="Composite (red box = placement)", height=320)
 
         # ── Event wiring ──────────────────────────────────────────────────────
 
-        # Auto-fill SAM bbox when reference is uploaded
-        ref_img.upload(_default_bbox, inputs=ref_img, outputs=[rx1, ry1, rx2, ry2])
-
-        # Auto-fill placement bbox when background is uploaded
-        bg_img.upload(_default_placement, inputs=bg_img, outputs=[px1, py1, px2, py2])
-
-        # SAM extraction — also stores mask in state
-        def _run_and_store(ref, x1, y1, x2, y2):
-            preview, mask, overlay, status = run_sam(ref, x1, y1, x2, y2)
-            return preview, mask, overlay, status, mask   # last = mask_state
+        def _run_sam_store(ref_ed, text):
+            orig, mask, overlay, mask_for_state, status = run_sam(ref_ed, text)
+            return orig, mask, overlay, mask_for_state, status
 
         sam_btn.click(
-            _run_and_store,
-            inputs=[ref_img, rx1, ry1, rx2, ry2],
-            outputs=[out_preview, out_mask, out_overlay, sam_status, mask_state],
+            _run_sam_store,
+            inputs=[ref_editor, ref_text],
+            outputs=[out_orig, out_mask, out_overlay, mask_state, sam_status],
         )
 
-        # Composite preview
         comp_btn.click(
             composite_preview,
-            inputs=[bg_img, ref_img, mask_state, px1, py1, px2, py2],
+            inputs=[bg_editor, ref_editor, mask_state],
             outputs=[comp_out, comp_status],
         )
 
@@ -224,8 +237,7 @@ def build_ui():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--share", action="store_true",
-                        help="Public Gradio link (required on Colab)")
-    parser.add_argument("--port", type=int, default=7860)
+    parser.add_argument("--share", action="store_true")
+    parser.add_argument("--port",  type=int, default=7860)
     args = parser.parse_args()
     build_ui().launch(share=args.share, server_port=args.port)
