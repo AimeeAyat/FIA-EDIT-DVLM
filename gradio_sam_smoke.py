@@ -23,11 +23,16 @@ from PIL import Image, ImageDraw
 from dvlm.prompt_utils import augment_prompt, get_negative_prompt
 
 DOMAIN_CHOICES = [
+    ("Choose style…",        "RC"),   # default → RC prompts shown on load
     ("Real → Cartoon  (RC)", "RC"),
     ("Real → Painting (RP)", "RP"),
     ("Real → Sketch   (RS)", "RS"),
     ("Real → Real     (RR)", "RR"),
 ]
+
+_DEFAULT_KEY     = "RC"
+_DEFAULT_AUG_POS = augment_prompt("(your base prompt here)", _DEFAULT_KEY)
+_DEFAULT_AUG_NEG = get_negative_prompt(_DEFAULT_KEY)
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -91,7 +96,7 @@ def _green_overlay(img_pil, mask_np, alpha=0.45):
 
 # ── SAM extraction ────────────────────────────────────────────────────────────
 
-def run_sam(ref_editor, ref_text):
+def run_sam(ref_editor, ref_text, rx1=0, ry1=0, rx2=0, ry2=0):
     """
     Draw a rectangle on the reference image → SAM uses it as bbox prompt.
     If no drawing, falls back to the image centre point.
@@ -104,7 +109,11 @@ def run_sam(ref_editor, ref_text):
 
     _load_sam()
 
-    bbox = _bbox_from_layer(ref_editor)
+    # Coordinate inputs override the drawing when all four are non-zero
+    if int(rx1) > 0 or int(ry1) > 0 or int(rx2) > 0 or int(ry2) > 0:
+        bbox = (int(rx1), int(ry1), int(rx2), int(ry2))
+    else:
+        bbox = _bbox_from_layer(ref_editor)
     if bbox is not None:
         x1, y1, x2, y2 = bbox
         prompt_desc = f"bbox ({x1},{y1})→({x2},{y2})"
@@ -145,7 +154,7 @@ def run_sam(ref_editor, ref_text):
 
 # ── Composite preview ─────────────────────────────────────────────────────────
 
-def composite_preview(bg_editor, ref_editor, mask_state):
+def composite_preview(bg_editor, ref_editor, mask_state, px1=0, py1=0, px2=0, py2=0):
     """
     Draw a rectangle on the background image → that's where the reference is placed.
     """
@@ -157,9 +166,12 @@ def composite_preview(bg_editor, ref_editor, mask_state):
     if ref_pil is None:
         return None, "⚠️  Upload a reference image first (use the left panel)."
 
-    bbox = _bbox_from_layer(bg_editor)
+    if int(px1) > 0 or int(py1) > 0 or int(px2) > 0 or int(py2) > 0:
+        bbox = (int(px1), int(py1), int(px2), int(py2))
+    else:
+        bbox = _bbox_from_layer(bg_editor)
     if bbox is None:
-        return None, "⚠️  Draw a rectangle on the background to set the placement region."
+        return None, "⚠️  Draw on the background or enter coordinates to set the placement region."
 
     x1, y1, x2, y2 = bbox
     bw, bh = max(1, x2-x1), max(1, y2-y1)
@@ -202,8 +214,10 @@ def build_ui():
                 placeholder="e.g. 'a sheep in the forest'",
                 scale=2,
             )
-        aug_pos = gr.Textbox(label="Augmented positive prompt (what FLUX sees)", interactive=False, lines=3)
-        aug_neg = gr.Textbox(label="Negative prompt",                            interactive=False, lines=2)
+        aug_pos = gr.Textbox(label="Augmented positive prompt (what FLUX sees)",
+                             value=_DEFAULT_AUG_POS, interactive=False, lines=3)
+        aug_neg = gr.Textbox(label="Negative prompt",
+                             value=_DEFAULT_AUG_NEG, interactive=False, lines=2)
 
         def _domain_key(label):
             for lbl, key in DOMAIN_CHOICES:
@@ -225,17 +239,20 @@ def build_ui():
             # ── LEFT: Reference + SAM ─────────────────────────────────────────
             with gr.Column():
                 gr.Markdown("### ① Reference — draw around the object")
+                gr.Markdown("*Use the brush to paint over the object, or enter exact pixel coordinates below.*")
                 ref_editor = gr.ImageEditor(
-                    label="Upload reference, then draw a rectangle around the object",
+                    label="Upload reference image, then paint over the object",
                     type="numpy",
-                    brush=gr.Brush(default_size=8, colors=["#FF4444"]),
-                    height=320,
+                    brush=gr.Brush(default_size=20, colors=["#FF4444"]),
+                    height=300,
                 )
-                ref_text = gr.Textbox(
-                    label="Object label (optional — e.g. 'sheep')",
-                    placeholder="Describe what you're extracting…",
-                    lines=1,
-                )
+                with gr.Accordion("Or enter exact pixel coordinates", open=False):
+                    with gr.Row():
+                        rx1 = gr.Number(label="x1 (left)",   value=0,   precision=0)
+                        ry1 = gr.Number(label="y1 (top)",    value=0,   precision=0)
+                        rx2 = gr.Number(label="x2 (right)",  value=200, precision=0)
+                        ry2 = gr.Number(label="y2 (bottom)", value=200, precision=0)
+                    gr.Markdown("*These override the painted region when non-zero.*")
                 sam_btn    = gr.Button("Extract Mask", variant="primary")
                 sam_status = gr.Textbox(label="Status", interactive=False, lines=2)
 
@@ -247,31 +264,39 @@ def build_ui():
             # ── RIGHT: Background + Placement ────────────────────────────────
             with gr.Column():
                 gr.Markdown("### ② Background — draw the placement region")
+                gr.Markdown("*Paint where the object should appear, or enter exact coordinates below.*")
                 bg_editor = gr.ImageEditor(
-                    label="Upload background, then draw where the object should appear",
+                    label="Upload background image, then paint the placement area",
                     type="numpy",
-                    brush=gr.Brush(default_size=8, colors=["#4488FF"]),
-                    height=320,
+                    brush=gr.Brush(default_size=20, colors=["#4488FF"]),
+                    height=300,
                 )
+                with gr.Accordion("Or enter exact pixel coordinates", open=False):
+                    with gr.Row():
+                        px1 = gr.Number(label="x1 (left)",   value=0,   precision=0)
+                        py1 = gr.Number(label="y1 (top)",    value=0,   precision=0)
+                        px2 = gr.Number(label="x2 (right)",  value=200, precision=0)
+                        py2 = gr.Number(label="y2 (bottom)", value=200, precision=0)
+                    gr.Markdown("*These override the painted region when non-zero.*")
                 comp_btn    = gr.Button("Preview Composite", variant="primary")
                 comp_status = gr.Textbox(label="Status", interactive=False, lines=2)
-                comp_out    = gr.Image(label="Composite (red box = placement)", height=320)
+                comp_out    = gr.Image(label="Composite (red box = placement)", height=300)
 
         # ── Event wiring ──────────────────────────────────────────────────────
 
-        def _run_sam_store(ref_ed, text):
-            orig, mask, overlay, mask_for_state, status = run_sam(ref_ed, text)
+        def _run_sam_store(ref_ed, x1, y1, x2, y2):
+            orig, mask, overlay, mask_for_state, status = run_sam(ref_ed, "", x1, y1, x2, y2)
             return orig, mask, overlay, mask_for_state, status
 
         sam_btn.click(
             _run_sam_store,
-            inputs=[ref_editor, ref_text],
+            inputs=[ref_editor, rx1, ry1, rx2, ry2],
             outputs=[out_orig, out_mask, out_overlay, mask_state, sam_status],
         )
 
         comp_btn.click(
             composite_preview,
-            inputs=[bg_editor, ref_editor, mask_state],
+            inputs=[bg_editor, ref_editor, mask_state, px1, py1, px2, py2],
             outputs=[comp_out, comp_status],
         )
 
