@@ -178,7 +178,6 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
         res = pipe.gen(
             prompt=prompt,
             neg_prompt=img_config.get("neg_prompt", None),
-            do_cfg=param.get('do_cfg', False),
             main_image=main_image,
             ref_image=ref_image,
             ref_segment=ref_segment,
