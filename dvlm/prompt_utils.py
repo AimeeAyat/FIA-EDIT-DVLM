@@ -11,94 +11,47 @@ must be preserved as-is.
 # Integration-only: scene coherence, shadows, ground contact.
 # No style-transfer language that would cause FLUX to re-generate the object.
 
+
 # _POS_SUFFIX = {
-#     "RC": (
-#         " Naturally placed in the scene with correct ground contact, "
-#         "consistent cast shadow, proper depth and scale relative to the background. "
-#         "The object retains its original appearance and is not re-drawn or re-styled."
-#     ),
-#     "RP": (
-#         " Naturally placed in the scene with correct ground contact, "
-#         "consistent cast shadow, proper depth and scale relative to the background. "
-#         "The object retains its original appearance and is not re-drawn or re-styled."
-#     ),
-#     "RS": (
-#         " Naturally placed in the scene with correct ground contact, "
-#         "consistent cast shadow, proper depth and scale relative to the background. "
-#         "The object retains its shape and style but looks hand sketch in the scene."
-#     ),
-#     "RR": (
-#         " Naturally placed in the scene with correct ground contact, "
-#         "consistent lighting and cast shadow, proper depth and scale. "
-#         "High quality, photorealistic integration."
-#     ),
-# }
-
-# # ── Per-domain negative-prompt templates ─────────────────────────────────────
-
-# _NEG_PROMPT = {
-#     "RC": (
-#         "artifacts, hard edge, blurry boundary, distorted proportions, low quality, "
-#         "truncated body, cut off, partial figure, missing limbs, floating object"
-#     ),
-#     "RP": (
-#         "artifacts, hard edge, low quality, distorted, "
-#         "truncated, cut off, partial body, floating object"
-#     ),
-#     "RS": (
-#         "artifacts, blurry, low quality, "
-#         "truncated, cut off, partial figure, floating object"
-#     ),
-#     "RR": (
-#         "distorted, artifacts, low quality, blurry, watermark, text, "
-#         "truncated body, cut off, partial figure, floating object"
-#     ),
-# }
-
-_POS_SUFFIX = {
-#     "RC": (
-#     "Cartoon-style subject naturally integrated into the scene with matching "
-#     "lighting, cast shadows, perspective, depth, and scale. Clean stylized linework, "
-#     "vibrant cartoon rendering, seamless blending, no pasted appearance  Original identity, "
-#     "face, clothing, and proportions preserved. "
+# "RC": (
+    
+#     "Cartoon style. Seamless integration into the scene. "
+#     "Matching linework, cel-shading, lighting, shadows, perspective, and scale. "
+#     "Original face, identity, and proportions preserved."
 # ),
 
 # "RP": (
-#     "Painterly subject naturally integrated into the scene with coherent lighting, "
-#     "soft shadows, correct perspective, depth, and scale. visible brushwork, artistic texture, seamless blending."
-#     " Original identity, face, pose, and proportions preserved."
-    
+#     "Painterly style. Seamless integration into the scene. "
+#     "Matching brushwork, texture, lighting, shadows, perspective, and scale. "
+#     "Original face, identity, and proportions preserved."
 # ),
 
 # "RS": (
-#     "Sketch-style subject naturally integrated into the scene with matching "
-#     "perspective, grounding, shadows, depth, and scale."
-#      "artistic shading, seamless sketch rendering, not photorealistic. Original identity, "
-#     "face, pose, and proportions preserved. Clean pencil linework, hatching, "
-    
+#     "Sketch style. Seamless integration into the scene. "
+#     "Matching linework, hatching, shading, perspective, and scale. Non-photorealistic. "
+#     "Original face, identity, and proportions preserved."
 # ),
 
 # "RR": (
-#     "Photorealistic subject naturally integrated into the scene with realistic "
-#     "lighting, cast shadows, perspective, depth, and scale. Original identity, "
-#     "face, clothing, textures, and proportions preserved. High-fidelity realistic "
-#     "rendering with seamless environmental blending."
+#     "Photorealistic style. Seamless integration into the scene. "
+#     "Matching lighting, shadows, textures, perspective, and scale. "
+#     "Original face, identity, and proportions preserved."
 # ),
+# }
+_POS_SUFFIX = {
 "RC": (
-    "Cartoon style. Seamless integration into the scene. "
-    "Matching linework, cel-shading, lighting, shadows, perspective, and scale. "
+    
+    "cartoon style, bold thick black outlines, flat vector colors, fun, exaggerated expressions and proportions."
     "Original face, identity, and proportions preserved."
 ),
 
 "RP": (
-    "Painterly style. Seamless integration into the scene. "
-    "Matching brushwork, texture, lighting, shadows, perspective, and scale. "
+    "realistic painting, featuring visible textures, artistic lighting, and authentic paint strokes."
     "Original face, identity, and proportions preserved."
 ),
 
 "RS": (
-    "Sketch style. Seamless integration into the scene. "
-    "Matching linework, hatching, shading, perspective, and scale. Non-photorealistic. "
+    "Sketch style. hand-drawn, featuring realistic line work, manual shading, and authentic paper texture."
     "Original face, identity, and proportions preserved."
 ),
 
