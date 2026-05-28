@@ -390,18 +390,18 @@ class EnhancedFluxCompositionPipeline(FluxCompositionPipeline):
         gen_latents = composite_inv_latents
         y_0 = composite_image_latents.clone()
 
-        # ── Pre-project reference tokens for attention injection ───────────────
-        # ref_tokens_embedded: [B, ref_seq, model_dim] — fixed across all steps
-        ref_tokens_embedded = self.transformer.x_embedder(
-            orig_ref_latents.to(device, dtype=prompt_embeds.dtype)
-        )
-
         # ── Augment joint_attention_kwargs with ref injection params ──────────
         if joint_attention_kwargs is None:
             joint_attention_kwargs = {}
-        joint_attention_kwargs["ref_tokens_embedded"] = ref_tokens_embedded
-        joint_attention_kwargs["ref_inject_blocks"]    = ref_inject_blocks
-        joint_attention_kwargs["ref_inject_steps"]     = ref_inject_steps
+        if ref_inject_blocks > 0:
+            # Only add ref keys when injection is active — MyFluxAttnProcessor2_0
+            # has no **kwargs and will crash if it receives unknown keyword args.
+            ref_tokens_embedded = self.transformer.x_embedder(
+                orig_ref_latents.to(device, dtype=prompt_embeds.dtype)
+            )
+            joint_attention_kwargs["ref_tokens_embedded"] = ref_tokens_embedded
+            joint_attention_kwargs["ref_inject_blocks"]    = ref_inject_blocks
+            joint_attention_kwargs["ref_inject_steps"]     = ref_inject_steps
         self._joint_attention_kwargs = joint_attention_kwargs
 
         # ── denoising loop ────────────────────────────────────────────────────

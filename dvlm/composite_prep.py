@@ -4,11 +4,14 @@ Composite construction utilities for reference-guided composition.
 Provides:
   - Poisson / seamless blending for natural boundary integration
   - Optional bounding-box expansion for partially-visible objects
+  - Reinhard LAB colour harmonisation of reference to scene
+  - Domain-adaptive reference preprocessing (RC/RP/RS/RR)
 """
 
 import numpy as np
 import torch
 import torch.nn.functional as F
+from PIL import Image
 
 
 # ── Seamless / Poisson composite ─────────────────────────────────────────────
@@ -144,4 +147,119 @@ def expand_bbox_for_partial(
         min(img_h, y2 + int(bh * expand_bottom_frac)),
     )
 
+
+# ── Reinhard colour harmonisation ────────────────────────────────────────────
+
+def reinhard_color_transfer(
+    ref_arr: np.ndarray,
+    scene_arr: np.ndarray,
+    mask_arr: np.ndarray,
+    strength: float = 0.65,
+) -> np.ndarray:
+    """
+    Reinhard (2001) LAB colour transfer: adapt reference colour statistics toward
+    the target scene region. Only foreground pixels are modified.
+    `strength` blends between original (0) and full transfer (1).
+    """
+    try:
+        import cv2
+    except ImportError:
+        return ref_arr
+
+    def to_lab(arr):
+        u8 = (arr.clip(0, 1) * 255).astype(np.uint8)
+        return cv2.cvtColor(u8, cv2.COLOR_RGB2LAB).astype(np.float32)
+
+    def from_lab(lab):
+        u8 = lab.clip(0, 255).astype(np.uint8)
+        return cv2.cvtColor(u8, cv2.COLOR_LAB2RGB).astype(np.float32) / 255.0
+
+    ref_lab   = to_lab(ref_arr)
+    scene_lab = to_lab(scene_arr)
+
+    fg = mask_arr > 0.5
+    if fg.sum() == 0:
+        return ref_arr
+
+    adapted = ref_lab.copy()
+    for ch in range(3):
+        src_pixels = ref_lab[:, :, ch][fg]
+        tgt_pixels = scene_lab[:, :, ch][fg]
+        src_mean, src_std = src_pixels.mean(), src_pixels.std()
+        tgt_mean, tgt_std = tgt_pixels.mean(), tgt_pixels.std()
+        if src_std < 1e-6:
+            continue
+        normalised = (src_pixels - src_mean) / src_std * (tgt_std + 1e-6) + tgt_mean
+        blended = src_pixels * (1 - strength) + normalised * strength
+        adapted[:, :, ch][fg] = blended
+
+    result = from_lab(adapted)
+    fg3 = np.stack([fg, fg, fg], axis=-1)
+    return np.where(fg3, result, ref_arr).astype(np.float32)
+
+
+def color_harmonize_ref(
+    ref_tensor: torch.Tensor,
+    mask_tensor: torch.Tensor,
+    scene_tensor: torch.Tensor,
+    x1: int, y1: int, x2: int, y2: int,
+    strength: float = 0.65,
+) -> torch.Tensor:
+    """
+    Apply Reinhard colour transfer to the reference object tensor so its colours
+    are closer to the scene region at (x1,y1)–(x2,y2).
+    """
+    ref_h = ref_tensor.shape[-2]
+    ref_w = ref_tensor.shape[-1]
+
+    scene_crop = scene_tensor[:, :, y1:y2, x1:x2]
+    scene_crop_r = F.interpolate(scene_crop, size=(ref_h, ref_w),
+                                 mode="bilinear", align_corners=False)
+
+    ref_np   = ref_tensor[0].permute(1, 2, 0).cpu().numpy()
+    scene_np = scene_crop_r[0].permute(1, 2, 0).cpu().numpy()
+    mask_np  = mask_tensor[0, 0].cpu().numpy()
+
+    adapted_np = reinhard_color_transfer(ref_np, scene_np, mask_np, strength)
+
+    adapted_t = torch.from_numpy(adapted_np).permute(2, 0, 1).unsqueeze(0)
+    return adapted_t.to(ref_tensor.device, dtype=ref_tensor.dtype)
+
+
+# ── Domain-adaptive reference preprocessing ──────────────────────────────────
+
+def domain_preprocess_ref(ref_pil: Image.Image, domain: str) -> Image.Image:
+    """
+    Mild domain-appropriate preprocessing on the reference image before
+    composition to reduce the photorealism–cartoon/painting/sketch gap.
+
+    domain: "RC" (Real-Cartoon), "RP" (Real-Painting),
+            "RS" (Real-Sketch),  "RR" (Real-Real, no-op)
+    """
+    import PIL.ImageEnhance as IE
+
+    if domain == "RR":
+        return ref_pil
+
+    if domain == "RC":
+        orig_size = ref_pil.size
+        small = ref_pil.resize(
+            (max(64, orig_size[0] // 4), max(64, orig_size[1] // 4)),
+            Image.LANCZOS,
+        )
+        smoothed = small.resize(orig_size, Image.LANCZOS)
+        ref_pil = Image.blend(ref_pil.convert("RGB"), smoothed.convert("RGB"), 0.20)
+        ref_pil = IE.Color(ref_pil).enhance(1.25)
+
+    elif domain == "RP":
+        ref_pil = IE.Color(ref_pil.convert("RGB")).enhance(0.85)
+        ref_pil = IE.Contrast(ref_pil).enhance(1.15)
+
+    elif domain == "RS":
+        grey = ref_pil.convert("L").convert("RGB")
+        ref_pil = Image.blend(ref_pil.convert("RGB"), grey, 0.6)
+        ref_pil = IE.Contrast(ref_pil).enhance(1.4)
+        ref_pil = IE.Sharpness(ref_pil).enhance(2.0)
+
+    return ref_pil.convert("RGB")
 
