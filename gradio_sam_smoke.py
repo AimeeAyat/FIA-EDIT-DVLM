@@ -12,10 +12,22 @@ Launch:
 """
 
 import argparse
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import numpy as np
 import torch
 import gradio as gr
 from PIL import Image, ImageDraw
+
+from dvlm.prompt_utils import augment_prompt, get_negative_prompt
+
+DOMAIN_CHOICES = [
+    ("Real → Cartoon  (RC)", "RC"),
+    ("Real → Painting (RP)", "RP"),
+    ("Real → Sketch   (RS)", "RS"),
+    ("Real → Real     (RR)", "RR"),
+]
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -176,6 +188,37 @@ def build_ui():
         )
 
         mask_state = gr.State(None)
+
+        # ── Prompt section ────────────────────────────────────────────────────
+        with gr.Row():
+            domain_dd = gr.Dropdown(
+                label="Domain (scene style)",
+                choices=[c[0] for c in DOMAIN_CHOICES],
+                value=DOMAIN_CHOICES[0][0],
+                scale=1,
+            )
+            base_prompt = gr.Textbox(
+                label="Base prompt",
+                placeholder="e.g. 'a sheep in the forest'",
+                scale=2,
+            )
+        aug_pos = gr.Textbox(label="Augmented positive prompt (what FLUX sees)", interactive=False, lines=3)
+        aug_neg = gr.Textbox(label="Negative prompt",                            interactive=False, lines=2)
+
+        def _domain_key(label):
+            for lbl, key in DOMAIN_CHOICES:
+                if lbl == label:
+                    return key
+            return "RR"
+
+        def _update_prompts(base, domain_label):
+            key = _domain_key(domain_label)
+            pos = augment_prompt(base.strip(), key) if base.strip() else augment_prompt("(your prompt here)", key)
+            neg = get_negative_prompt(key)
+            return pos, neg
+
+        for trigger in [base_prompt, domain_dd]:
+            trigger.change(_update_prompts, inputs=[base_prompt, domain_dd], outputs=[aug_pos, aug_neg])
 
         with gr.Row():
 

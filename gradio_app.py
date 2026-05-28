@@ -35,6 +35,14 @@ from MyCodes import MyFluxForward
 from MyCodes.MyFluxCompositionPipeline import FluxCompositionPipeline
 from MyCodes.myutils import seed_everything
 from transformers import SamModel, SamProcessor, T5EncoderModel
+from dvlm.prompt_utils import augment_prompt, get_negative_prompt
+
+DOMAIN_CHOICES = [
+    ("Real → Cartoon  (RC)", "RC"),
+    ("Real → Painting (RP)", "RP"),
+    ("Real → Sketch   (RS)", "RS"),
+    ("Real → Real     (RR)", "RR"),
+]
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -301,6 +309,7 @@ def generate(
     ref_np,
     mask_pil,
     target_prompt: str,
+    domain: str,
     x1, y1, x2, y2,
     num_steps: int,
     guidance_scale: float,
@@ -324,6 +333,9 @@ def generate(
         return None, "❌  Enter a target prompt"
 
     seed_everything(42)
+
+    # Augment prompt with domain-specific style/integration language
+    final_prompt = augment_prompt(target_prompt.strip(), domain)
 
     main_image   = Image.fromarray(source_np).convert("RGB").resize((512, 512))
     ref_image    = Image.fromarray(ref_np).convert("RGB")
@@ -365,7 +377,8 @@ def generate(
     generator = torch.Generator(device=DEVICE).manual_seed(42)
 
     res = _pipe.gen(
-        prompt=target_prompt,
+        prompt=final_prompt,
+        neg_prompt=get_negative_prompt(domain),
         main_image=main_image,
         ref_image=ref_image,
         ref_segment=ref_segment,
@@ -386,7 +399,7 @@ def generate(
     )
 
     elapsed = time.time() - t0
-    return res.images[0], f"✅  Generated in {elapsed:.1f}s"
+    return res.images[0], f"✅  Generated in {elapsed:.1f}s  |  domain={domain}  |  prompt: {final_prompt[:80]}…"
 
 
 # ╔══════════════════════════════════════════════════════════╗
@@ -441,13 +454,20 @@ def build_app() -> gr.Blocks:
                     lines=1,
                 )
 
+                domain_dd = gr.Dropdown(
+                    label="Domain (scene style)",
+                    choices=[c[0] for c in DOMAIN_CHOICES],
+                    value=DOMAIN_CHOICES[0][0],
+                )
                 target_prompt = gr.Textbox(
-                    label="Target Prompt",
-                    placeholder=(
-                        "Describe the desired output, e.g.\n"
-                        "'a cartoon sheep in the forest, vibrant colors, clean lines'"
-                    ),
+                    label="Base Prompt",
+                    placeholder="e.g. 'a sheep in the forest'",
+                    lines=2,
+                )
+                aug_prompt_box = gr.Textbox(
+                    label="Augmented Prompt (auto-generated — what FLUX sees)",
                     lines=3,
+                    interactive=False,
                 )
 
                 with gr.Accordion("Advanced Parameters", open=False):
@@ -575,6 +595,24 @@ def build_app() -> gr.Blocks:
             outputs=[x1_in, y1_in, x2_in, y2_in],
         )
 
+        # Live augmented-prompt preview
+        def _domain_key(label):
+            for lbl, key in DOMAIN_CHOICES:
+                if lbl == label:
+                    return key
+            return "RR"
+
+        def _preview_aug_prompt(base, domain_label):
+            key = _domain_key(domain_label)
+            return augment_prompt(base.strip(), key) if base.strip() else ""
+
+        for trigger in [target_prompt, domain_dd]:
+            trigger.change(
+                _preview_aug_prompt,
+                inputs=[target_prompt, domain_dd],
+                outputs=[aug_prompt_box],
+            )
+
         # Composite preview
         def _placement_preview_wrap(src_np, ref_ed, mask, x1, y1, x2, y2):
             bg = ref_ed.get("background") if ref_ed else None
@@ -588,18 +626,21 @@ def build_app() -> gr.Blocks:
         )
 
         # Generation
-        def _generate_wrap(src_np, ref_ed, mask, prompt, x1, y1, x2, y2,
+        def _generate_wrap(src_np, ref_ed, mask, prompt, domain_label,
+                           x1, y1, x2, y2,
                            steps, guidance, eta, gamma, blend, cache, cascade):
             bg = ref_ed.get("background") if ref_ed else None
             ref_np = np.asarray(bg) if bg is not None else None
-            return generate(src_np, ref_np, mask, prompt, x1, y1, x2, y2,
+            domain_key = _domain_key(domain_label)
+            return generate(src_np, ref_np, mask, prompt, domain_key,
+                            x1, y1, x2, y2,
                             steps, guidance, eta, gamma, blend, cache, cascade)
 
         generate_btn.click(
             _generate_wrap,
             inputs=[
                 source_img, ref_editor, mask_state,
-                target_prompt,
+                target_prompt, domain_dd,
                 x1_in, y1_in, x2_in, y2_in,
                 num_steps, guidance, eta, gamma, blend_ratio,
                 use_cache, cascade_num,
