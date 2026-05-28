@@ -97,6 +97,9 @@ def parse_args():
                    help="Disable automatic prompt augmentation")
     p.add_argument("--use_tail_cfg",         action="store_true",
                    help="Enable tail-CFG (last 5 steps) with negative prompt")
+    # Colour harmonisation
+    p.add_argument("--no_color_harmonize",   action="store_true",
+                   help="Disable Reinhard colour transfer before paste")
     return p.parse_args()
 
 
@@ -218,6 +221,7 @@ def generate_image(pipe, img_config, param_config, output_dir, args, domain):
             expand_top_frac=args.expand_top,
             expand_sides_frac=args.expand_sides,
             domain=domain,
+            color_harmonize=not args.no_color_harmonize,
             use_tail_cfg=args.use_tail_cfg,
             cfg_tail_steps=param.get("cfg_tail_steps", 5),
             cfg_scale=param.get("cfg_scale", 3.5),
