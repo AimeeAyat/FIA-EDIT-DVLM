@@ -49,6 +49,7 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ── Global singletons (loaded once on demand) ─────────────────────────────────
 _pipe: FluxCompositionPipeline | None = None
+_inpaint_pipe = None   # built lazily from _pipe components — zero reload cost
 _sam_model: SamModel | None = None
 _sam_processor: SamProcessor | None = None
 
@@ -244,6 +245,100 @@ def extract_mask_center(ref_np):
     cx, cy = ref_pil.width // 2, ref_pil.height // 2
     mask_pil, mask_display, overlay_pil = _run_sam(ref_pil, (cx, cy))
     return mask_pil, mask_display, overlay_pil, f"✅  Auto-mask via centre point ({cx}, {cy})"
+
+
+# ╔══════════════════════════════════════════════════════════╗
+# ║  Reference modification (pose / style via prompt)        ║
+# ╚══════════════════════════════════════════════════════════╝
+
+def _get_inpaint_pipe():
+    """Build FluxInpaintPipeline from already-loaded _pipe components — zero reload."""
+    global _inpaint_pipe
+    if _inpaint_pipe is not None:
+        return _inpaint_pipe
+    from diffusers import FluxInpaintPipeline
+    _inpaint_pipe = FluxInpaintPipeline(
+        scheduler=_pipe.scheduler,
+        vae=_pipe.vae,
+        text_encoder=_pipe.text_encoder,
+        text_encoder_2=_pipe.text_encoder_2,
+        tokenizer=_pipe.tokenizer,
+        tokenizer_2=_pipe.tokenizer_2,
+        transformer=_pipe.transformer,
+    )
+    return _inpaint_pipe
+
+
+def modify_reference(ref_editor_val, mask_pil, mod_prompt, strength, seed):
+    """
+    Edit the reference object's pose / style using EEdit's inpaint pipeline
+    with RF-Inversion and cache acceleration.
+
+    The mask from Step ① defines WHICH region to edit.
+    The modification prompt describes the desired result.
+    """
+    if _pipe is None:
+        return None, None, "⚠️  Load models first"
+    bg = ref_editor_val.get("background") if ref_editor_val else None
+    if bg is None:
+        return None, None, "⚠️  Upload a reference image first"
+    if mask_pil is None:
+        return None, None, "⚠️  Extract mask first (Step ①)"
+    if not mod_prompt or not mod_prompt.strip():
+        return None, None, "⚠️  Enter a modification prompt"
+
+    ref_pil  = Image.fromarray(np.asarray(bg)).convert("RGB")
+    mask_pil = mask_pil.convert("L")
+
+    # Resize to nearest 64-divisible size FLUX requires
+    w, h   = ref_pil.size
+    tgt_w  = (min(w, 512) // 64) * 64 or 64
+    tgt_h  = (min(h, 512) // 64) * 64 or 64
+    ref_rs = ref_pil.resize((tgt_w, tgt_h), Image.LANCZOS)
+    msk_rs = mask_pil.resize((tgt_w, tgt_h), Image.NEAREST)
+
+    inpaint_pipe = _get_inpaint_pipe()
+
+    # EEdit cache kwargs — same acceleration used in composition
+    from cache_functions import cache_init, predefine_cache_fresh_indices
+    model_kwargs = {
+        "fresh_ratio": 0.1, "cache_type": "ours_predefine",
+        "ratio_scheduler": "constant", "force_fresh": "global",
+        "fresh_threshold": 3, "soft_fresh_weight": 0.25,
+        "tailing_step": 1, "edit_base": 2,
+        "hw": (tgt_h // 16, tgt_w // 16),
+    }
+    num_steps = 20
+    cache_dic, current = cache_init(model_kwargs, num_steps, None)
+    predefine_cache_fresh_indices(cache_dic, current)
+    joint_attn_kwargs = {
+        "use_attn_map": False, "cache_dic": cache_dic,
+        "use_cache": True, "current": current,
+    }
+
+    try:
+        with torch.no_grad():
+            result = inpaint_pipe(
+                prompt=mod_prompt.strip(),
+                image=ref_rs,
+                mask_image=msk_rs,
+                height=tgt_h,
+                width=tgt_w,
+                num_inference_steps=num_steps,
+                guidance_scale=7.0,
+                strength=float(strength),
+                generator=torch.Generator(device=DEVICE).manual_seed(int(seed)),
+                joint_attention_kwargs=joint_attn_kwargs,
+            )
+        modified_pil = result.images[0].resize((w, h), Image.LANCZOS)
+        # Overlay modified result with mask for display
+        overlay = np.array(modified_pil.copy())
+        mask_np = np.array(mask_pil.resize((w, h), Image.NEAREST)) > 128
+        overlay[~mask_np] = (overlay[~mask_np] * 0.4).astype(np.uint8)
+        overlay_pil = Image.fromarray(overlay)
+        return modified_pil, overlay_pil, f"✅  Modified — prompt: '{mod_prompt[:60]}'"
+    except Exception as exc:
+        return None, None, f"❌  {exc}"
 
 
 # ╔══════════════════════════════════════════════════════════╗
@@ -507,6 +602,32 @@ def build_app() -> gr.Blocks:
                             )
                         mask_state = gr.State(None)
 
+                    # ── Step 1b: Modify Reference ────────────────────────────
+                    with gr.Tab("① b Modify Reference"):
+                        gr.Markdown(
+                            "**Optionally** change the reference object's pose or style "
+                            "before compositing.  \n"
+                            "Uses EEdit's FLUX inpaint pipeline with cache acceleration.  \n"
+                            "Skip this tab if you want to use the original reference as-is."
+                        )
+                        mod_prompt = gr.Textbox(
+                            label="Modification prompt",
+                            placeholder="e.g. 'sheep jumping in the air' or 'sheep facing left'",
+                            lines=2,
+                        )
+                        with gr.Row():
+                            mod_strength = gr.Slider(0.5, 1.0, value=0.80, step=0.05,
+                                                     label="Edit strength  (higher = more change)")
+                            mod_seed = gr.Number(value=42, precision=0, label="Seed")
+                        with gr.Row():
+                            mod_btn   = gr.Button("Modify Reference",     variant="primary")
+                            regen_btn = gr.Button("Regenerate (+1 seed)", variant="secondary")
+                        mod_status = gr.Textbox(label="", interactive=False, lines=1, max_lines=1)
+                        with gr.Row():
+                            mod_out     = gr.Image(label="Modified reference", height=220, interactive=False)
+                            mod_overlay = gr.Image(label="Modified + mask",    height=220, interactive=False)
+                        modified_ref_state = gr.State(None)
+
                     # ── Step 2: Placement ────────────────────────────────────
                     with gr.Tab("② Set Placement"):
                         gr.Markdown(
@@ -580,6 +701,25 @@ def build_app() -> gr.Blocks:
             outputs=[mask_state, mask_display, mask_overlay, mask_status],
         )
 
+        # ── Modify reference wiring ───────────────────────────────────────────
+        def _modify(ref_ed, mask, prompt, strength, seed):
+            out, overlay, status = modify_reference(ref_ed, mask, prompt, strength, seed)
+            return out, overlay, status, out   # last = modified_ref_state
+
+        def _regen(ref_ed, mask, prompt, strength, seed):
+            return _modify(ref_ed, mask, prompt, strength, int(seed) + 1)
+
+        mod_btn.click(
+            _modify,
+            inputs=[ref_editor, mask_state, mod_prompt, mod_strength, mod_seed],
+            outputs=[mod_out, mod_overlay, mod_status, modified_ref_state],
+        )
+        regen_btn.click(
+            _regen,
+            inputs=[ref_editor, mask_state, mod_prompt, mod_strength, mod_seed],
+            outputs=[mod_out, mod_overlay, mod_status, modified_ref_state],
+        )
+
         # Placement editor
         load_editor_btn.click(
             load_source_to_editor,
@@ -612,24 +752,31 @@ def build_app() -> gr.Blocks:
                 outputs=[aug_prompt_box],
             )
 
-        # Composite preview
-        def _placement_preview_wrap(src_np, ref_ed, mask, x1, y1, x2, y2):
-            bg = ref_ed.get("background") if ref_ed else None
-            ref_np = np.asarray(bg) if bg is not None else None
+        # Composite preview — uses modified ref if available, else original
+        def _placement_preview_wrap(src_np, ref_ed, modified_ref, mask, x1, y1, x2, y2):
+            if modified_ref is not None:
+                ref_np = np.array(modified_ref)
+            else:
+                bg = ref_ed.get("background") if ref_ed else None
+                ref_np = np.asarray(bg) if bg is not None else None
             return placement_preview(src_np, ref_np, mask, x1, y1, x2, y2)
 
         preview_btn.click(
             _placement_preview_wrap,
-            inputs=[source_img, ref_editor, mask_state, x1_in, y1_in, x2_in, y2_in],
+            inputs=[source_img, ref_editor, modified_ref_state, mask_state,
+                    x1_in, y1_in, x2_in, y2_in],
             outputs=[comp_preview],
         )
 
-        # Generation
-        def _generate_wrap(src_np, ref_ed, mask, prompt, domain_label,
+        # Generation — uses modified ref if available, else original
+        def _generate_wrap(src_np, ref_ed, modified_ref, mask, prompt, domain_label,
                            x1, y1, x2, y2,
                            steps, guidance, eta, gamma, blend, cache, cascade):
-            bg = ref_ed.get("background") if ref_ed else None
-            ref_np = np.asarray(bg) if bg is not None else None
+            if modified_ref is not None:
+                ref_np = np.array(modified_ref)
+            else:
+                bg = ref_ed.get("background") if ref_ed else None
+                ref_np = np.asarray(bg) if bg is not None else None
             domain_key = _domain_key(domain_label)
             return generate(src_np, ref_np, mask, prompt, domain_key,
                             x1, y1, x2, y2,
@@ -638,7 +785,7 @@ def build_app() -> gr.Blocks:
         generate_btn.click(
             _generate_wrap,
             inputs=[
-                source_img, ref_editor, mask_state,
+                source_img, ref_editor, modified_ref_state, mask_state,
                 target_prompt, domain_dd,
                 x1_in, y1_in, x2_in, y2_in,
                 num_steps, guidance, eta, gamma, blend_ratio,
