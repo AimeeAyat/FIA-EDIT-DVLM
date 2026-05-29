@@ -2,8 +2,8 @@
   "_comment": "Real-Sketch: raised eta for identity preservation — reference injection carries shape/structure into the sketch prior.",
   "params": [
     {
-      "eta": 0.80,
-      "gamma": 0.85,
+      "eta": 0.60,
+      "gamma": 0.60,
       "blend_ratio": 0,
       "start_timestep": 0,
       "stop_timestep": 22,
