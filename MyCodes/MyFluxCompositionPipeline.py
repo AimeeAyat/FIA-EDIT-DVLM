@@ -1013,18 +1013,6 @@ class FluxCompositionPipeline(FluxInpaintPipeline):
         )
         ref_masked_image = ref_image * (ref_mask_condition > 0.5)
 
-        # Crop to tight mask bounding box before resizing to the target bbox.
-        # Without this, if the subject reaches the edge of the fg image it gets
-        # clipped at the bbox boundary in the composite → hard edge in output.
-        mask_bin = (ref_mask_condition[0, 0] > 0.5)
-        rows = mask_bin.any(dim=1).nonzero(as_tuple=True)[0]
-        cols = mask_bin.any(dim=0).nonzero(as_tuple=True)[0]
-        if len(rows) > 0 and len(cols) > 0:
-            my1, my2 = rows[0].item(), rows[-1].item() + 1
-            mx1, mx2 = cols[0].item(), cols[-1].item() + 1
-            ref_masked_image   = ref_masked_image  [:, :, my1:my2, mx1:mx2]
-            ref_mask_condition = ref_mask_condition[:, :, my1:my2, mx1:mx2]
-
         resized_ref_masked_image = F.interpolate(
             ref_masked_image,
             size=(ref_height, ref_width),

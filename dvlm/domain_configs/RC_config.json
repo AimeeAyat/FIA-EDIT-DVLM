@@ -1,9 +1,9 @@
 {
-  "_comment": "Real-Cartoon: low eta gives FLUX room to cartoon-ify; ref_inject only in early steps to preserve coarse structure/pose without locking in photo texture; strong tail-CFG pushes cartoon style.",
+  "_comment": "Real-Cartoon: eta=0.75 for scene grounding; strong ref_inject (16 blocks, 18 steps) anchors subject identity/colors against cartoon prior.",
   "params": [
     {
-      "eta": 0.6,
-      "gamma": 0.6,
+      "eta": 0.75,
+      "gamma": 0.75,
       "blend_ratio": 0,
       "start_timestep": 0,
       "stop_timestep": 13,
@@ -17,8 +17,8 @@
       "tailing_step": 1,
       "inv_skip": 2,
       "cache_type": "ours_predefine",
-      "ref_inject_blocks": 10,
-      "ref_inject_steps": 14,
+      "ref_inject_blocks": 16,
+      "ref_inject_steps": 18,
       "cfg_tail_steps": 5,
       "cfg_scale": 3.5,
       "bbox_margin": 0.10

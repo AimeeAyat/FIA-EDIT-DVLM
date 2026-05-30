@@ -1,9 +1,9 @@
 {
-  "_comment": "Real-Real: same-domain. eta=0.45 (not 1.0) lets FLUX blend lighting/shadows naturally; ref_inject (added) anchors subject identity. Slightly higher eta than cross-domain because background realism must not drift. Moderate tail-CFG for coherent realism.",
+  "_comment": "Real-Real: same-domain. eta=0.75 for tight background preservation; ref_inject anchors subject identity. Moderate tail-CFG for coherent realism.",
   "params": [
     {
-      "eta": 0.7,
-      "gamma": 0.7,
+      "eta": 0.75,
+      "gamma": 0.75,
       "blend_ratio": 0,
       "start_timestep": 0,
       "stop_timestep": 14,
