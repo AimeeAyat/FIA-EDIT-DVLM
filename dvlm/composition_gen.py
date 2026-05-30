@@ -265,6 +265,7 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
             generator=torch.Generator(device='cuda').manual_seed(42),
             skip_T=param.get('inv_skip', 3),
             callback_on_step_end=cfg_callback,
+            callback_on_step_end_tensor_inputs=[],
         )
 
         # ── Remove patches so next image starts clean ─────────────────────────
