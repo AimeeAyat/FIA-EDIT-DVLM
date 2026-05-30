@@ -498,8 +498,10 @@ def generate(source_np, ref_np, mask_pil, target_prompt: str, domain: str,
         "current":      current,
     }
 
-    device = next(_pipe.transformer.parameters()).device
-    dtype  = next(_pipe.transformer.parameters()).dtype
+    # With enable_model_cpu_offload the transformer parameters sit on CPU;
+    # always use DEVICE (cuda) so VAE / transformer forward passes land on GPU.
+    device = torch.device(DEVICE)
+    dtype  = torch.bfloat16
 
     # ── Tail CFG patch ────────────────────────────────────────────────────────
     cfg_tail_steps = param.get("cfg_tail_steps", 0)
@@ -747,11 +749,12 @@ def build_app(weights_dir: str = "./weights") -> gr.Blocks:
             return np.asarray(bg) if bg is not None else None
 
         def _get_bbox(bg_ed, x1, y1, x2, y2):
-            """Use painted region if no manual coords given, else use coords."""
+            """Use painted region if no manual coords given, else use coords.
+            Scales layer (canvas) coordinates to 512×512 space to match placement_preview."""
             _x1, _y1, _x2, _y2 = int(x1), int(y1), int(x2), int(y2)
             if _x2 > _x1 and _y2 > _y1:
                 return _x1, _y1, _x2, _y2
-            bbox = _bbox_from_layer(bg_ed)
+            bbox = _bbox_from_layer(bg_ed, orig_size=(512, 512))
             if bbox:
                 return bbox
             return _x1, _y1, _x2, _y2
