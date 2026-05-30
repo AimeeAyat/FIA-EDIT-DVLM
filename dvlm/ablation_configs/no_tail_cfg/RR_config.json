@@ -1,0 +1,24 @@
+{
+  "_ablation": "no_tail_cfg — tail CFG removed; KV injection + prompt aug kept",
+  "params": [
+    {
+      "eta": 0.75,
+      "gamma": 0.75,
+      "blend_ratio": 0,
+      "start_timestep": 0,
+      "stop_timestep": 14,
+      "use_rf_inversion": true,
+      "use_cache": true,
+      "num_inference_steps": 28,
+      "cascade_num": 5,
+      "fresh_ratio": 0.1,
+      "fresh_threshold": 3,
+      "soft_fresh_weight": 0.25,
+      "tailing_step": 1,
+      "inv_skip": 2,
+      "cache_type": "ours_predefine",
+      "ref_inject_blocks": 6,
+      "ref_inject_steps": 10
+    }
+  ]
+}
