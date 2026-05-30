@@ -26,10 +26,10 @@ OUT_DIR   = Path("comparisons")
 #   Real-Cartoon/Painting/Sketch: comp 0 = img 001  → offset = -1
 #   Real-Real:                    comp 1 = img 001  → offset =  0
 CATEGORIES = {
-    "Real-Cartoon":  ("Real-Cartoon-Papers.zip",  "full_Real-Cartoon-ours.zip",  "Real-Cartoon",  -1),
-    "Real-Painting": ("Real-Painting-Papers.zip",  "full_Real-Painting-ours.zip", "Real-Painting", -1),
-    "Real-Real":     ("Real-Real-papers.zip",       "full_Real-Real-ours.zip",     "Real-Real",      0),
-    "Real-Sketch":   ("Real-Sketch-papers.zip",     "full_Real-Sketch-ours.zip",   "Real-Sketch",   -1),
+    "Real-Cartoon":  ("Real-Cartoon-Papers.zip",  "full_Real-Cartoon_ours.zip",  "Real-Cartoon",  -1),
+    "Real-Painting": ("Real-Painting-Papers.zip",  "full_Real-Painting_ours.zip", "Real-Painting", -1),
+    "Real-Real":     ("Real-Real-papers.zip",       "full_Real-Real_ours.zip",     "Real-Real",      0),
+    "Real-Sketch":   ("Real-Sketch-papers.zip",     "full_Real-Sketch_ours.zip",   "Real-Sketch",   -1),
 }
 
 COL_LABELS = ["Source", "Reference", "Mask", "EEdit", "Ours"]
