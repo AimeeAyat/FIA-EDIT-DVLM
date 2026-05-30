@@ -16,11 +16,7 @@
       "soft_fresh_weight": 0.25,
       "tailing_step": 1,
       "inv_skip": 2,
-      "cache_type": "ours_predefine",
-      "ref_inject_blocks": 6,
-      "ref_inject_steps": 10,
-      "cfg_tail_steps": 4,
-      "cfg_scale": 2.5
+      "cache_type": "ours_predefine"
     }
   ]
 }

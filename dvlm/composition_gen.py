@@ -27,6 +27,8 @@ import MyCodes.MyFluxForward as MyFluxForward
 from MyCodes.myutils import seed_everything
 
 from dvlm.prompt_utils import augment_prompt, get_negative_prompt, detect_domain
+from dvlm.pipeline_patches import install_cfg_tail_patch, remove_cfg_tail_patch
+from dvlm.ref_inject import extract_ref_kv, install_ref_inject, remove_ref_inject
 
 # Blackwell (sm_120) bfloat16 LayerNorm fix
 import torch.nn as nn
@@ -179,13 +181,57 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
             'current':      current,
         }
 
+        device    = next(pipe.transformer.parameters()).device
+        dtype     = next(pipe.transformer.parameters()).dtype
+        num_steps = param['num_inference_steps']
+
+        # ── Tail CFG: patch transformer to apply CFG on last N steps only ─────
+        cfg_tail_steps = param.get('cfg_tail_steps', 0) if args.use_tail_cfg else 0
+        cfg_scale_val  = param.get('cfg_scale', 3.5)
+        if cfg_tail_steps > 0:
+            neg_embeds, neg_pooled, _ = pipe.encode_prompt(
+                prompt=get_negative_prompt(domain),
+                prompt_2=None,
+                device=device,
+                num_images_per_prompt=1,
+                max_sequence_length=512,
+            )
+            install_cfg_tail_patch(pipe, num_steps, cfg_tail_steps,
+                                   cfg_scale_val, neg_embeds, neg_pooled)
+            print(f"[cfg_tail] last {cfg_tail_steps} steps, scale={cfg_scale_val}")
+
+        # ── Ref injection: extract ref K,V then swap attention processors ─────
+        ref_inject_blocks = param.get('ref_inject_blocks', 0)
+        ref_inject_steps  = param.get('ref_inject_steps', 0)
+        if ref_inject_blocks > 0 and ref_inject_steps > 0:
+            pos_embeds, pos_pooled, text_ids = pipe.encode_prompt(
+                prompt=prompt,
+                prompt_2=None,
+                device=device,
+                num_images_per_prompt=1,
+                max_sequence_length=512,
+            )
+            ref_kv = extract_ref_kv(
+                pipe, ref_image, pos_embeds, pos_pooled, text_ids,
+                ref_inject_blocks, device, dtype,
+            )
+            install_ref_inject(pipe, ref_kv, ref_inject_blocks, ref_inject_steps)
+            print(f"[ref_inject] blocks={ref_inject_blocks}, steps={ref_inject_steps}")
+
         torch.manual_seed(42)
         t0 = time.time()
-        neg_prompt = get_negative_prompt(domain) if args.use_tail_cfg else img_config.get("neg_prompt", None)
+
+        # When tail CFG patch is active, pass neg_prompt=None so the pipeline's
+        # own do_cfg branch stays off — the patch handles guidance directly.
+        neg_prompt_for_gen = (
+            None if cfg_tail_steps > 0
+            else (get_negative_prompt(domain) if args.use_tail_cfg
+                  else img_config.get("neg_prompt", None))
+        )
 
         res = pipe.gen(
             prompt=prompt,
-            neg_prompt=neg_prompt,
+            neg_prompt=neg_prompt_for_gen,
             main_image=main_image,
             ref_image=ref_image,
             ref_segment=ref_segment,
@@ -193,8 +239,8 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
             width=512,
             x1=img_config["x1"], y1=img_config["y1"],
             x2=img_config["x2"], y2=img_config["y2"],
-            num_inference_steps=param['num_inference_steps'],
-            guidance_scale=param.get('guidance_scale', 7.0),
+            num_inference_steps=num_steps,
+            guidance_scale=param.get('cfg_scale', param.get('guidance_scale', 7.0)),
             joint_attention_kwargs=joint_attention_kwargs,
             use_rf_inversion=param['use_rf_inversion'],
             eta=param['eta'],
@@ -205,6 +251,11 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
             generator=torch.Generator(device='cuda').manual_seed(42),
             skip_T=param.get('inv_skip', 3),
         )
+
+        # ── Remove patches so next image starts clean ─────────────────────────
+        remove_cfg_tail_patch(pipe)
+        remove_ref_inject(pipe)
+
         elapsed = time.time() - t0
 
         image = res.images[0]

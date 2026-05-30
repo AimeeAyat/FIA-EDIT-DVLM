@@ -1,0 +1,23 @@
+{
+    "params": [
+        {
+            "eta": 0.0,
+            "gamma": 0.0,
+            "blend_ratio": 0,
+            "start_timestep": 0,
+            "stop_timestep": 0,
+            "use_rf_inversion": false,
+            "use_cache": false,
+            "do_cfg": true,
+            "guidance_scale": 7.0,
+            "num_inference_steps": 28,
+            "cascade_num": 0,
+            "fresh_ratio": 0.1,
+            "fresh_threshold": 3,
+            "soft_fresh_weight": 0.25,
+            "tailing_step": 1,
+            "inv_skip": 1,
+            "cache_type": "ours_cache"
+        }
+    ]
+}

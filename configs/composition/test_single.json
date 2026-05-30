@@ -1,0 +1,15 @@
+{
+    "imgs": [
+        {
+            "prompt": "a cartoon animation of a sheep in the forest, cartoon style, vibrant colors, clean lines, animated",
+            "neg_prompt": "photorealistic, real photo, blurry, faded, grayscale, low quality, washed out, ghostly",
+            "main_image": "./input/composition/Real-Cartoon/0000 a cartoon animation of a sheep in the forest/bg58.png",
+            "ref_image": "./input/composition/Real-Cartoon/0000 a cartoon animation of a sheep in the forest/fg35_63d22cda1f5b66e8e5aca776.jpg",
+            "ref_segment": "./input/composition/Real-Cartoon/0000 a cartoon animation of a sheep in the forest/fg35_mask.png",
+            "x1": 152,
+            "y1": 296,
+            "x2": 359,
+            "y2": 471
+        }
+    ]
+}

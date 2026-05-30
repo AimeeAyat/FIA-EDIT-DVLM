@@ -166,6 +166,8 @@ def generate_image(pipe, img_config, param_config, output_dir):
         t0 = time.time()
         res = pipe.gen(
             prompt=img_config["prompt"],
+            neg_prompt=img_config.get("neg_prompt", None),
+            do_cfg=param.get('do_cfg', False),
             main_image=main_image,
             ref_image=ref_image,
             ref_segment=ref_segment,
@@ -174,6 +176,7 @@ def generate_image(pipe, img_config, param_config, output_dir):
             x1=img_config["x1"], y1=img_config["y1"],
             x2=img_config["x2"], y2=img_config["y2"],
             num_inference_steps=param['num_inference_steps'],
+            guidance_scale=param.get('guidance_scale', 7.0),
             joint_attention_kwargs=joint_attention_kwargs,
             use_rf_inversion=param['use_rf_inversion'],
             eta=param['eta'],

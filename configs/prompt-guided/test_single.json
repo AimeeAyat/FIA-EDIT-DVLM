@@ -1,0 +1,11 @@
+{
+    "imgs": [
+        {
+            "prompt": "a slanted rusty mountain bicycle on the road in front of a building",
+            "image": "./input/inpaint/annotation_images/0_random_140/000000000000.jpg",
+            "mask_image": "./input/inpaint/masks/mask-000.png",
+            "height": 512,
+            "width": 512
+        }
+    ]
+}

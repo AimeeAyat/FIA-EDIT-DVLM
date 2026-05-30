@@ -6,7 +6,7 @@
       "gamma": 0.6,
       "blend_ratio": 0,
       "start_timestep": 0,
-      "stop_timestep": 20,
+      "stop_timestep": 18,
       "use_rf_inversion": true,
       "use_cache": true,
       "num_inference_steps": 28,
