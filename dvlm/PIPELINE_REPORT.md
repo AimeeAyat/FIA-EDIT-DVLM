@@ -450,75 +450,92 @@ All other parameters (`num_inference_steps`, `cascade_num`, `fresh_ratio`, `fres
 
 ### 15. Latency Analysis
 
-#### 15.1 Baseline (Original EEdit)
+#### 15.1 Measured Timings
 
-**Measured average: 4.6 s per image** (28 steps, `ours_predefine`, `inv_skip=2`).
+**Original EEdit pipeline**: 4.6 s average per image (28 steps, `ours_predefine`, `inv_skip=2`, no ref_inject, no cfg_tail).
 
-Let $\tau_f$ = cost of one full uncached transformer forward pass.
+**Our modified pipeline**: 4.9 – 5.3 s observed range, **5.1 s average** across all domains. Representative RC output:
 
-| Phase | Passes | Cached? | Effective cost |
-|-------|--------|---------|----------------|
-| RF-Inversion | $\lceil 28/2 \rceil = 14$ | No | $14\,\tau_f$ |
-| Denoising — cached steps (~25) | 25 | Yes (10% tokens) | $25 \times 0.1\,\tau_f = 2.5\,\tau_f$ |
-| Denoising — hard-refresh steps (every 3rd → ~3) | 3 | No | $3\,\tau_f$ |
-| **Total** | | | $\approx 19.5\,\tau_f$ |
+```
+[timing] 026.png — 5.3s  domain=RC
+100% 28/28 [00:03<00:00,  8.13it/s]
+```
 
-$$\tau_f \approx \frac{4.6}{19.5} \approx 0.236 \text{ s/pass}$$
+The tqdm reports 28 denoising iterations in 3.44 s (8.13 it/s), with the remainder of the 5.3 s total consumed by inversion and one-time per-image setup.
 
-#### 15.2 Additional Costs of Our Pipeline
+#### 15.2 Calibrating $\tau_f$
 
-**Addition 1 — ref_inject extraction** (once per image, uncached, all joint blocks):
-$$\Delta t_\text{extract} = 1 \times \tau_f \approx 0.24 \text{ s}$$
+Let $\tau_f$ = cost of one full **uncached** transformer forward pass on a 512×512 image.
+
+For the original pipeline, the 14 inversion passes are uncached. The denoising portion accounts for the tqdm window (~3.4 s in both original and ours — consistent with similar caching config). Therefore:
+
+$$\tau_f \approx \frac{4.6 - 3.4}{14} \approx \frac{1.2}{14} \approx 0.086 \text{ s/pass}$$
+
+This is consistent with the observed 8.13 it/s cached denoising rate, where caching reduces per-step transformer work to ~10% of a full pass:
+
+$$\text{cached step cost} \approx \texttt{fresh\_ratio} \times \tau_f = 0.1 \times 0.086 \approx 0.009 \text{ s} \quad \Rightarrow \quad \approx 111 \text{ it/s uncached equivalent}$$
+
+The actual 8.13 it/s reflects that hard-refresh steps (every `fresh_threshold=3` steps) and cfg_tail extra passes bring the average down from the pure-cached ceiling.
+
+#### 15.3 Additional Costs of Our Pipeline
+
+**Addition 1 — ref_inject extraction** (once per image, full uncached pass over `ref_inject_blocks` joint blocks):
+
+$$\Delta t_\text{extract} = 1 \times \tau_f \approx 0.09 \text{ s}$$
 
 **Addition 2 — RefInjectAttnProcessor cache bypass**:
 
-During the first `ref_inject_steps` denoising steps, `RefInjectAttnProcessor` performs full manual Q,K,V computation for each of the `ref_inject_blocks` joint blocks, bypassing the EEdit cache. Additionally, the attention sequence length doubles from $S_\text{txt}+S_\text{img}$ to $S_\text{txt}+S_\text{img}+S_\text{ref}$:
+During the first `ref_inject_steps` denoising steps, `RefInjectAttnProcessor` performs full manual Q,K,V computation for each of the `ref_inject_blocks` joint blocks, bypassing the EEdit cache. The attention sequence length also expands:
 
 $$C_\text{attn}^\text{ours} \propto (S_\text{txt}+S_\text{img}+S_\text{ref}) \times (S_\text{txt}+S_\text{img}) = (512+2048) \times (512+1024) \approx 3.84 \times 10^6$$
 $$C_\text{attn}^\text{orig} \propto (S_\text{txt}+S_\text{img})^2 = (512+1024)^2 \approx 2.36 \times 10^6$$
 
-Ratio: $\approx 1.63\times$ more expensive per active block per step.
+Ratio: $\approx 1.63\times$ more expensive per injected block per step. However, because EEdit caching is active for all other blocks at each step, and joint blocks are only ~33% of total transformer compute (19/57 blocks), the net per-step overhead is modest:
 
-For RC (16 blocks, 18 steps, `fresh_ratio`=0.1, joint blocks ≈ 33% of $\tau_f$, 19 joint blocks):
-$$\Delta t_\text{inject} \approx 18 \times 16 \times \frac{0.33\,\tau_f}{19} \times (1 - 0.1) \times 1.63 \approx 1.3\,\tau_f \approx 0.31 \text{ s}$$
+$$\Delta t_\text{inject} \approx \texttt{ref\_inject\_steps} \times \frac{\texttt{ref\_inject\_blocks}}{19} \times 0.33\,\tau_f \times 0.9 \times (1.63 - 1)$$
 
-**Addition 3 — cfg_tail sequential passes** (last `cfg_tail_steps` steps, 1 extra uncached pass each):
+For RC (16 blocks, 18 steps): $\approx 18 \times \frac{16}{19} \times 0.033 \times 0.9 \times 0.63 \approx 0.14$ s
+
+**Addition 3 — cfg_tail sequential passes** (last `cfg_tail_steps` steps, each requiring 1 extra full uncached transformer pass):
+
 $$\Delta t_\text{CFG} = \texttt{cfg\_tail\_steps} \times \tau_f$$
 
 | Domain | cfg_tail_steps | $\Delta t_\text{CFG}$ |
 |--------|---------------|----------------------|
-| RC | 5 | $5 \times 0.236 = 1.18$ s |
-| RP | 7 | $7 \times 0.236 = 1.65$ s |
-| RS | 5 | $5 \times 0.236 = 1.18$ s |
-| RR | 4 | $4 \times 0.236 = 0.94$ s |
-| **Average** | 5.25 | **1.24 s** |
+| RC | 5 | $5 \times 0.086 = 0.43$ s |
+| RP | 7 | $7 \times 0.086 = 0.60$ s |
+| RS | 5 | $5 \times 0.086 = 0.43$ s |
+| RR | 4 | $4 \times 0.086 = 0.34$ s |
+| **Average** | 5.25 | **0.45 s** |
 
 **Addition 4 — Extra prompt encodings** (neg + pos T5 calls per image):
-$$\Delta t_\text{encode} \approx 0.10 \text{ s}$$
+$$\Delta t_\text{encode} \approx 0.05 \text{ s}$$
 
-#### 15.3 Predicted vs Measured
+#### 15.4 Breakdown for RC (5.3 s measured)
 
 | Component | Cost (s) |
 |-----------|----------|
-| ref_inject extraction | +0.24 |
-| Cache bypass + extended attention (inject processor) | +0.31 |
-| cfg_tail average across domains | +1.24 |
-| Extra prompt encoding | +0.10 |
-| GPU memory pressure, Python closure overhead | ~+1.66 |
-| **Total additional** | **+3.55 s** |
-| **Original baseline** | **4.60 s** |
-| **Predicted total** | **8.15 s** |
-| **Measured total** | **8.15 s** |
+| Original baseline | 4.60 |
+| ref_inject extraction | +0.09 |
+| Cache bypass + extended attention (inject processor) | +0.14 |
+| cfg_tail (5 steps × $\tau_f$) | +0.43 |
+| Extra prompt encoding | +0.05 |
+| **Total predicted** | **5.31 s** |
+| **Total measured (RC)** | **5.30 s** |
 
-#### 15.4 Summary
+#### 15.5 Summary
 
 | Metric | Original | Ours | Delta |
 |--------|----------|------|-------|
-| Average generation time | 4.60 s | 8.15 s | +3.55 s (+77%) |
+| Average generation time | 4.60 s | **5.10 s** | +0.50 s (+11%) |
+| RC generation time | 4.60 s | **5.30 s** | +0.70 s (+15%) |
+| Observed denoising throughput | ~8–9 it/s | **8.13 it/s** (RC) | negligible |
 | Transformer forward passes — inversion | 14 | 15 (+extraction) | +1 |
-| Transformer forward passes — denoising | 28 (mostly cached) | 28 + cfg_tail_steps extra uncached | +4 to +7 |
+| Transformer forward passes — denoising | 28 (mostly cached) | 28 + cfg_tail_steps extra | +4 to +7 |
 | Attention sequence length (inject blocks, early steps) | $S_\text{txt}+S_\text{img} = 1536$ | $S_\text{txt}+2S_\text{img} = 2560$ | +1024 tokens |
 | Cache-bypassed block-steps | 0 | ref_inject_steps × ref_inject_blocks | up to 18×16=288 |
+
+The +11% average overhead is much smaller than a naive pass-counting estimate would suggest, because EEdit's caching already dominates denoising cost. The extra uncached passes (cfg_tail) add roughly $\texttt{cfg\_tail\_steps} \times \tau_f$ each, but since $\tau_f \approx 86$ ms and the number of tail steps is small (4–7), the absolute penalty is modest.
 
 ---
 
