@@ -18,7 +18,7 @@
       "inv_skip": 2,
       "cache_type": "ours_predefine",
       "ref_inject_blocks": 6,
-      "ref_inject_steps": 8,
+      "ref_inject_steps": 14,
       "cfg_tail_steps": 7,
       "cfg_scale": 5.5
     }
