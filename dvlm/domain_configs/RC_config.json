@@ -1,12 +1,12 @@
 {
-  "_comment": "Real-Cartoon: high eta preserves reference identity against the cartoon prior. Reference injection anchors appearance. Prompts guide only scene integration, not style transformation.",
+  "_comment": "Real-Cartoon: low eta gives FLUX room to cartoon-ify; ref_inject only in early steps to preserve coarse structure/pose without locking in photo texture; strong tail-CFG pushes cartoon style.",
   "params": [
     {
-      "eta": 0.6,
-      "gamma": 0.6,
+      "eta": 0.3,
+      "gamma": 0.35,
       "blend_ratio": 0,
       "start_timestep": 0,
-      "stop_timestep": 18,
+      "stop_timestep": 13,
       "use_rf_inversion": true,
       "use_cache": true,
       "num_inference_steps": 28,
@@ -17,10 +17,10 @@
       "tailing_step": 1,
       "inv_skip": 2,
       "cache_type": "ours_predefine",
-      "ref_inject_blocks": 10,
-      "ref_inject_steps": 14,
-      "cfg_tail_steps": 5,
-      "cfg_scale": 3.5
+      "ref_inject_blocks": 6,
+      "ref_inject_steps": 8,
+      "cfg_tail_steps": 7,
+      "cfg_scale": 5.5
     }
   ]
 }
