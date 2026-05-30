@@ -22,6 +22,12 @@ from PIL import Image, ImageDraw
 # ── Ensure repo root is importable ───────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Compatibility shim: newer transformers dropped FLAX_WEIGHTS_NAME but older
+# diffusers still imports it. Inject the missing name before diffusers loads.
+import transformers.utils as _tu
+if not hasattr(_tu, "FLAX_WEIGHTS_NAME"):
+    _tu.FLAX_WEIGHTS_NAME = "flax_model.msgpack"
+
 # Patch LayerNorm to fp32 for Blackwell (sm_120) GPUs where bfloat16 underflows
 def _ln_fp32_forward(self, x):
     w = self.weight.float() if self.weight is not None else None
@@ -30,12 +36,26 @@ def _ln_fp32_forward(self, x):
 
 nn.LayerNorm.forward = _ln_fp32_forward
 
-from cache_functions import cache_init, edit_region_parser, convert_to_cache_index
+import json as _json
+from pathlib import Path as _Path
+
+from cache_functions import (cache_init, edit_region_parser, convert_to_cache_index,
+                              predefine_cache_fresh_indices)
 from MyCodes import MyFluxForward
 from MyCodes.MyFluxCompositionPipeline import FluxCompositionPipeline
 from MyCodes.myutils import seed_everything
 from transformers import SamModel, SamProcessor, T5EncoderModel
 from dvlm.prompt_utils import augment_prompt, get_negative_prompt
+from dvlm.pipeline_patches import install_cfg_tail_patch, remove_cfg_tail_patch
+from dvlm.ref_inject import extract_ref_kv, install_ref_inject, remove_ref_inject
+
+# ── Load domain-specific generation configs ───────────────────────────────────
+_DVLM_CFG_DIR = _Path(__file__).parent / "dvlm" / "domain_configs"
+DOMAIN_PARAM: dict = {}
+for _dk in ["RC", "RP", "RR", "RS"]:
+    _f = _DVLM_CFG_DIR / f"{_dk}_config.json"
+    if _f.exists():
+        DOMAIN_PARAM[_dk] = _json.loads(_f.read_text())["params"][0]
 
 DOMAIN_CHOICES = [
     ("Choose style…",        ""),
@@ -94,30 +114,27 @@ def _load_eedit_pipeline(weights_dir: str, dtype=torch.bfloat16) -> FluxComposit
 
 
 def load_models(weights_dir: str):
-    """Generator: yields (status_text, generate_btn_update) — streams progress to UI."""
+    """Load SAM + EEdit pipeline at startup. Returns final status string."""
     global _pipe, _sam_model, _sam_processor
 
     weights_dir = (weights_dir or "").strip()
     if not weights_dir or not os.path.isdir(weights_dir):
-        yield "❌  Invalid weights directory — check the path", gr.update(interactive=False)
-        return
+        return f"❌  Weights directory not found: '{weights_dir}'"
 
-    yield "⏳  Loading SAM (facebook/sam-vit-base)…", gr.update(interactive=False)
+    print("Loading SAM (facebook/sam-vit-base)…")
     try:
         _sam_processor = SamProcessor.from_pretrained("facebook/sam-vit-base")
         _sam_model = SamModel.from_pretrained("facebook/sam-vit-base").eval().to("cpu")
     except Exception as exc:
-        yield f"❌  SAM load failed: {exc}", gr.update(interactive=False)
-        return
+        return f"❌  SAM load failed: {exc}"
 
-    yield "⏳  Loading EEdit / FLUX.1 pipeline (may take several minutes)…", gr.update(interactive=False)
+    print("Loading EEdit / FLUX.1 pipeline…")
     try:
         _pipe = _load_eedit_pipeline(weights_dir)
     except Exception as exc:
-        yield f"❌  EEdit load failed: {exc}", gr.update(interactive=False)
-        return
+        return f"❌  EEdit load failed: {exc}"
 
-    yield "✅  All models loaded — ready!", gr.update(interactive=True)
+    return "✅  All models loaded — ready!"
 
 
 # ╔══════════════════════════════════════════════════════════╗
@@ -415,300 +432,287 @@ def placement_preview(source_np, ref_np, mask_pil, x1, y1, x2, y2):
 # ║  EEdit generation                                        ║
 # ╚══════════════════════════════════════════════════════════╝
 
-def generate(
-    source_np,
-    ref_np,
-    mask_pil,
-    target_prompt: str,
-    domain: str,
-    x1, y1, x2, y2,
-    num_steps: int,
-    guidance_scale: float,
-    eta: float,
-    gamma: float,
-    blend_ratio: float,
-    use_cache: bool,
-    cascade_num: int,
-):
+def generate(source_np, ref_np, mask_pil, target_prompt: str, domain: str,
+             x1, y1, x2, y2, seed: int = 42):
     if _pipe is None:
-        return None, "⚠️  Load models first"
+        return None, "Load models first"
     if source_np is None or ref_np is None:
-        return None, "❌  Provide source and reference images"
+        return None, "Provide source and reference images"
     if mask_pil is None:
-        return None, "❌  Extract the reference mask first (Step ①)"
+        return None, "Extract the reference mask first (Step 1)"
 
     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
     if x1 >= x2 or y1 >= y2:
-        return None, f"❌  Invalid bbox ({x1},{y1})→({x2},{y2}) — ensure x1<x2 and y1<y2"
+        return None, f"Invalid bbox ({x1},{y1})->({x2},{y2}) — ensure x1<x2, y1<y2"
     if not target_prompt.strip():
-        return None, "❌  Enter a target prompt"
+        return None, "Enter a target prompt"
 
-    seed_everything(42)
+    param = DOMAIN_PARAM.get(domain, DOMAIN_PARAM.get("RR", {}))
+    if not param:
+        return None, f"No domain config found for '{domain}'"
 
-    # Augment prompt with domain-specific style/integration language
+    seed_everything(seed)
     final_prompt = augment_prompt(target_prompt.strip(), domain)
+    height = width = 512
 
-    main_image   = Image.fromarray(source_np).convert("RGB").resize((512, 512))
-    ref_image    = Image.fromarray(ref_np).convert("RGB")
-    ref_segment  = mask_pil.convert("L")
-    height, width = 512, 512
+    main_image  = Image.fromarray(source_np).convert("RGB").resize((512, 512))
+    ref_image   = Image.fromarray(ref_np).convert("RGB")
+    ref_segment = mask_pil.convert("L")
 
-    # Build cache / model kwargs identical to composition_gen.py
+    # RS domain: convert reference to grayscale to match the sketch scene
+    if domain == "RS":
+        ref_image = ref_image.convert("L").convert("RGB")
+
+    num_steps  = param["num_inference_steps"]
+    cache_type = param.get("cache_type", "ours_predefine")
+
     model_kwargs = {
-        "fresh_ratio":      0.1,
-        "cache_type":       "ours_cache",
-        "ratio_scheduler":  "constant",
-        "force_fresh":      "global",
-        "fresh_threshold":  3,
-        "soft_fresh_weight": 0.25,
-        "tailing_step":     1,
-        "edit_base":        2,
-        "hw":               (height // 16, width // 16),
+        "fresh_ratio":       param["fresh_ratio"],
+        "cache_type":        cache_type,
+        "ratio_scheduler":   "constant",
+        "force_fresh":       "global",
+        "fresh_threshold":   param["fresh_threshold"],
+        "soft_fresh_weight": param["soft_fresh_weight"],
+        "tailing_step":      param["tailing_step"],
+        "edit_base":         2,
+        "hw":                (height // 16, width // 16),
     }
 
+    cascade_num = param.get("cascade_num", 5)
     edit_idx = (
-        None
-        if int(cascade_num) == 0
-        else edit_region_parser(x1, y1, x2, y2, cascade_num=int(cascade_num), height=height, width=width)
+        None if cascade_num == 0
+        else edit_region_parser(x1, y1, x2, y2, cascade_num=cascade_num,
+                                height=height, width=width)
     )
-
-    cache_dic, current = cache_init(model_kwargs, int(num_steps), edit_idx)
+    cache_dic, current = cache_init(model_kwargs, num_steps, edit_idx)
     current["edit_idx_merged"] = convert_to_cache_index(
         edit_idx, edit_base=2, bonus_ratio=0.8, height=height, width=width
     ).to(DEVICE)
+    if cache_type == "ours_predefine":
+        predefine_cache_fresh_indices(cache_dic, current)
 
     joint_attention_kwargs = {
         "use_attn_map": False,
         "cache_dic":    cache_dic,
-        "use_cache":    bool(use_cache),
+        "use_cache":    param.get("use_cache", True),
         "current":      current,
     }
 
-    t0 = time.time()
-    generator = torch.Generator(device=DEVICE).manual_seed(42)
+    device = next(_pipe.transformer.parameters()).device
+    dtype  = next(_pipe.transformer.parameters()).dtype
 
-    res = _pipe.gen(
-        prompt=final_prompt,
-        neg_prompt=get_negative_prompt(domain),
-        main_image=main_image,
-        ref_image=ref_image,
-        ref_segment=ref_segment,
-        height=height,
-        width=width,
-        x1=x1, y1=y1, x2=x2, y2=y2,
-        num_inference_steps=int(num_steps),
-        guidance_scale=float(guidance_scale),
-        joint_attention_kwargs=joint_attention_kwargs,
-        use_rf_inversion=True,
-        eta=float(eta),
-        gamma=float(gamma),
-        start_timestep=0,
-        stop_timestep=10,
-        blend_ratio=float(blend_ratio),
-        generator=generator,
-        skip_T=2,
-    )
+    # ── Tail CFG patch ────────────────────────────────────────────────────────
+    cfg_tail_steps = param.get("cfg_tail_steps", 0)
+    cfg_scale_val  = param.get("cfg_scale", 3.5)
+    if cfg_tail_steps > 0:
+        neg_embeds, neg_pooled, _ = _pipe.encode_prompt(
+            prompt=get_negative_prompt(domain), prompt_2=None,
+            device=device, num_images_per_prompt=1, max_sequence_length=512,
+        )
+        install_cfg_tail_patch(_pipe, num_steps, cfg_tail_steps,
+                               cfg_scale_val, neg_embeds, neg_pooled)
+
+    # ── Ref injection ─────────────────────────────────────────────────────────
+    ref_inject_blocks = param.get("ref_inject_blocks", 0)
+    ref_inject_steps  = param.get("ref_inject_steps", 0)
+    if ref_inject_blocks > 0 and ref_inject_steps > 0:
+        pos_embeds, pos_pooled, text_ids = _pipe.encode_prompt(
+            prompt=final_prompt, prompt_2=None,
+            device=device, num_images_per_prompt=1, max_sequence_length=512,
+        )
+        ref_kv = extract_ref_kv(_pipe, ref_image, pos_embeds, pos_pooled,
+                                 text_ids, ref_inject_blocks, device, dtype)
+        install_ref_inject(_pipe, ref_kv, ref_inject_blocks, ref_inject_steps)
+
+    t0 = time.time()
+    neg_prompt_for_gen = None if cfg_tail_steps > 0 else get_negative_prompt(domain)
+
+    try:
+        res = _pipe.gen(
+            prompt=final_prompt,
+            neg_prompt=neg_prompt_for_gen,
+            main_image=main_image,
+            ref_image=ref_image,
+            ref_segment=ref_segment,
+            height=height, width=width,
+            x1=x1, y1=y1, x2=x2, y2=y2,
+            num_inference_steps=num_steps,
+            guidance_scale=cfg_scale_val,
+            joint_attention_kwargs=joint_attention_kwargs,
+            use_rf_inversion=param.get("use_rf_inversion", True),
+            eta=param["eta"],
+            gamma=param["gamma"],
+            start_timestep=param.get("start_timestep", 0),
+            stop_timestep=param.get("stop_timestep", 13),
+            blend_ratio=param.get("blend_ratio", 0.0),
+            generator=torch.Generator(device=DEVICE).manual_seed(seed),
+            skip_T=param.get("inv_skip", 2),
+        )
+    finally:
+        remove_cfg_tail_patch(_pipe)
+        remove_ref_inject(_pipe)
 
     elapsed = time.time() - t0
-    return res.images[0], f"✅  Generated in {elapsed:.1f}s  |  domain={domain}  |  prompt: {final_prompt[:80]}…"
+    return res.images[0], (f"Done in {elapsed:.1f}s  |  domain={domain}  "
+                           f"|  ref_inject={ref_inject_blocks}b/{ref_inject_steps}s  "
+                           f"|  cfg_tail={cfg_tail_steps}")
 
 
 # ╔══════════════════════════════════════════════════════════╗
 # ║  Gradio UI                                               ║
 # ╚══════════════════════════════════════════════════════════╝
 
-def build_app() -> gr.Blocks:
+def build_app(weights_dir: str = "./weights") -> gr.Blocks:
+    _weights_dir = weights_dir
     with gr.Blocks(title="EEdit — Reference-Guided Composition") as demo:
 
         gr.Markdown(
-            "# EEdit — Reference-Guided Image Composition\n"
-            "Paste a foreground object from a **reference image** into a "
-            "**source/background image** using FLUX.1 + RF-Inversion."
+            "## EEdit — Reference-Guided Image Composition\n"
+            "Paint over the **object** in the reference image → extract its mask.  \n"
+            "Paint the **placement area** on the background → click Generate."
         )
 
-        # ── Model loading row ────────────────────────────────────────────────
-        with gr.Row():
-            weights_box = gr.Textbox(
-                label="Weights Directory",
-                value="./weights",
-                placeholder="/path/to/weights",
-                scale=3,
-            )
-            load_btn = gr.Button("Load Models", variant="primary", scale=1)
         status_box = gr.Textbox(
-            label="Status", interactive=False, value="Models not loaded yet"
+            label="Status", interactive=False, value="Loading models…"
         )
 
         gr.Markdown("---")
 
-        # ── Two-column layout ────────────────────────────────────────────────
-        with gr.Row(equal_height=False):
+        # ── Prompt section (mirrors smoke app) ───────────────────────────────
+        with gr.Row():
+            domain_dd = gr.Dropdown(
+                label="Domain (scene style)",
+                choices=[c[0] for c in DOMAIN_CHOICES],
+                value=DOMAIN_CHOICES[0][0],
+                scale=1,
+            )
+            target_prompt = gr.Textbox(
+                label="Base prompt",
+                placeholder="e.g. 'a sheep in the forest'",
+                scale=2,
+            )
+        aug_prompt_box = gr.Textbox(
+            label="Augmented prompt (what FLUX sees)",
+            value="", interactive=False, lines=3,
+        )
 
-            # ── Left: inputs & params ────────────────────────────────────────
-            with gr.Column(scale=1, min_width=340):
-                gr.Markdown("### Inputs")
+        gr.Markdown("---")
 
-                source_img = gr.Image(
-                    label="Source / Background Image  (resized to 512×512 internally)",
-                    type="numpy",
-                    height=210,
-                )
+        # ── Shared state ─────────────────────────────────────────────────────
+        mask_state        = gr.State(None)
+        modified_ref_state = gr.State(None)
+
+        # ── Two-column panel (mirrors smoke app) ─────────────────────────────
+        with gr.Row():
+
+            # ── LEFT: Reference + SAM ────────────────────────────────────────
+            with gr.Column():
+                gr.Markdown("### ① Reference — paint around the object")
+                gr.Markdown("*Use the brush to mark the object, or enter exact pixel coordinates below.*")
                 ref_editor = gr.ImageEditor(
-                    label="Reference Image — draw a rectangle around the object to extract",
+                    label="Upload reference image, then paint over the object",
                     type="numpy",
-                    brush=gr.Brush(default_size=8, colors=["#FF4444"]),
-                    height=210,
+                    brush=gr.Brush(default_size=20, colors=["#FF4444"]),
+                    height=300,
                 )
+                with gr.Row():
+                    extract_draw_btn = gr.Button("Extract Mask", variant="primary")
+                    auto_btn         = gr.Button("Auto: centre point", variant="secondary")
+                mask_status = gr.Textbox(label="", interactive=False, lines=1, max_lines=1)
+                with gr.Row():
+                    mask_display = gr.Image(label="Mask (B&W)",          type="pil", interactive=False, height=180)
+                    mask_overlay = gr.Image(label="Reference + Overlay", type="pil", interactive=False, height=180)
 
-                domain_dd = gr.Dropdown(
-                    label="Domain (scene style)",
-                    choices=[c[0] for c in DOMAIN_CHOICES],
-                    value=DOMAIN_CHOICES[0][0],
+                with gr.Accordion("Optional: modify reference pose/style before compositing", open=False):
+                    mod_prompt = gr.Textbox(
+                        label="Modification prompt",
+                        placeholder="e.g. 'sheep jumping in the air'",
+                        lines=2,
+                    )
+                    with gr.Row():
+                        mod_strength = gr.Slider(0.5, 1.0, value=0.80, step=0.05, label="Edit strength")
+                        mod_seed     = gr.Number(value=42, precision=0, label="Seed")
+                    with gr.Row():
+                        mod_btn   = gr.Button("Modify Reference",     variant="primary")
+                        regen_btn = gr.Button("Regenerate (+1 seed)", variant="secondary")
+                    mod_status = gr.Textbox(label="", interactive=False, lines=1, max_lines=1)
+                    with gr.Row():
+                        mod_out     = gr.Image(label="Modified reference", height=180, interactive=False)
+                        mod_overlay = gr.Image(label="Modified + mask",    height=180, interactive=False)
+
+            # ── RIGHT: Background + Placement ────────────────────────────────
+            with gr.Column():
+                gr.Markdown("### ② Background — paint the placement region")
+                gr.Markdown("*Paint where the object should appear, or enter exact coordinates below.*")
+                bg_editor = gr.ImageEditor(
+                    label="Upload background image, then paint the placement area",
+                    type="numpy",
+                    brush=gr.Brush(default_size=20, colors=["#4488FF"]),
+                    height=300,
                 )
-                target_prompt = gr.Textbox(
-                    label="Base Prompt",
-                    placeholder="e.g. 'a sheep in the forest'",
-                    lines=2,
-                )
-                aug_prompt_box = gr.Textbox(
-                    label="Augmented Prompt (auto-generated — what FLUX sees)",
-                    value="",
-                    lines=3,
-                    interactive=False,
-                )
+                with gr.Accordion("Or enter exact pixel coordinates", open=False):
+                    with gr.Row():
+                        x1_in = gr.Number(label="x1 (left)",   value=100, precision=0, minimum=0, maximum=512)
+                        y1_in = gr.Number(label="y1 (top)",    value=100, precision=0, minimum=0, maximum=512)
+                        x2_in = gr.Number(label="x2 (right)",  value=300, precision=0, minimum=0, maximum=512)
+                        y2_in = gr.Number(label="y2 (bottom)", value=400, precision=0, minimum=0, maximum=512)
+                    gr.Markdown("*Enter all four to override the painted region.*")
 
-                with gr.Accordion("Advanced Parameters", open=False):
-                    num_steps   = gr.Slider(8,  50,  value=28,  step=1,    label="Inference Steps")
-                    guidance    = gr.Slider(1,  15,  value=7.0, step=0.5,  label="Guidance Scale")
-                    eta         = gr.Slider(0,  1,   value=0.6, step=0.05, label="Eta  (RF-Inversion)")
-                    gamma       = gr.Slider(0,  2,   value=0.6, step=0.05, label="Gamma")
-                    blend_ratio = gr.Slider(0,  1,   value=0.0, step=0.05, label="Blend Ratio")
-                    use_cache   = gr.Checkbox(value=True, label="Cache Acceleration")
-                    cascade_num = gr.Slider(0,  10,  value=5,   step=1,    label="Cascade Num")
+                comp_btn    = gr.Button("Preview Composite", variant="secondary")
+                comp_status = gr.Textbox(label="", interactive=False, lines=1, max_lines=1)
+                comp_out    = gr.Image(label="Composite preview (red box = placement)", interactive=False, height=300)
 
-                generate_btn = gr.Button(
-                    "Generate Image", variant="primary", interactive=False, size="lg"
-                )
+        gr.Markdown("---")
 
-            # ── Right: step panels ───────────────────────────────────────────
-            with gr.Column(scale=1, min_width=440):
-                with gr.Tabs():
+        # ── Seed (only manual override needed — all other params from domain config) ──
+        with gr.Accordion("Advanced", open=False):
+            seed_in = gr.Number(label="Seed", value=42, precision=0)
 
-                    # ── Step 1: Mask ─────────────────────────────────────────
-                    with gr.Tab("① Extract Mask"):
-                        gr.Markdown(
-                            "**Draw** a rectangle on the reference image (left panel), "
-                            "then click **Extract Mask**.  \n"
-                            "No drawing? Click **Auto: use centre** as a fallback."
-                        )
-                        extract_draw_btn = gr.Button("Extract Mask from Drawing", variant="primary")
-                        auto_btn = gr.Button("Auto: use centre point", variant="secondary")
-                        mask_status = gr.Textbox(
-                            label="", interactive=False, lines=1, max_lines=1
-                        )
-                        with gr.Row():
-                            mask_display = gr.Image(
-                                label="Extracted Mask",
-                                type="pil", interactive=False, height=200,
-                            )
-                            mask_overlay = gr.Image(
-                                label="Reference + Mask Overlay",
-                                type="pil", interactive=False, height=200,
-                            )
-                        mask_state = gr.State(None)
+        # ── Generate + Result ────────────────────────────────────────────────
+        generate_btn = gr.Button("Generate Image", variant="primary", interactive=False, size="lg")
 
-                    # ── Step 1b: Modify Reference ────────────────────────────
-                    with gr.Tab("① b Modify Reference"):
-                        gr.Markdown(
-                            "**Optionally** change the reference object's pose or style "
-                            "before compositing.  \n"
-                            "Uses EEdit's FLUX inpaint pipeline with cache acceleration.  \n"
-                            "Skip this tab if you want to use the original reference as-is."
-                        )
-                        mod_prompt = gr.Textbox(
-                            label="Modification prompt",
-                            placeholder="e.g. 'sheep jumping in the air' or 'sheep facing left'",
-                            lines=2,
-                        )
-                        with gr.Row():
-                            mod_strength = gr.Slider(0.5, 1.0, value=0.80, step=0.05,
-                                                     label="Edit strength  (higher = more change)")
-                            mod_seed = gr.Number(value=42, precision=0, label="Seed")
-                        with gr.Row():
-                            mod_btn   = gr.Button("Modify Reference",     variant="primary")
-                            regen_btn = gr.Button("Regenerate (+1 seed)", variant="secondary")
-                        mod_status = gr.Textbox(label="", interactive=False, lines=1, max_lines=1)
-                        with gr.Row():
-                            mod_out     = gr.Image(label="Modified reference", height=220, interactive=False)
-                            mod_overlay = gr.Image(label="Modified + mask",    height=220, interactive=False)
-                        modified_ref_state = gr.State(None)
-
-                    # ── Step 2: Placement ────────────────────────────────────
-                    with gr.Tab("② Set Placement"):
-                        gr.Markdown(
-                            "1. Click **Load Source →** to bring your background into the editor.  \n"
-                            "2. **Paint / draw** over the region where the object should appear.  \n"
-                            "3. Click **Extract Bbox** — or type coordinates directly below."
-                        )
-                        load_editor_btn = gr.Button("Load Source →", variant="secondary")
-                        placement_editor = gr.ImageEditor(
-                            label="Draw placement region on source image",
-                            type="numpy",
-                            brush=gr.Brush(default_size=14, colors=["#FF4444"]),
-                            height=300,
-                        )
-                        extract_bbox_btn = gr.Button(
-                            "Extract Bbox from Drawing", variant="secondary"
-                        )
-                        with gr.Row():
-                            x1_in = gr.Number(label="x1", value=100, precision=0, minimum=0, maximum=512)
-                            y1_in = gr.Number(label="y1", value=100, precision=0, minimum=0, maximum=512)
-                            x2_in = gr.Number(label="x2", value=300, precision=0, minimum=0, maximum=512)
-                            y2_in = gr.Number(label="y2", value=400, precision=0, minimum=0, maximum=512)
-
-                    # ── Step 3: Preview ──────────────────────────────────────
-                    with gr.Tab("③ Composite Preview"):
-                        gr.Markdown(
-                            "Preview the masked reference pasted at your chosen location. "
-                            "Adjust bbox coordinates in Step ② and refresh."
-                        )
-                        preview_btn = gr.Button("Refresh Preview", variant="secondary")
-                        comp_preview = gr.Image(
-                            label="Composite Preview (red box = bbox)",
-                            interactive=False, height=340,
-                        )
-
-                    # ── Step 4: Result ───────────────────────────────────────
-                    with gr.Tab("④ Result"):
-                        result_img = gr.Image(
-                            label="Generated Image", interactive=False, height=340
-                        )
-                        gen_status = gr.Textbox(
-                            label="", interactive=False, lines=1, max_lines=1
-                        )
+        with gr.Row():
+            result_img = gr.Image(label="Generated Image", interactive=False, height=512)
+        gen_status = gr.Textbox(label="", interactive=False, lines=1, max_lines=1)
 
         # ── Event wiring ─────────────────────────────────────────────────────
 
-        load_btn.click(
-            load_models,
-            inputs=[weights_box],
-            outputs=[status_box, generate_btn],
-        )
+        def _domain_key(label):
+            for lbl, key in DOMAIN_CHOICES:
+                if lbl == label:
+                    return key
+            return "RR"
 
-        # SAM: draw rectangle on reference → extract mask
+        # Load models on startup
+        def _startup():
+            msg = load_models(_weights_dir)
+            return msg, gr.update(interactive="✅" in msg)
+
+        demo.load(_startup, outputs=[status_box, generate_btn])
+
+        # Prompt preview
+        def _preview_aug_prompt(base, domain_label):
+            key = _domain_key(domain_label)
+            if not key:
+                return ""
+            return augment_prompt(base.strip(), key) if base.strip() else augment_prompt("(your prompt here)", key)
+
+        for trigger in [target_prompt, domain_dd]:
+            trigger.change(_preview_aug_prompt, inputs=[target_prompt, domain_dd], outputs=[aug_prompt_box])
+
+        # SAM: draw → mask
         extract_draw_btn.click(
             extract_mask_draw,
             inputs=[ref_editor],
             outputs=[mask_state, mask_display, mask_overlay, mask_status],
         )
 
-        # SAM: auto centre fallback
+        # SAM: auto centre
         def _auto_from_editor(ed):
             bg = ed.get("background") if ed else None
             if bg is None:
-                return None, None, None, "⚠️  Upload a reference image first"
-            ref_np = np.asarray(bg)
-            return extract_mask_center(ref_np)
+                return None, None, None, "Upload a reference image first"
+            return extract_mask_center(np.asarray(bg))
 
         auto_btn.click(
             _auto_from_editor,
@@ -716,10 +720,10 @@ def build_app() -> gr.Blocks:
             outputs=[mask_state, mask_display, mask_overlay, mask_status],
         )
 
-        # ── Modify reference wiring ───────────────────────────────────────────
+        # Modify reference
         def _modify(ref_ed, mask, prompt, strength, seed):
             out, overlay, status = modify_reference(ref_ed, mask, prompt, strength, seed)
-            return out, overlay, status, out   # last = modified_ref_state
+            return out, overlay, status, out
 
         def _regen(ref_ed, mask, prompt, strength, seed):
             return _modify(ref_ed, mask, prompt, strength, int(seed) + 1)
@@ -735,76 +739,64 @@ def build_app() -> gr.Blocks:
             outputs=[mod_out, mod_overlay, mod_status, modified_ref_state],
         )
 
-        # Placement editor
-        load_editor_btn.click(
-            load_source_to_editor,
-            inputs=[source_img],
-            outputs=[placement_editor],
-        )
-        extract_bbox_btn.click(
-            bbox_from_drawing,
-            inputs=[placement_editor],
-            outputs=[x1_in, y1_in, x2_in, y2_in],
-        )
+        def _get_bg_np(bg_ed):
+            """Extract background numpy array from ImageEditor value."""
+            if bg_ed is None:
+                return None
+            bg = bg_ed.get("background")
+            return np.asarray(bg) if bg is not None else None
 
-        # Live augmented-prompt preview
-        def _domain_key(label):
-            for lbl, key in DOMAIN_CHOICES:
-                if lbl == label:
-                    return key
-            return "RR"
+        def _get_bbox(bg_ed, x1, y1, x2, y2):
+            """Use painted region if no manual coords given, else use coords."""
+            _x1, _y1, _x2, _y2 = int(x1), int(y1), int(x2), int(y2)
+            if _x2 > _x1 and _y2 > _y1:
+                return _x1, _y1, _x2, _y2
+            bbox = _bbox_from_layer(bg_ed)
+            if bbox:
+                return bbox
+            return _x1, _y1, _x2, _y2
 
-        def _preview_aug_prompt(base, domain_label):
-            key = _domain_key(domain_label)
-            if not key:
-                return ""
-            return augment_prompt(base.strip(), key) if base.strip() else augment_prompt("(your prompt here)", key)
-
-        for trigger in [target_prompt, domain_dd]:
-            trigger.change(
-                _preview_aug_prompt,
-                inputs=[target_prompt, domain_dd],
-                outputs=[aug_prompt_box],
-            )
-
-        # Composite preview — uses modified ref if available, else original
-        def _placement_preview_wrap(src_np, ref_ed, modified_ref, mask, x1, y1, x2, y2):
-            if modified_ref is not None:
-                ref_np = np.array(modified_ref)
-            else:
+        # Composite preview
+        def _composite_preview(bg_ed, ref_ed, modified_ref, mask, x1, y1, x2, y2):
+            src_np = _get_bg_np(bg_ed)
+            if src_np is None:
+                return None, "Upload a background image first"
+            ref_np = np.array(modified_ref) if modified_ref is not None else None
+            if ref_np is None:
                 bg = ref_ed.get("background") if ref_ed else None
                 ref_np = np.asarray(bg) if bg is not None else None
-            return placement_preview(src_np, ref_np, mask, x1, y1, x2, y2)
+            if ref_np is None:
+                return None, "Upload a reference image first"
+            bx1, by1, bx2, by2 = _get_bbox(bg_ed, x1, y1, x2, y2)
+            comp = placement_preview(src_np, ref_np, mask, bx1, by1, bx2, by2)
+            return comp, f"Composite ready — placement ({bx1},{by1})->({bx2},{by2})"
 
-        preview_btn.click(
-            _placement_preview_wrap,
-            inputs=[source_img, ref_editor, modified_ref_state, mask_state,
+        comp_btn.click(
+            _composite_preview,
+            inputs=[bg_editor, ref_editor, modified_ref_state, mask_state,
                     x1_in, y1_in, x2_in, y2_in],
-            outputs=[comp_preview],
+            outputs=[comp_out, comp_status],
         )
 
-        # Generation — uses modified ref if available, else original
-        def _generate_wrap(src_np, ref_ed, modified_ref, mask, prompt, domain_label,
-                           x1, y1, x2, y2,
-                           steps, guidance, eta, gamma, blend, cache, cascade):
-            if modified_ref is not None:
-                ref_np = np.array(modified_ref)
-            else:
+        # Generation
+        def _generate_wrap(bg_ed, ref_ed, modified_ref, mask, prompt, domain_label,
+                           x1, y1, x2, y2, seed):
+            src_np = _get_bg_np(bg_ed)
+            ref_np = np.array(modified_ref) if modified_ref is not None else None
+            if ref_np is None:
                 bg = ref_ed.get("background") if ref_ed else None
                 ref_np = np.asarray(bg) if bg is not None else None
-            domain_key = _domain_key(domain_label)
-            return generate(src_np, ref_np, mask, prompt, domain_key,
-                            x1, y1, x2, y2,
-                            steps, guidance, eta, gamma, blend, cache, cascade)
+            bx1, by1, bx2, by2 = _get_bbox(bg_ed, x1, y1, x2, y2)
+            return generate(src_np, ref_np, mask, prompt, _domain_key(domain_label),
+                            bx1, by1, bx2, by2, int(seed))
 
         generate_btn.click(
             _generate_wrap,
             inputs=[
-                source_img, ref_editor, modified_ref_state, mask_state,
+                bg_editor, ref_editor, modified_ref_state, mask_state,
                 target_prompt, domain_dd,
                 x1_in, y1_in, x2_in, y2_in,
-                num_steps, guidance, eta, gamma, blend_ratio,
-                use_cache, cascade_num,
+                seed_in,
             ],
             outputs=[result_img, gen_status],
         )
@@ -826,6 +818,4 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    app = build_app()
-    # Pre-fill the weights box default from --weights arg
-    app.launch(server_port=args.port, share=args.share)
+    build_app(weights_dir=args.weights).launch(server_port=args.port, share=args.share)
