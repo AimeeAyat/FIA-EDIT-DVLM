@@ -185,9 +185,15 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
         dtype     = next(pipe.transformer.parameters()).dtype
         num_steps = param['num_inference_steps']
 
-        # ── Tail CFG: patch transformer to apply CFG on last N steps only ─────
+        # ── Tail CFG: install patch via callback so inversion runs unpatched ────
+        # The transformer is called during both inversion AND the denoising loop.
+        # Installing before pipe.gen() causes the patch to fire during inversion
+        # (current['step'] increments internally and exceeds start_cfg_step).
+        # callback_on_step_end fires only during the denoising loop, so we
+        # install there — inversion is already done by the first callback.
         cfg_tail_steps = param.get('cfg_tail_steps', 0) if args.use_tail_cfg else 0
         cfg_scale_val  = param.get('cfg_scale', 3.5)
+        cfg_callback   = None
         if cfg_tail_steps > 0:
             neg_embeds, neg_pooled, _ = pipe.encode_prompt(
                 prompt=get_negative_prompt(domain),
@@ -196,9 +202,17 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
                 num_images_per_prompt=1,
                 max_sequence_length=512,
             )
-            install_cfg_tail_patch(pipe, num_steps, cfg_tail_steps,
-                                   cfg_scale_val, neg_embeds, neg_pooled)
-            print(f"[cfg_tail] last {cfg_tail_steps} steps, scale={cfg_scale_val}")
+            _installed = [False]
+
+            def cfg_callback(pipe_obj, step_i, _t, _kwargs):
+                if not _installed[0]:
+                    install_cfg_tail_patch(pipe_obj, num_steps, cfg_tail_steps,
+                                           cfg_scale_val, neg_embeds, neg_pooled)
+                    _installed[0] = True
+                    print(f"[cfg_tail] patch active from step {num_steps - cfg_tail_steps}, scale={cfg_scale_val}")
+                return {}
+
+            print(f"[cfg_tail] scheduled: last {cfg_tail_steps} steps, scale={cfg_scale_val}")
 
         # ── Ref injection: extract ref K,V then swap attention processors ─────
         ref_inject_blocks = param.get('ref_inject_blocks', 0)
@@ -250,6 +264,7 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
             blend_ratio=param['blend_ratio'],
             generator=torch.Generator(device='cuda').manual_seed(42),
             skip_T=param.get('inv_skip', 3),
+            callback_on_step_end=cfg_callback,
         )
 
         # ── Remove patches so next image starts clean ─────────────────────────
