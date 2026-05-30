@@ -32,7 +32,7 @@ CATEGORIES = {
     "Real-Sketch":   ("Real-Sketch-papers.zip",     "Real-Sketch-ours.zip",   "Real-Sketch",   -1),
 }
 
-COL_LABELS = ["Reference", "Mask", "Paper", "Ours"]
+COL_LABELS = ["Source", "Reference", "Mask", "Paper", "Ours"]
 IMG_SIZE   = 3      # inches per panel
 DPI        = 150
 
@@ -80,12 +80,12 @@ def build_comp_index(zf: zipfile.ZipFile, cat: str) -> dict[int, dict[str, str]]
     return result
 
 
-def save_comparison(ref: np.ndarray, mask: np.ndarray,
+def save_comparison(source: np.ndarray, ref: np.ndarray, mask: np.ndarray,
                     paper: np.ndarray, ours: np.ndarray,
                     out_path: Path, title: str) -> None:
-    fig, axes = plt.subplots(1, 4, figsize=(IMG_SIZE * 4, IMG_SIZE + 0.7))
+    fig, axes = plt.subplots(1, 5, figsize=(IMG_SIZE * 5, IMG_SIZE + 0.7))
     fig.suptitle(title, fontsize=10, y=1.01)
-    for ax, img, label in zip(axes, [ref, mask, paper, ours], COL_LABELS):
+    for ax, img, label in zip(axes, [source, ref, mask, paper, ours], COL_LABELS):
         ax.imshow(img)
         ax.set_title(label, fontsize=10, fontweight="bold")
         ax.axis("off")
@@ -96,7 +96,10 @@ def save_comparison(ref: np.ndarray, mask: np.ndarray,
 
 
 def pick_comp_images(files: dict[str, str], zf_comp: zipfile.ZipFile):
-    """Return (reference_array, mask_array) from a composition entry."""
+    """Return (source_array, reference_array, mask_array) from a composition entry."""
+    # source: background image bg*.png/jpg
+    src_name  = next((k for k in files
+                      if re.match(r"bg\w*\.(jpg|png)", k, re.I)), None)
     # foreground image: fg*.jpg/png but NOT fg*_mask.*
     ref_name  = next((k for k in files
                       if re.match(r"fg\w+\.(jpg|png)", k, re.I)
@@ -104,9 +107,10 @@ def pick_comp_images(files: dict[str, str], zf_comp: zipfile.ZipFile):
     mask_name = next((k for k in files if k == "mask_bg_fg.jpg"), None)
 
     placeholder = np.full((256, 256, 3), 180, dtype=np.uint8)
+    src  = open_img(zf_comp, files[src_name])  if src_name  else placeholder
     ref  = open_img(zf_comp, files[ref_name])  if ref_name  else placeholder
     mask = open_img(zf_comp, files[mask_name]) if mask_name else placeholder
-    return ref, mask
+    return src, ref, mask
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -138,12 +142,12 @@ def process_category(cat: str, papers_zip: str, ours_zip: str,
                       f"(comp idx {comp_entry_idx})")
                 continue
 
-            ref_arr, mask_arr = pick_comp_images(comp_idx_map[comp_entry_idx], zf_comp)
+            src_arr, ref_arr, mask_arr = pick_comp_images(comp_idx_map[comp_entry_idx], zf_comp)
             paper_arr = open_img(zf_paper, paper_map[img_num])
             ours_arr  = open_img(zf_ours,  ours_map[img_num])
 
             out_path = OUT_DIR / cat / f"{img_num:03d}.png"
-            save_comparison(ref_arr, mask_arr, paper_arr, ours_arr,
+            save_comparison(src_arr, ref_arr, mask_arr, paper_arr, ours_arr,
                             out_path, f"{cat}  —  sample {img_num:03d}")
             saved += 1
 
