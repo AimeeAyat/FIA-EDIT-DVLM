@@ -2,8 +2,8 @@
   "_comment": "Real-Painting: ref_inject anchors identity; low eta lets FLUX paint-stylize the subject. Early-only injection (8 steps) preserves pose/shape without locking in photo texture. Strong tail-CFG drives painting style.",
   "params": [
     {
-      "eta": 0.5,
-      "gamma": 0.5,
+      "eta": 0.6,
+      "gamma": 0.6,
       "blend_ratio": 0,
       "start_timestep": 0,
       "stop_timestep": 12,
