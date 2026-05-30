@@ -49,8 +49,13 @@ def _load_sam():
 
 # ── Extract bbox from a painted ImageEditor layer ─────────────────────────────
 
-def _bbox_from_layer(editor_val):
-    """Return (x1,y1,x2,y2) bounding box of whatever the user painted, or None."""
+def _bbox_from_layer(editor_val, orig_size=None):
+    """Return (x1,y1,x2,y2) in original image coordinates, or None.
+
+    Gradio renders the ImageEditor layer at canvas/display resolution, which
+    is often smaller than the original image. orig_size=(w,h) rescales the
+    bbox to original image space so SAM receives correct coordinates.
+    """
     if editor_val is None:
         return None
     layers = editor_val.get("layers") or []
@@ -67,7 +72,16 @@ def _bbox_from_layer(editor_val):
         return None
     rows = np.where(painted.any(axis=1))[0]
     cols = np.where(painted.any(axis=0))[0]
-    return int(cols[0]), int(rows[0]), int(cols[-1]), int(rows[-1])
+    x1, y1, x2, y2 = int(cols[0]), int(rows[0]), int(cols[-1]), int(rows[-1])
+    if orig_size is not None:
+        orig_w, orig_h = orig_size
+        layer_h, layer_w = arr.shape[:2]
+        if layer_w != orig_w or layer_h != orig_h:
+            x1 = int(x1 * orig_w / layer_w)
+            y1 = int(y1 * orig_h / layer_h)
+            x2 = int(x2 * orig_w / layer_w)
+            y2 = int(y2 * orig_h / layer_h)
+    return x1, y1, x2, y2
 
 
 def _get_bg_image(editor_val):
@@ -105,11 +119,12 @@ def run_sam(ref_editor, ref_text, rx1=0, ry1=0, rx2=0, ry2=0):
 
     _load_sam()
 
-    # Coordinate inputs override the drawing when all four are non-zero
-    if int(rx1) > 0 or int(ry1) > 0 or int(rx2) > 0 or int(ry2) > 0:
-        bbox = (int(rx1), int(ry1), int(rx2), int(ry2))
+    # Coordinate inputs override the drawing only when they form a valid box
+    _cx1, _cy1, _cx2, _cy2 = int(rx1), int(ry1), int(rx2), int(ry2)
+    if _cx2 > _cx1 and _cy2 > _cy1:
+        bbox = (_cx1, _cy1, _cx2, _cy2)
     else:
-        bbox = _bbox_from_layer(ref_editor)
+        bbox = _bbox_from_layer(ref_editor, orig_size=img_pil.size)
     if bbox is not None:
         x1, y1, x2, y2 = bbox
         prompt_desc = f"bbox ({x1},{y1})→({x2},{y2})"
@@ -162,10 +177,11 @@ def composite_preview(bg_editor, ref_editor, mask_state, px1=0, py1=0, px2=0, py
     if ref_pil is None:
         return None, "⚠️  Upload a reference image first (use the left panel)."
 
-    if int(px1) > 0 or int(py1) > 0 or int(px2) > 0 or int(py2) > 0:
-        bbox = (int(px1), int(py1), int(px2), int(py2))
+    _bx1, _by1, _bx2, _by2 = int(px1), int(py1), int(px2), int(py2)
+    if _bx2 > _bx1 and _by2 > _by1:
+        bbox = (_bx1, _by1, _bx2, _by2)
     else:
-        bbox = _bbox_from_layer(bg_editor)
+        bbox = _bbox_from_layer(bg_editor, orig_size=bg_pil.size)
     if bbox is None:
         return None, "⚠️  Draw on the background or enter coordinates to set the placement region."
 
@@ -246,11 +262,11 @@ def build_ui():
                 )
                 with gr.Accordion("Or enter exact pixel coordinates", open=False):
                     with gr.Row():
-                        rx1 = gr.Number(label="x1 (left)",   value=0,   precision=0)
-                        ry1 = gr.Number(label="y1 (top)",    value=0,   precision=0)
-                        rx2 = gr.Number(label="x2 (right)",  value=200, precision=0)
-                        ry2 = gr.Number(label="y2 (bottom)", value=200, precision=0)
-                    gr.Markdown("*These override the painted region when non-zero.*")
+                        rx1 = gr.Number(label="x1 (left)",   value=0, precision=0)
+                        ry1 = gr.Number(label="y1 (top)",    value=0, precision=0)
+                        rx2 = gr.Number(label="x2 (right)",  value=0, precision=0)
+                        ry2 = gr.Number(label="y2 (bottom)", value=0, precision=0)
+                    gr.Markdown("*Enter all four to override the painted region.*")
                 sam_btn    = gr.Button("Extract Mask", variant="primary")
                 sam_status = gr.Textbox(label="Status", interactive=False, lines=2)
 
@@ -271,11 +287,11 @@ def build_ui():
                 )
                 with gr.Accordion("Or enter exact pixel coordinates", open=False):
                     with gr.Row():
-                        px1 = gr.Number(label="x1 (left)",   value=0,   precision=0)
-                        py1 = gr.Number(label="y1 (top)",    value=0,   precision=0)
-                        px2 = gr.Number(label="x2 (right)",  value=200, precision=0)
-                        py2 = gr.Number(label="y2 (bottom)", value=200, precision=0)
-                    gr.Markdown("*These override the painted region when non-zero.*")
+                        px1 = gr.Number(label="x1 (left)",   value=0, precision=0)
+                        py1 = gr.Number(label="y1 (top)",    value=0, precision=0)
+                        px2 = gr.Number(label="x2 (right)",  value=0, precision=0)
+                        py2 = gr.Number(label="y2 (bottom)", value=0, precision=0)
+                    gr.Markdown("*Enter all four to override the painted region.*")
                 comp_btn    = gr.Button("Preview Composite", variant="primary")
                 comp_status = gr.Textbox(label="Status", interactive=False, lines=2)
                 comp_out    = gr.Image(label="Composite (red box = placement)", height=300)

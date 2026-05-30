@@ -124,8 +124,13 @@ def load_models(weights_dir: str):
 # ║  SAM mask extraction                                     ║
 # ╚══════════════════════════════════════════════════════════╝
 
-def _bbox_from_layer(editor_val):
-    """Return (x1,y1,x2,y2) from the painted layer of an ImageEditor, or None."""
+def _bbox_from_layer(editor_val, orig_size=None):
+    """Return (x1,y1,x2,y2) in original image coordinates, or None.
+
+    Gradio's ImageEditor layer is rendered at canvas/display resolution, which
+    is often much smaller than the original image. orig_size=(w,h) is used to
+    scale the bbox back to original image space.
+    """
     if editor_val is None:
         return None
     layers = editor_val.get("layers") or []
@@ -142,7 +147,17 @@ def _bbox_from_layer(editor_val):
         return None
     rows = np.where(painted.any(axis=1))[0]
     cols = np.where(painted.any(axis=0))[0]
-    return int(cols[0]), int(rows[0]), int(cols[-1]), int(rows[-1])
+    x1, y1, x2, y2 = int(cols[0]), int(rows[0]), int(cols[-1]), int(rows[-1])
+    # Scale from layer (canvas) coordinates to original image coordinates
+    if orig_size is not None:
+        orig_w, orig_h = orig_size
+        layer_h, layer_w = arr.shape[:2]
+        if layer_w != orig_w or layer_h != orig_h:
+            x1 = int(x1 * orig_w / layer_w)
+            y1 = int(y1 * orig_h / layer_h)
+            x2 = int(x2 * orig_w / layer_w)
+            y2 = int(y2 * orig_h / layer_h)
+    return x1, y1, x2, y2
 
 
 def _run_sam(ref_pil: Image.Image, point_xy: tuple[int, int]):
@@ -202,7 +217,7 @@ def extract_mask_draw(ref_editor_val):
         return None, None, None, "⚠️  Upload a reference image first"
     ref_pil = Image.fromarray(np.asarray(bg)).convert("RGB")
 
-    bbox = _bbox_from_layer(ref_editor_val)
+    bbox = _bbox_from_layer(ref_editor_val, orig_size=ref_pil.size)
     if bbox is not None:
         x1, y1, x2, y2 = bbox
         inputs = _sam_processor(
