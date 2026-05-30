@@ -26,13 +26,13 @@ OUT_DIR   = Path("comparisons")
 #   Real-Cartoon/Painting/Sketch: comp 0 = img 001  → offset = -1
 #   Real-Real:                    comp 1 = img 001  → offset =  0
 CATEGORIES = {
-    "Real-Cartoon":  ("Real-Cartoon-Papers.zip",  "Real-Cartoon-ours.zip",  "Real-Cartoon",  -1),
-    "Real-Painting": ("Real-Painting-Papers.zip",  "Real-Painting-ours.zip", "Real-Painting", -1),
-    "Real-Real":     ("Real-Real-papers.zip",       "Real-Real-ours.zip",     "Real-Real",      0),
-    "Real-Sketch":   ("Real-Sketch-papers.zip",     "Real-Sketch-ours.zip",   "Real-Sketch",   -1),
+    "Real-Cartoon":  ("Real-Cartoon-Papers.zip",  "full_Real-Cartoon-ours.zip",  "Real-Cartoon",  -1),
+    "Real-Painting": ("Real-Painting-Papers.zip",  "full_Real-Painting-ours.zip", "Real-Painting", -1),
+    "Real-Real":     ("Real-Real-papers.zip",       "full_Real-Real-ours.zip",     "Real-Real",      0),
+    "Real-Sketch":   ("Real-Sketch-papers.zip",     "full_Real-Sketch-ours.zip",   "Real-Sketch",   -1),
 }
 
-COL_LABELS = ["Source", "Reference", "Mask", "Paper", "Ours"]
+COL_LABELS = ["Source", "Reference", "Mask", "EEdit", "Ours"]
 IMG_SIZE   = 3      # inches per panel
 DPI        = 150
 
@@ -81,11 +81,11 @@ def build_comp_index(zf: zipfile.ZipFile, cat: str) -> dict[int, dict[str, str]]
 
 
 def save_comparison(source: np.ndarray, ref: np.ndarray, mask: np.ndarray,
-                    paper: np.ndarray, ours: np.ndarray,
+                    EEdit: np.ndarray, ours: np.ndarray,
                     out_path: Path, title: str) -> None:
     fig, axes = plt.subplots(1, 5, figsize=(IMG_SIZE * 5, IMG_SIZE + 0.7))
     fig.suptitle(title, fontsize=10, y=1.01)
-    for ax, img, label in zip(axes, [source, ref, mask, paper, ours], COL_LABELS):
+    for ax, img, label in zip(axes, [source, ref, mask, EEdit, ours], COL_LABELS):
         ax.imshow(img)
         ax.set_title(label, fontsize=10, fontweight="bold")
         ax.axis("off")
@@ -128,7 +128,7 @@ def process_category(cat: str, papers_zip: str, ours_zip: str,
           zipfile.ZipFile(BASE / ours_zip)   as zf_ours):
 
         paper_map = build_index(zf_paper, lambda n: n.endswith(".png"))
-        ours_map  = build_index(zf_ours,  lambda n: "generated" in n and n.endswith(".png"))
+        ours_map  = build_index(zf_ours,  lambda n: n.endswith(".png"))
 
         common = sorted(set(paper_map) & set(ours_map))
         print(f"  Matched samples: {len(common)}  (paper={len(paper_map)}, ours={len(ours_map)})")
