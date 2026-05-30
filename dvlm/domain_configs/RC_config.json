@@ -2,8 +2,8 @@
   "_comment": "Real-Cartoon: low eta gives FLUX room to cartoon-ify; ref_inject only in early steps to preserve coarse structure/pose without locking in photo texture; strong tail-CFG pushes cartoon style.",
   "params": [
     {
-      "eta": 0.5,
-      "gamma": 0.5,
+      "eta": 0.6,
+      "gamma": 0.6,
       "blend_ratio": 0,
       "start_timestep": 0,
       "stop_timestep": 13,
