@@ -41,7 +41,7 @@ must be preserved as-is.
 _POS_SUFFIX = {
 "RC": (
     
-    "cartoon style, bold thick black outlines, flat vector colors, fun, exaggerated expressions and proportions."
+    "cartoon style, bold thick black outlines, flat vector colors, exaggerated expressions."
     "Original face, identity, and proportions preserved."
 ),
 
