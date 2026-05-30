@@ -654,10 +654,10 @@ def build_app(weights_dir: str = "./weights") -> gr.Blocks:
                 )
                 with gr.Accordion("Or enter exact pixel coordinates", open=False):
                     with gr.Row():
-                        x1_in = gr.Number(label="x1 (left)",   value=100, precision=0, minimum=0, maximum=512)
-                        y1_in = gr.Number(label="y1 (top)",    value=100, precision=0, minimum=0, maximum=512)
-                        x2_in = gr.Number(label="x2 (right)",  value=300, precision=0, minimum=0, maximum=512)
-                        y2_in = gr.Number(label="y2 (bottom)", value=400, precision=0, minimum=0, maximum=512)
+                        x1_in = gr.Number(label="x1 (left)",   value=0, precision=0, minimum=0, maximum=512)
+                        y1_in = gr.Number(label="y1 (top)",    value=0, precision=0, minimum=0, maximum=512)
+                        x2_in = gr.Number(label="x2 (right)",  value=0, precision=0, minimum=0, maximum=512)
+                        y2_in = gr.Number(label="y2 (bottom)", value=0, precision=0, minimum=0, maximum=512)
                     gr.Markdown("*Enter all four to override the painted region.*")
 
                 comp_btn    = gr.Button("Preview Composite", variant="secondary")
