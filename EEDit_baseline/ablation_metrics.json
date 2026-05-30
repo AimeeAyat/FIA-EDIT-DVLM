@@ -1,0 +1,647 @@
+{
+  "no_all": {
+    "Real-Cartoon": {
+      "individual": [
+        {
+          "mse": 0.0001754704862833023,
+          "psnr": 37.55795920350239,
+          "ssim": 0.9767220016999358,
+          "lpips": 0.0069527337327599525,
+          "clip": 34.17652130126953,
+          "file": "001.png",
+          "prompt": "0000 a cartoon animation of a sheep in the forest"
+        },
+        {
+          "mse": 0.00019007729133591056,
+          "psnr": 37.21069765494403,
+          "ssim": 0.9766196981279922,
+          "lpips": 0.008643440902233124,
+          "clip": 31.437402725219727,
+          "file": "002.png",
+          "prompt": "0001 a cartoon animation of a panda in the forest"
+        }
+      ],
+      "average": {
+        "mse": 0.00018277388880960643,
+        "psnr": 37.38432842922321,
+        "ssim": 0.976670849913964,
+        "lpips": 0.007798087317496538,
+        "clip": 32.80696201324463
+      },
+      "count": 2
+    },
+    "Real-Painting": {
+      "individual": [
+        {
+          "mse": 0.000850657292176038,
+          "psnr": 30.70245370695597,
+          "ssim": 0.9105945727689924,
+          "lpips": 0.029911238700151443,
+          "clip": 30.2518310546875,
+          "file": "001.png",
+          "prompt": "0000 an oil painting of a sheep, Van Gogh Style"
+        },
+        {
+          "mse": 0.0007307319901883602,
+          "psnr": 31.36241879573948,
+          "ssim": 0.9114486383087588,
+          "lpips": 0.026902813464403152,
+          "clip": 31.101051330566406,
+          "file": "002.png",
+          "prompt": "0001 an oil painting of a panda, Van Gogh Style"
+        }
+      ],
+      "average": {
+        "mse": 0.0007906946411821991,
+        "psnr": 31.032436251347725,
+        "ssim": 0.9110216055388756,
+        "lpips": 0.028407026082277298,
+        "clip": 30.676441192626953
+      },
+      "count": 2
+    },
+    "Real-Real": {
+      "individual": [
+        {
+          "mse": 0.0003520882746670395,
+          "psnr": 34.533484376739054,
+          "ssim": 0.9618831526325099,
+          "lpips": 0.013985207304358482,
+          "clip": 30.842817306518555,
+          "file": "001.png",
+          "prompt": "0001 a professional photograph of a puppy in the snow, ultra realistic"
+        },
+        {
+          "mse": 0.0003282849211245775,
+          "psnr": 34.83749064948957,
+          "ssim": 0.9607937979019838,
+          "lpips": 0.013825510628521442,
+          "clip": 26.651382446289062,
+          "file": "002.png",
+          "prompt": "0002 a professional photograph of a panda crawling on the beach, ultra realistic"
+        }
+      ],
+      "average": {
+        "mse": 0.0003401865978958085,
+        "psnr": 34.68548751311431,
+        "ssim": 0.9613384752672469,
+        "lpips": 0.013905358966439962,
+        "clip": 28.74709987640381
+      },
+      "count": 2
+    },
+    "Real-Sketch": {
+      "individual": [
+        {
+          "mse": 0.0003555708972271532,
+          "psnr": 34.490737923893576,
+          "ssim": 0.9684680934341608,
+          "lpips": 0.010276411660015583,
+          "clip": 30.000024795532227,
+          "file": "001.png",
+          "prompt": "0000 a pencil drawing of a sheep in the sunset"
+        },
+        {
+          "mse": 0.0003626536054071039,
+          "psnr": 34.40508000538849,
+          "ssim": 0.9679472215775958,
+          "lpips": 0.01043645292520523,
+          "clip": 32.86920928955078,
+          "file": "002.png",
+          "prompt": "0001 a pencil drawing of a dog in the sunset"
+        }
+      ],
+      "average": {
+        "mse": 0.00035911225131712854,
+        "psnr": 34.44790896464103,
+        "ssim": 0.9682076575058783,
+        "lpips": 0.010356432292610407,
+        "clip": 31.434617042541504
+      },
+      "count": 2
+    },
+    "_overall": {
+      "mse": 0.00041819184480118565,
+      "psnr": 34.387540289581565,
+      "ssim": 0.9543096470564912,
+      "lpips": 0.015116726164706051,
+      "clip": 30.916280031204224
+    }
+  },
+  "no_kv": {
+    "Real-Cartoon": {
+      "individual": [
+        {
+          "mse": 0.00016854412388056517,
+          "psnr": 37.73286384114418,
+          "ssim": 0.9768288632184693,
+          "lpips": 0.006561466492712498,
+          "clip": 33.30094909667969,
+          "file": "001.png",
+          "prompt": "0000 a cartoon animation of a sheep in the forest"
+        },
+        {
+          "mse": 0.00019770146172959358,
+          "psnr": 37.039901196658434,
+          "ssim": 0.9764331499449774,
+          "lpips": 0.008421603590250015,
+          "clip": 31.295766830444336,
+          "file": "002.png",
+          "prompt": "0001 a cartoon animation of a panda in the forest"
+        }
+      ],
+      "average": {
+        "mse": 0.00018312279280507937,
+        "psnr": 37.38638251890131,
+        "ssim": 0.9766310065817234,
+        "lpips": 0.0074915350414812565,
+        "clip": 32.29835796356201
+      },
+      "count": 2
+    },
+    "Real-Painting": {
+      "individual": [
+        {
+          "mse": 0.0009787267772480845,
+          "psnr": 30.093385295395304,
+          "ssim": 0.9096684575870272,
+          "lpips": 0.03004605323076248,
+          "clip": 28.722902297973633,
+          "file": "001.png",
+          "prompt": "0000 an oil painting of a sheep, Van Gogh Style"
+        },
+        {
+          "mse": 0.00100784155074507,
+          "psnr": 29.966077407536996,
+          "ssim": 0.9095461341874636,
+          "lpips": 0.032195307314395905,
+          "clip": 30.371051788330078,
+          "file": "002.png",
+          "prompt": "0001 an oil painting of a panda, Van Gogh Style"
+        }
+      ],
+      "average": {
+        "mse": 0.0009932841639965773,
+        "psnr": 30.02973135146615,
+        "ssim": 0.9096072958872454,
+        "lpips": 0.031120680272579193,
+        "clip": 29.546977043151855
+      },
+      "count": 2
+    },
+    "Real-Real": {
+      "individual": [
+        {
+          "mse": 0.00034990280983038247,
+          "psnr": 34.56052569980854,
+          "ssim": 0.9619663758007109,
+          "lpips": 0.013761471956968307,
+          "clip": 30.36903190612793,
+          "file": "001.png",
+          "prompt": "0001 a professional photograph of a puppy in the snow, ultra realistic"
+        },
+        {
+          "mse": 0.00032547497539781034,
+          "psnr": 34.87482397155497,
+          "ssim": 0.9609698829884122,
+          "lpips": 0.013601694256067276,
+          "clip": 25.96787452697754,
+          "file": "002.png",
+          "prompt": "0002 a professional photograph of a panda crawling on the beach, ultra realistic"
+        }
+      ],
+      "average": {
+        "mse": 0.0003376888926140964,
+        "psnr": 34.71767483568175,
+        "ssim": 0.9614681293945615,
+        "lpips": 0.013681583106517792,
+        "clip": 28.168453216552734
+      },
+      "count": 2
+    },
+    "Real-Sketch": {
+      "individual": [
+        {
+          "mse": 0.0003586290404200554,
+          "psnr": 34.453545458292496,
+          "ssim": 0.9684916661653435,
+          "lpips": 0.010627939365804195,
+          "clip": 30.16132926940918,
+          "file": "001.png",
+          "prompt": "0000 a pencil drawing of a sheep in the sunset"
+        },
+        {
+          "mse": 0.0003521699400153011,
+          "psnr": 34.53247716632866,
+          "ssim": 0.9682122552585172,
+          "lpips": 0.010038175620138645,
+          "clip": 32.65525817871094,
+          "file": "002.png",
+          "prompt": "0001 a pencil drawing of a dog in the sunset"
+        }
+      ],
+      "average": {
+        "mse": 0.00035539949021767825,
+        "psnr": 34.49301131231058,
+        "ssim": 0.9683519607119304,
+        "lpips": 0.01033305749297142,
+        "clip": 31.40829372406006
+      },
+      "count": 2
+    },
+    "_overall": {
+      "mse": 0.0004673738349083578,
+      "psnr": 34.15670000458995,
+      "ssim": 0.9540145981438652,
+      "lpips": 0.015656713978387415,
+      "clip": 30.355520486831665
+    }
+  },
+  "no_tail_cfg": {
+    "Real-Cartoon": {
+      "individual": [
+        {
+          "mse": 0.00017601368017494678,
+          "psnr": 37.54453576540382,
+          "ssim": 0.9766119500699327,
+          "lpips": 0.0063781654462218285,
+          "clip": 33.21768569946289,
+          "file": "001.png",
+          "prompt": "0000 a cartoon animation of a sheep in the forest"
+        },
+        {
+          "mse": 0.00023806850367691368,
+          "psnr": 36.232980576993505,
+          "ssim": 0.9761237177081897,
+          "lpips": 0.007342481054365635,
+          "clip": 31.91742515563965,
+          "file": "002.png",
+          "prompt": "0001 a cartoon animation of a panda in the forest"
+        }
+      ],
+      "average": {
+        "mse": 0.00020704109192593023,
+        "psnr": 36.88875817119866,
+        "ssim": 0.9763678338890612,
+        "lpips": 0.006860323250293732,
+        "clip": 32.56755542755127
+      },
+      "count": 2
+    },
+    "Real-Painting": {
+      "individual": [
+        {
+          "mse": 0.0007934771128930151,
+          "psnr": 31.00465595547596,
+          "ssim": 0.9108765419407435,
+          "lpips": 0.028869733214378357,
+          "clip": 29.406005859375,
+          "file": "001.png",
+          "prompt": "0000 an oil painting of a sheep, Van Gogh Style"
+        },
+        {
+          "mse": 0.0007130980957299471,
+          "psnr": 31.468507232984486,
+          "ssim": 0.911567945696108,
+          "lpips": 0.027530798688530922,
+          "clip": 31.714353561401367,
+          "file": "002.png",
+          "prompt": "0001 an oil painting of a panda, Van Gogh Style"
+        }
+      ],
+      "average": {
+        "mse": 0.0007532876043114811,
+        "psnr": 31.236581594230223,
+        "ssim": 0.9112222438184258,
+        "lpips": 0.02820026595145464,
+        "clip": 30.560179710388184
+      },
+      "count": 2
+    },
+    "Real-Real": {
+      "individual": [
+        {
+          "mse": 0.0003508385270833969,
+          "psnr": 34.54892720947452,
+          "ssim": 0.9619614997645248,
+          "lpips": 0.013960625045001507,
+          "clip": 31.479036331176758,
+          "file": "001.png",
+          "prompt": "0001 a professional photograph of a puppy in the snow, ultra realistic"
+        },
+        {
+          "mse": 0.0003236779884900898,
+          "psnr": 34.89886833505453,
+          "ssim": 0.9612384820075425,
+          "lpips": 0.01345191989094019,
+          "clip": 27.712663650512695,
+          "file": "002.png",
+          "prompt": "0002 a professional photograph of a panda crawling on the beach, ultra realistic"
+        }
+      ],
+      "average": {
+        "mse": 0.00033725825778674334,
+        "psnr": 34.72389777226452,
+        "ssim": 0.9615999908860337,
+        "lpips": 0.013706272467970848,
+        "clip": 29.595849990844727
+      },
+      "count": 2
+    },
+    "Real-Sketch": {
+      "individual": [
+        {
+          "mse": 0.0003544286300893873,
+          "psnr": 34.50471203862779,
+          "ssim": 0.9684652738348417,
+          "lpips": 0.010225027799606323,
+          "clip": 29.997230529785156,
+          "file": "001.png",
+          "prompt": "0000 a pencil drawing of a sheep in the sunset"
+        },
+        {
+          "mse": 0.00036404040292836726,
+          "psnr": 34.38850413617167,
+          "ssim": 0.967892851154969,
+          "lpips": 0.010425562039017677,
+          "clip": 33.0273551940918,
+          "file": "002.png",
+          "prompt": "0001 a pencil drawing of a dog in the sunset"
+        }
+      ],
+      "average": {
+        "mse": 0.0003592345165088773,
+        "psnr": 34.446608087399724,
+        "ssim": 0.9681790624949054,
+        "lpips": 0.010325294919312,
+        "clip": 31.512292861938477
+      },
+      "count": 2
+    },
+    "_overall": {
+      "mse": 0.000414205367633258,
+      "psnr": 34.323961406273284,
+      "ssim": 0.9543422827721064,
+      "lpips": 0.014773039147257805,
+      "clip": 31.058969497680664
+    }
+  },
+  "no_prompt_aug": {
+    "Real-Cartoon": {
+      "individual": [
+        {
+          "mse": 0.0001619108661543578,
+          "psnr": 37.907240039179094,
+          "ssim": 0.9768273306979092,
+          "lpips": 0.005397217348217964,
+          "clip": 33.14363479614258,
+          "file": "001.png",
+          "prompt": "0000 a cartoon animation of a sheep in the forest"
+        },
+        {
+          "mse": 0.0002534380473662168,
+          "psnr": 35.96128186134414,
+          "ssim": 0.9759380006240287,
+          "lpips": 0.007605091203004122,
+          "clip": 32.31822204589844,
+          "file": "002.png",
+          "prompt": "0001 a cartoon animation of a panda in the forest"
+        }
+      ],
+      "average": {
+        "mse": 0.00020767445676028728,
+        "psnr": 36.93426095026162,
+        "ssim": 0.9763826656609689,
+        "lpips": 0.006501154275611043,
+        "clip": 32.73092842102051
+      },
+      "count": 2
+    },
+    "Real-Painting": {
+      "individual": [
+        {
+          "mse": 0.0009348769672214985,
+          "psnr": 30.29245539900298,
+          "ssim": 0.9097211533485788,
+          "lpips": 0.03204232454299927,
+          "clip": 29.661958694458008,
+          "file": "001.png",
+          "prompt": "0000 an oil painting of a sheep, Van Gogh Style"
+        },
+        {
+          "mse": 0.0010603134287521243,
+          "psnr": 29.74565738266422,
+          "ssim": 0.9085865940252053,
+          "lpips": 0.0330766960978508,
+          "clip": 29.690752029418945,
+          "file": "002.png",
+          "prompt": "0001 an oil painting of a panda, Van Gogh Style"
+        }
+      ],
+      "average": {
+        "mse": 0.0009975951979868114,
+        "psnr": 30.019056390833597,
+        "ssim": 0.909153873686892,
+        "lpips": 0.032559510320425034,
+        "clip": 29.676355361938477
+      },
+      "count": 2
+    },
+    "Real-Real": {
+      "individual": [
+        {
+          "mse": 0.00035258103162050247,
+          "psnr": 34.5274105586011,
+          "ssim": 0.9619136902331494,
+          "lpips": 0.013905853033065796,
+          "clip": 30.096391677856445,
+          "file": "001.png",
+          "prompt": "0001 a professional photograph of a puppy in the snow, ultra realistic"
+        },
+        {
+          "mse": 0.00032698348513804376,
+          "psnr": 34.854741815737775,
+          "ssim": 0.960738467154726,
+          "lpips": 0.01378600299358368,
+          "clip": 26.521411895751953,
+          "file": "002.png",
+          "prompt": "0002 a professional photograph of a panda crawling on the beach, ultra realistic"
+        }
+      ],
+      "average": {
+        "mse": 0.0003397822583792731,
+        "psnr": 34.691076187169436,
+        "ssim": 0.9613260786939377,
+        "lpips": 0.013845928013324738,
+        "clip": 28.3089017868042
+      },
+      "count": 2
+    },
+    "Real-Sketch": {
+      "individual": [
+        {
+          "mse": 0.0003615842142608017,
+          "psnr": 34.41790537845662,
+          "ssim": 0.9684335061380498,
+          "lpips": 0.010856028646230698,
+          "clip": 30.079618453979492,
+          "file": "001.png",
+          "prompt": "0000 a pencil drawing of a sheep in the sunset"
+        },
+        {
+          "mse": 0.0003606942482292652,
+          "psnr": 34.428607830550995,
+          "ssim": 0.9680945335994289,
+          "lpips": 0.01033085212111473,
+          "clip": 32.122154235839844,
+          "file": "002.png",
+          "prompt": "0001 a pencil drawing of a dog in the sunset"
+        }
+      ],
+      "average": {
+        "mse": 0.00036113923124503344,
+        "psnr": 34.423256604503806,
+        "ssim": 0.9682640198687393,
+        "lpips": 0.010593440383672714,
+        "clip": 31.100886344909668
+      },
+      "count": 2
+    },
+    "_overall": {
+      "mse": 0.0004765477860928513,
+      "psnr": 34.01691253319212,
+      "ssim": 0.9537816594776345,
+      "lpips": 0.015875008248258382,
+      "clip": 30.454267978668213
+    }
+  },
+  "ours": {
+    "Real-Cartoon": {
+      "individual": [
+        {
+          "mse": 0.0018093101680278778,
+          "psnr": 27.424869761384123,
+          "ssim": 0.942970531677334,
+          "lpips": 0.05314730852842331,
+          "clip": 32.60170364379883,
+          "file": "001.png",
+          "prompt": "0000 a cartoon animation of a sheep in the forest"
+        },
+        {
+          "mse": 0.0001878564798971638,
+          "psnr": 37.26173819844435,
+          "ssim": 0.9767840151449166,
+          "lpips": 0.0058099618181586266,
+          "clip": 30.21509552001953,
+          "file": "002.png",
+          "prompt": "0001 a cartoon animation of a panda in the forest"
+        }
+      ],
+      "average": {
+        "mse": 0.0009985833239625208,
+        "psnr": 32.34330397991424,
+        "ssim": 0.9598772734111254,
+        "lpips": 0.029478635173290968,
+        "clip": 31.40839958190918
+      },
+      "count": 2
+    },
+    "Real-Painting": {
+      "individual": [
+        {
+          "mse": 0.0029778655152767897,
+          "psnr": 25.260949195093026,
+          "ssim": 0.8700552933576472,
+          "lpips": 0.06733790040016174,
+          "clip": 30.02802085876465,
+          "file": "001.png",
+          "prompt": "0000 an oil painting of a sheep, Van Gogh Style"
+        },
+        {
+          "mse": 0.0031053870916366577,
+          "psnr": 25.078842565876744,
+          "ssim": 0.8719526432174406,
+          "lpips": 0.07420094311237335,
+          "clip": 30.610376358032227,
+          "file": "002.png",
+          "prompt": "0001 an oil painting of a panda, Van Gogh Style"
+        }
+      ],
+      "average": {
+        "mse": 0.0030416263034567237,
+        "psnr": 25.169895880484887,
+        "ssim": 0.8710039682875439,
+        "lpips": 0.07076942175626755,
+        "clip": 30.319198608398438
+      },
+      "count": 2
+    },
+    "Real-Real": {
+      "individual": [
+        {
+          "mse": 0.0003516741271596402,
+          "psnr": 34.5385958176871,
+          "ssim": 0.9619662400497243,
+          "lpips": 0.013781124725937843,
+          "clip": 30.407882690429688,
+          "file": "001.png",
+          "prompt": "0001 a professional photograph of a puppy in the snow, ultra realistic"
+        },
+        {
+          "mse": 0.0003250308509450406,
+          "psnr": 34.880754151463414,
+          "ssim": 0.9610454213040049,
+          "lpips": 0.013672842644155025,
+          "clip": 26.197219848632812,
+          "file": "002.png",
+          "prompt": "0002 a professional photograph of a panda crawling on the beach, ultra realistic"
+        }
+      ],
+      "average": {
+        "mse": 0.0003383524890523404,
+        "psnr": 34.70967498457526,
+        "ssim": 0.9615058306768647,
+        "lpips": 0.013726983685046434,
+        "clip": 28.30255126953125
+      },
+      "count": 2
+    },
+    "Real-Sketch": {
+      "individual": [
+        {
+          "mse": 0.0003595209855120629,
+          "psnr": 34.44275754443571,
+          "ssim": 0.9684578047833883,
+          "lpips": 0.010639164596796036,
+          "clip": 29.992324829101562,
+          "file": "001.png",
+          "prompt": "0000 a pencil drawing of a sheep in the sunset"
+        },
+        {
+          "mse": 0.00035773435956798494,
+          "psnr": 34.46439344854851,
+          "ssim": 0.9681304891974558,
+          "lpips": 0.010167757980525494,
+          "clip": 32.816749572753906,
+          "file": "002.png",
+          "prompt": "0001 a pencil drawing of a dog in the sunset"
+        }
+      ],
+      "average": {
+        "mse": 0.0003586276725400239,
+        "psnr": 34.45357549649211,
+        "ssim": 0.968294146990422,
+        "lpips": 0.010403461288660765,
+        "clip": 31.404537200927734
+      },
+      "count": 2
+    },
+    "_overall": {
+      "mse": 0.0011842974472529022,
+      "psnr": 31.669112585366623,
+      "ssim": 0.9401703048414889,
+      "lpips": 0.03109462547581643,
+      "clip": 30.35867166519165
+    }
+  }
+}
