@@ -128,6 +128,18 @@ def load_models(args, dtype=torch.bfloat16):
     return pipe
 
 
+def _expand_bbox(x1, y1, x2, y2, margin, img_w=512, img_h=512):
+    """Expand bbox by margin fraction of each side, clamped to image bounds."""
+    dx = int((x2 - x1) * margin)
+    dy = int((y2 - y1) * margin)
+    return (
+        max(0,     x1 - dx),
+        max(0,     y1 - dy),
+        min(img_w, x2 + dx),
+        min(img_h, y2 + dy),
+    )
+
+
 def generate_image(pipe, img_config, param_config, output_dir, domain, args):
     main_image  = load_image(img_config["main_image"])
     ref_image   = load_image(img_config["ref_image"])
@@ -148,6 +160,15 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
         ratio_scheduler = 'constant'
         use_attn_map   = False
 
+        # Optionally expand the bbox to give the subject breathing room.
+        # bbox_margin=0.10 expands each side by 10% of bbox width/height.
+        bbox_margin = param.get('bbox_margin', 0.0)
+        x1 = img_config['x1']; y1 = img_config['y1']
+        x2 = img_config['x2']; y2 = img_config['y2']
+        if bbox_margin > 0:
+            x1, y1, x2, y2 = _expand_bbox(x1, y1, x2, y2, bbox_margin, width, height)
+            print(f"[bbox_margin] {bbox_margin:.0%}  → ({x1},{y1},{x2},{y2})")
+
         model_kwargs = {
             'fresh_ratio':       param['fresh_ratio'],
             'cache_type':        cache_type,
@@ -161,8 +182,7 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
         }
 
         edit_idx = None if param['cascade_num'] == 0 else edit_region_parser(
-            img_config['x1'], img_config['y1'],
-            img_config['x2'], img_config['y2'],
+            x1, y1, x2, y2,
             cascade_num=param['cascade_num'],
             height=height, width=width,
         )
@@ -239,8 +259,8 @@ def generate_image(pipe, img_config, param_config, output_dir, domain, args):
             ref_segment=ref_segment,
             height=512,
             width=512,
-            x1=img_config["x1"], y1=img_config["y1"],
-            x2=img_config["x2"], y2=img_config["y2"],
+            x1=x1, y1=y1,
+            x2=x2, y2=y2,
             num_inference_steps=num_steps,
             guidance_scale=param.get('cfg_scale', param.get('guidance_scale', 7.0)),
             joint_attention_kwargs=joint_attention_kwargs,

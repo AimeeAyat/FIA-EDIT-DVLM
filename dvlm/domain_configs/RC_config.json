@@ -19,8 +19,9 @@
       "cache_type": "ours_predefine",
       "ref_inject_blocks": 10,
       "ref_inject_steps": 14,
-      "cfg_tail_steps": 7,
-      "cfg_scale": 5.5
+      "cfg_tail_steps": 5,
+      "cfg_scale": 3.5,
+      "bbox_margin": 0.10
     }
   ]
 }

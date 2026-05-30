@@ -20,7 +20,8 @@
       "ref_inject_blocks": 12,
       "ref_inject_steps": 14,
       "cfg_tail_steps": 7,
-      "cfg_scale": 5.0
+      "cfg_scale": 5.0,
+      "bbox_margin": 0.10
     }
   ]
 }
