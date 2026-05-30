@@ -86,24 +86,21 @@ def install_cfg_tail_patch(
                 **kwargs,
             )
 
-        # ── Tail window: batch neg + pos (FIA-Edit style) ─────────────────────
-        cfg_jak = {**(joint_attention_kwargs or {}), "use_cache": False}
+        # ── Tail window: two sequential passes ───────────────────────────────
+        # FluxTransformer2DModel_PREDEFINE has a gate tensor of shape
+        # [batch, dim] that relies on PyTorch's implicit unsqueeze to broadcast
+        # against [batch, seq, dim].  With batch=1 this works; with batch=2 it
+        # fails (dim 1 becomes 2, clashing with seq_len).  Sequential passes
+        # keep batch=1 throughout, which is safe with the PREDEFINE model.
         dt = hidden_states.dtype
+        cfg_jak = {**(joint_attention_kwargs or {}), "use_cache": False}
 
-        batch_hs     = torch.cat([hidden_states, hidden_states], dim=0)
-        batch_pooled = torch.cat([neg_pooled_prompt_embeds.to(dt),
-                                  pooled_projections], dim=0)
-        batch_enc    = torch.cat([neg_prompt_embeds.to(dt),
-                                  encoder_hidden_states], dim=0)
-        batch_t      = timestep.expand(2) if timestep is not None else timestep
-        batch_g      = guidance.expand(2)  if guidance  is not None else guidance
-
-        batch_out = _original_forward(
-            batch_hs,
-            timestep=batch_t,
-            guidance=batch_g,
-            pooled_projections=batch_pooled,
-            encoder_hidden_states=batch_enc,
+        neg_out = _original_forward(
+            hidden_states,
+            timestep=timestep,
+            guidance=guidance,
+            pooled_projections=neg_pooled_prompt_embeds.to(dt),
+            encoder_hidden_states=neg_prompt_embeds.to(dt),
             txt_ids=txt_ids,
             img_ids=img_ids,
             joint_attention_kwargs=cfg_jak,
@@ -111,7 +108,19 @@ def install_cfg_tail_patch(
             **kwargs,
         )[0]
 
-        neg_out, pos_out = batch_out.chunk(2, dim=0)
+        pos_out = _original_forward(
+            hidden_states,
+            timestep=timestep,
+            guidance=guidance,
+            pooled_projections=pooled_projections,
+            encoder_hidden_states=encoder_hidden_states,
+            txt_ids=txt_ids,
+            img_ids=img_ids,
+            joint_attention_kwargs=cfg_jak,
+            return_dict=False,
+            **kwargs,
+        )[0]
+
         blended = neg_out + cfg_scale * (pos_out - neg_out)
         return (blended,) if not return_dict else blended
 
