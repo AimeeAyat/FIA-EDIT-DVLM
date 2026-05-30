@@ -1,12 +1,12 @@
 {
-  "_comment": "Real-Sketch: raised eta for identity preservation — reference injection carries shape/structure into the sketch prior.",
+  "_comment": "Real-Sketch: ref_inject anchors subject shape; low eta lets FLUX sketch-stylize. stop_timestep kept shorter so FLUX has free steps to convert photo texture to sketch lines. Strong tail-CFG enforces sketch aesthetics.",
   "params": [
     {
-      "eta": 0.60,
-      "gamma": 0.60,
+      "eta": 0.35,
+      "gamma": 0.4,
       "blend_ratio": 0,
       "start_timestep": 0,
-      "stop_timestep": 22,
+      "stop_timestep": 13,
       "use_rf_inversion": true,
       "use_cache": true,
       "num_inference_steps": 28,
@@ -18,9 +18,9 @@
       "inv_skip": 2,
       "cache_type": "ours_predefine",
       "ref_inject_blocks": 8,
-      "ref_inject_steps": 14,
-      "cfg_tail_steps": 5,
-      "cfg_scale": 3.0
+      "ref_inject_steps": 8,
+      "cfg_tail_steps": 7,
+      "cfg_scale": 5.0
     }
   ]
 }

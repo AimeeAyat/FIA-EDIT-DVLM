@@ -1,12 +1,12 @@
 {
-  "_comment": "Real-Painting: high eta preserves reference identity against painting prior. Reference injection anchors texture/shape.",
+  "_comment": "Real-Painting: ref_inject anchors identity; low eta lets FLUX paint-stylize the subject. Early-only injection (8 steps) preserves pose/shape without locking in photo texture. Strong tail-CFG drives painting style.",
   "params": [
     {
-      "eta": 0.75,
-      "gamma": 0.75,
+      "eta": 0.35,
+      "gamma": 0.4,
       "blend_ratio": 0,
       "start_timestep": 0,
-      "stop_timestep": 15,
+      "stop_timestep": 12,
       "use_rf_inversion": true,
       "use_cache": true,
       "num_inference_steps": 28,
@@ -18,9 +18,9 @@
       "inv_skip": 2,
       "cache_type": "ours_predefine",
       "ref_inject_blocks": 8,
-      "ref_inject_steps": 14,
-      "cfg_tail_steps": 5,
-      "cfg_scale": 3.0
+      "ref_inject_steps": 8,
+      "cfg_tail_steps": 7,
+      "cfg_scale": 5.0
     }
   ]
 }
