@@ -142,7 +142,7 @@ pip install -r requirements.txt
 
 ---
 
-# 📦 Models & Resources
+#  Models & Resources
 
 ## Base Model
 
@@ -188,7 +188,7 @@ Run the notebook sequentially and adjust the configuration files for different a
 
 ---
 
-# 📈 Evaluation
+#  Evaluation
 
 Metrics
 
@@ -206,7 +206,7 @@ Benchmarks
 
 ---
 
-# 🧪 Ablation Studies
+#  Ablation Studies
 
 The repository contains experiments analysing
 
@@ -218,7 +218,7 @@ The repository contains experiments analysing
 
 ---
 
-# 🙏 Acknowledgements
+#  Acknowledgements
 
 This project builds upon the **EEdit** framework and adapts its efficient inversion and editing strategies for reference-guided image composition. Our implementation is **not a reproduction of FIA or the original K/V injection pipeline**. Instead, we extend the EEdit backbone with attention-level reference conditioning, domain-guided prompt augmentation, and tailored modifications for FLUX-based generation.
 
@@ -233,7 +233,7 @@ for making their work publicly available.
 
 ---
 
-# 📚 Citation
+#  Citation
 
 ```bibtex
 @misc{fluxkey2026,
