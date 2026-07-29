@@ -67,7 +67,7 @@ The architecture consists of:
 
 ```markdown
 <p align="center">
-  <img src="[assets/qualitative_results.png](https://github.com/rabiaaslam92/FIA-EDIT-DVLM/edit/main/README.md#:~:text=qualitative_results.png)" width="100%">
+  <img src="https://raw.githubusercontent.com/rabiaaslam92/FIA-EDIT-DVLM/main/assets/qualitative_results.png" width="100%">
 </p>
 ```
 
