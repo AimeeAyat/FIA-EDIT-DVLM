@@ -39,12 +39,9 @@ Our method addresses the common limitation of prompt-only image editing where se
 
 #  Architecture
 
-
-assets/architecture.png
-
 ```markdown
 <p align="center">
-  <img src="assets/architecture.png" width="100%">
+  <img src="https://github.com/rabiaaslam92/FIA-EDIT-DVLM/blob/main/README.md#:~:text=architecture.png" width="100%">
 </p>
 ```
 
@@ -68,12 +65,9 @@ The architecture consists of:
 
 
 
-assets/qualitative_results.png
-
-
 ```markdown
 <p align="center">
-  <img src="assets/qualitative_results.png" width="100%">
+  <img src="[assets/qualitative_results.png](https://github.com/rabiaaslam92/FIA-EDIT-DVLM/edit/main/README.md#:~:text=qualitative_results.png)" width="100%">
 </p>
 ```
 
@@ -82,8 +76,9 @@ assets/qualitative_results.png
 
 
 ```
-assets/benchmark.png
-```
+<p align="center">
+  <img src="https://github.com/rabiaaslam92/FIA-EDIT-DVLM/edit/main/README.md#:~:text=benchmark.png" width="100%">
+</p>```
 
 Metrics
 
